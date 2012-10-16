@@ -1,8 +1,45 @@
-:start Cursor-down motion
+:start Insertion
+Hello|!
+:type i, World
+Hello, Worl|d!
+:end
+
+:start Visual
+a|sdfghij
+:type vll
+asd|fghij
+:type d
+a|ghij
+:end
+
+:start Motion h
+Lorem ipsum
+do|lor sit amet
+:type h
+Lorem ipsum
+d|olor sit amet
+:type h
+Lorem ipsum
+|dolor sit amet
+:type h
+Lorem ipsum
+|dolor sit amet
+:end
+
+:start Motion j
 Lor|em ipsum
 dolor sit amet
 :type j
 Lorem ipsum
 dol|or sit amet
 :end
+
+#start Unit test for motion h
+Lor|em ipsum
+#type h
+Lo|rem ipsum
+#type 10h
+|Lorem ipsum
+#end
+
 

@@ -1,0 +1,1 @@
+vim -S runtest.vim
