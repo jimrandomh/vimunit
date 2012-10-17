@@ -1,0 +1,113 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Command [count]x (delete char)
+	Lor|em ipsum
+	dolor sit amet
+:type x
+	Lor|m ipsum
+	dolor sit amet
+:type 6x
+	Lor|m
+	dolor sit amet
+:type x
+	Lo|r
+	dolor sit amet
+:type 2x
+	L|o
+	dolor sit amet
+:type x
+	|L
+	dolor sit amet
+:type x
+	|
+	dolor sit amet
+:type x
+	|
+	dolor sit amet
+:end
+
+:start Command [count]X (delete previous char)
+	Lorem ipsum
+	dolor sit a|met
+:type X
+	Lorem ipsum
+	dolor sit |met
+:type 5X
+	Lorem ipsum
+	dolor|met
+:type 10X
+	Lorem ipsum
+	|met
+:type X
+	Lorem ipsum
+	|met
+:end
+
+:start Putting yanked text ([count]y[motion], [count]p)
+	Lorem |ipsum
+	dolor sit amet
+:type yyp
+	Lorem ipsum
+	|Lorem ipsum
+	dolor sit amet
+:type y2lp
+	Lorem ipsum
+	LL|oorem ipsum
+	dolor sit amet
+:type 2ylp
+	Lorem ipsum
+	LLoo|oorem ipsum
+	dolor sit amet
+:type y5yp
+	Lorem ipsum
+	LLoooorem ipsum
+	|LLoooorem ipsum
+	dolor sit amet
+	dolor sit amet
+:type kd4d
+	|Lorem ipsum
+:type yy2p
+	Lorem ipsum
+	|Lorem ipsum
+	Lorem ipsum
+:type y$p
+	Lorem ipsum
+	LLorem ipsu|morem ipsum
+	Lorem ipsum
+:end
+
+:start Putting deleted text (d, x, X, p)
+	Lorem |ipsum
+	dolor sit amet
+:type ddp
+	dolor sit amet
+	|Lorem ipsum
+:type xp
+	dolor sit amet
+	o|Lrem ipsum
+:type k$3X0P
+	am|edolor sit t
+	oLrem ipsum
+:type 2ddp
+	
+	|amedolor sit t
+	oLrem ipsum
+:end
+
+:start Command [count]Y, [count]P (yank lines, put above)
+	Lorem |ipsum
+	dolor sit amet
+:type YP
+	|Lorem ipsum
+	Lorem ipsum
+	dolor sit amet
+:type 2Y2P
+	|Lorem ipsum
+	Lorem ipsum
+	Lorem ipsum
+	Lorem ipsum
+	Lorem ipsum
+	Lorem ipsum
+	dolor sit amet
+:end
+

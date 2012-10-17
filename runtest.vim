@@ -1,3 +1,23 @@
+function Main()
+	let testFiles = GetTestFiles()
+	call RunTestFiles(testFiles)
+
+	echo 'Test results'
+	for message in g:logLines
+		echo message
+	endfor
+	:q!
+endfunction
+
+function GetTestFiles()
+	return split(glob("./**/*.vimunit"), "\n")
+endfunction
+
+function RunTestFiles(files)
+	for file in a:files
+		call RunTestFile(file)
+	endfor
+endfunction
 
 function RunTestFile(filename)
 	let contents = readfile(a:filename)
@@ -42,9 +62,9 @@ function RunTest(filename, description, firstLine, lines)
 	while ii < len(a:lines)
 		if a:lines[ii] =~ '^:.*'
 			if bufStart == 0
-				call InitBuffer(a:lines[0:ii-1])
+				call InitBuffer(GetBufferLines(a:lines, 0, ii-1))
 			else
-				if !ExpectBuffer(a:filename, a:firstLine+bufStart, a:lines[bufStart : ii-1])
+				if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, ii-1))
 					let wasSuccessful = 0
 					call InitBuffer(a:lines[bufStart : ii])
 				endif
@@ -60,15 +80,23 @@ function RunTest(filename, description, firstLine, lines)
 		endif
 		let ii = ii+1
 	endwhile
-	if !ExpectBuffer(a:filename, a:firstLine+bufStart, a:lines[bufStart : len(a:lines)])
+	if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, len(a:lines)))
 		let wasSuccessful = 0
 	endif
 	return wasSuccessful
 endfunction
 
+function GetBufferLines(lines, start, end)
+	return map(a:lines[a:start : a:end], 'substitute(v:val, "^\t", "", "")')
+endfunction
+
 function HandleKeys(keys)
 	"call feedkeys(a:keys, 't')
-	:execute ("normal ".a:keys)
+	:execute ("normal ".UnescapeKeys(a:keys))
+endfunction
+
+function UnescapeKeys(keys)
+	return eval('"'.a:keys.'"')
 endfunction
 
 function InitBuffer(lines)
@@ -103,9 +131,11 @@ function ExpectBuffer(filename, firstLineNumber, lines)
 			let line = substitute(line, '|', '', '')
 		endif
 		if getline(ii+1) != line
-			call LogTest(a:filename.":".(a:firstLineNumber+ii).": Text doesn't match")
-			call LogTest("    Expected: " . line)
-			call LogTest("    Actual: " . getline(ii+1))
+			call LogTest(a:filename.":".(a:firstLineNumber+ii+1).": Text doesn't match")
+			"call LogTest("    Expected: " . line)
+			"call LogTest("    Actual: " . getline(ii+1))
+			call LogTest("Expected:\n".join(a:lines, "\n"))
+			call LogTest("Actual:\n".join(getline(1, line('$')), "\n"))
 			return 0
 		endif
 		let ii = ii+1
@@ -113,7 +143,7 @@ function ExpectBuffer(filename, firstLineNumber, lines)
 	
 	if cursorLine >= 1
 		if col('.') != cursorCol || line('.') != cursorLine
-			call LogTest(a:filename.":".(a:firstLineNumber+ii).": Wrong cursor position")
+			call LogTest(a:filename.":".(a:firstLineNumber+1).": Wrong cursor position")
 			call LogTest("    Expected: " . cursorLine . "," . cursorCol)
 			call LogTest("    Actual: " . line('.') . "," . col('.'))
 			return 0
@@ -135,21 +165,5 @@ function LogTest(message)
 	call add(g:logLines, a:message)
 endfunction
 
-function Main(args)
-	for arg in a:args
-		if arg =~ '^-.*'
-			echoerr 'Unrecognized option: ' . arg
-		else
-			call RunTestFile(arg)
-		endif
-	endfor
-
-	echomsg 'Test results'
-	for message in g:logLines
-		echomsg message
-	endfor
-	:q!
-endfunction
-
-call Main(['tests/motions.vimunit'])
+call Main()
 

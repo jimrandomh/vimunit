@@ -1,0 +1,65 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Command i (insert)
+	Lorem |sit amet
+:type i\<esc>
+	Lorem| sit amet
+:type i ipsum\ndolor \<esc>
+	Lorem ipsum
+	dolor| sit amet
+:type i\n\<esc>
+	Lorem ipsum
+	dolor
+	|sit amet
+:end
+
+:start Command a (append)
+	|L ipsum
+	sit amet
+:type aorem
+	Lore|m ipsum
+	sit amet
+:type a\<esc>
+	Lore|m ipsum
+	sit amet
+:type lllllla dolor\<esc>
+	Lorem ipsum dolo|r
+	sit amet
+:type ja consectetur\<esc>
+	Lorem ipsum dolor
+	sit amet consectetu|r
+:type a\nadipisicing\<esc>
+	Lorem ipsum dolor
+	sit amet consectetur
+	adipisicin|g
+:end
+
+:start Command A (append to line)
+	Lo|rem ipsum
+:type A dolor\nsit amet\<esc>
+	Lorem ipsum dolor
+	sit ame|t
+:end
+
+:start Command I (prepend to line)
+	|dolor
+:type I    ipsum \<esc>
+	    ipsum| dolor
+:type ILorem \<esc>
+	    Lorem| ipsum dolor
+:end
+
+:start Command o (new line below)
+	Lo|rem ipsum
+:type odolor sit\<esc>
+	Lorem ipsum
+	dolor si|t
+:end
+
+:start Command O (new line above)
+	Lo|rem ipsum
+:type Odolor sit\<esc>
+	dolor si|t
+	Lorem ipsum
+:end
+

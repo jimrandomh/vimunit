@@ -1,0 +1,151 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Motion 0 (start of line)
+	  Lo|rem
+		ipsum
+	dolor
+:type 0
+	|  Lorem
+		ipsum
+	dolor
+:type 0
+	|  Lorem
+		ipsum
+	dolor
+:type j
+	  Lorem
+	|	ipsum
+	dolor
+:type 0
+	  Lorem
+	|	ipsum
+	dolor
+:end
+
+:start Motion [count]$ (end of line)
+	Lo|rem ipsum
+	dolor
+	sit amet longlinefiller
+:type $
+	Lorem ipsu|m
+	dolor
+	sit amet longlinefiller
+:type 2$
+	Lorem ipsum
+	dolo|r
+	sit amet longlinefiller
+:type k
+	Lorem ipsu|m
+	dolor
+	sit amet longlinefiller
+:type 2j
+	Lorem ipsum
+	dolor
+	sit amet longlinefille|r
+:end
+
+:start Motion ^ (first nonwhitespace char)
+	Lo|rem ipsum
+		dolor sit amet
+:type ^
+	|Lorem ipsum
+		dolor sit amet
+:type j^
+	Lorem ipsum
+		|dolor sit amet
+:end
+
+:start Motion [count]h (left, multiple)
+	Lorem
+	ipsum dolo|r
+:type 2h
+	Lorem
+	ipsum do|lor
+:type d2h
+	Lorem
+	ipsum |lor
+:type d100h
+	Lorem
+	|lor
+:type dh
+	Lorem
+	|lor
+:end
+
+:start Motion [count]l (right, multiple)
+	|Lorem ipsum dolor
+	sit amet
+:type 2l
+	Lo|rem ipsum dolor
+	sit amet
+:type d2l
+	Lo|m ipsum dolor
+	sit amet
+:type d100l
+	L|o
+	sit amet
+:type 2l
+	L|o
+	sit amet
+:end
+
+:start Motion [count]j (down, multiple)
+	Lore|m
+	ipsum
+	dol
+	sit
+	amet
+	  consectetur
+:type 2j
+	Lorem
+	ipsum
+	do|l
+	sit
+	amet
+	  consectetur
+:type d2j
+	Lorem
+	ipsum
+	  |consectetur
+:type dj
+	Lorem
+	ipsum
+	  |consectetur
+:end
+
+:start Motion [count]k (up, multiple)
+	Lorem
+	ipsum
+
+	dolor
+	sit
+	  amet
+	consecte|tur
+:type 2k
+	Lorem
+	ipsum
+
+	dolor
+	si|t
+	  amet
+	consectetur
+:type k
+	Lorem
+	ipsum
+
+	dolo|r
+	sit
+	  amet
+	consectetur
+:type d2k
+	Lorem
+	|sit
+	  amet
+	consectetur
+:type d2k
+	  |amet
+	consectetur
+:type dk
+	  |amet
+	consectetur
+:end

@@ -1,0 +1,113 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Motion w (next word)
+	Lo|rem ipsum-dolor--
+	sit amet consectetur.
+:type w
+	Lorem |ipsum-dolor--
+	sit amet consectetur.
+:type w
+	Lorem ipsum|-dolor--
+	sit amet consectetur.
+:type w
+	Lorem ipsum-|dolor--
+	sit amet consectetur.
+:type 2w
+	Lorem ipsum-dolor--
+	|sit amet consectetur.
+:type 100w
+	Lorem ipsum-dolor--
+	sit amet consectetur|.
+:end
+
+:start Motion W (next WORD)
+	Lo|rem ipsum-dolor--
+	  s!,1.425it amet consectetur
+:type 2W
+	Lorem ipsum-dolor--
+	  |s!,1.425it amet consectetur
+:type W
+	Lorem ipsum-dolor--
+	  s!,1.425it |amet consectetur
+:type hW
+	Lorem ipsum-dolor--
+	  s!,1.425it |amet consectetur
+:type 100W
+	Lorem ipsum-dolor--
+	  s!,1.425it amet consectetu|r
+:end
+
+:start Motion b (back word)
+	Lorem ipsum-dolor--
+	|sit amet consectetur.
+:type b
+	Lorem ipsum-dolor|--
+	sit amet consectetur.
+:type 2b
+	Lorem ipsum|-dolor--
+	sit amet consectetur.
+:type 100b
+	|Lorem ipsum-dolor--
+	sit amet consectetur.
+:type b
+	|Lorem ipsum-dolor--
+	sit amet consectetur.
+:end
+
+:start Motion B (back WORD)
+	Lorem ipsum-dolor--
+	  s!,1.425it ame|t consectetur
+:type B
+	Lorem ipsum-dolor--
+	  s!,1.425it |amet consectetur
+:type B
+	Lorem ipsum-dolor--
+	  |s!,1.425it amet consectetur
+:type B
+	Lorem |ipsum-dolor--
+	  s!,1.425it amet consectetur
+:type 100B
+	|Lorem ipsum-dolor--
+	  s!,1.425it amet consectetur
+:type B
+	|Lorem ipsum-dolor--
+	  s!,1.425it amet consectetur
+:end
+
+:start Motion e (end of word)
+	L|orem ipsum-dolor--
+	sit amet consectetur.
+:type e
+	Lore|m ipsum-dolor--
+	sit amet consectetur.
+:type e
+	Lorem ipsu|m-dolor--
+	sit amet consectetur.
+:type 3e
+	Lorem ipsum-dolor-|-
+	sit amet consectetur.
+:type 100e
+	Lorem ipsum-dolor--
+	sit amet consectetur|.
+:type e
+	Lorem ipsum-dolor--
+	sit amet consectetur|.
+:end
+
+:start Motion E (end of WORD)
+	L|orem ipsum-dolor--
+	sit amet consectetur.
+:type E
+	Lore|m ipsum-dolor--
+	sit amet consectetur.
+:type 2E
+	Lorem ipsum-dolor--
+	si|t amet consectetur.
+:type 100E
+	Lorem ipsum-dolor--
+	sit amet consectetur|.
+:type E
+	Lorem ipsum-dolor--
+	sit amet consectetur|.
+:end
+

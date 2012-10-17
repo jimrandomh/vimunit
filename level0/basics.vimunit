@@ -1,0 +1,56 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Motion h (left, single)
+	Lorem ipsum
+	d|olor sit amet.
+:type h
+	Lorem ipsum
+	|dolor sit amet.
+:type h
+	Lorem ipsum
+	|dolor sit amet.
+:end
+
+:start Motion j (down, single)
+	L|orem ipsum
+	dolor sit amet.
+:type j
+	Lorem ipsum
+	d|olor sit amet.
+:type j
+	Lorem ipsum
+	d|olor sit amet.
+:end
+
+:start Motion k (up, single)
+	Lorem ipsum
+	d|olor sit amet
+:type k
+	L|orem ipsum
+	dolor sit amet
+:end
+
+:start Motion l (right, single)
+	Lorem ips|um
+	dolor sit amet
+:type l
+	Lorem ipsu|m
+	dolor sit amet
+:type l
+	Lorem ipsu|m
+	dolor sit amet
+:end
+
+:start Command dd (delete line)
+	|Lorem ipsum
+	dolor sit amet
+:type dd
+	|dolor sit amet
+:end
+
+:start Insert mode
+	Hello|!
+:type i, World\<esc>lll
+	Hello, World|!
+:end
+
