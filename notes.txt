@@ -98,7 +98,7 @@ Level 2
 - Word-wise motion: w,W,b,B,e,E
 - Undo history: u
 - Visual and line visual modes
-- Command repetition with .: d,x,X,p,P,i,I,o,O
+- Command repetition with . (for d,x,X,p,P,i,I,a,A,o,O)
 - Simple search with /text
 - Commands: n,N
 
@@ -113,6 +113,7 @@ Level 3
 - Marks
 - Insert-mode entering commands with counts
 - End of line corner case for dw
+- Repetition with visual mode
 
 Level 4
 - Block visual mode
@@ -122,6 +123,7 @@ Level 4
 - Bells
 - Jumplist and backtracking
 - Obscure easy commands and alternate bindings
+- Commands that're weird in visual mode: X,Y,D,J
 
 Level 5
 - Basic ex commands
@@ -138,10 +140,11 @@ Level 6
       (Also tests to see if the window ever gets scrolled inappropriately, eg if
 	  commands have intermediate steps and the window scrolls based on
 	  intermediate cursor positions)
-- Motion-mode modifiers
 - Detailed regular expression search
 - More ex commands
 - Filter programs (!,=)
+- Motion-mode modifiers
+- Visual mode with a count
 
 Side branches:
 - Folding

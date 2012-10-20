@@ -1,0 +1,64 @@
+
+:start Command repetitions (d,X,p,P)
+	Lorem |ipsum
+	dolor sit amet
+:type X.
+	Lore|ipsum
+	dolor sit amet
+:type d$.
+	Lo|r
+	dolor sit amet
+:type p
+	Lor|e
+	dolor sit amet
+:type 2.
+	Loree|e
+	dolor sit amet
+:type u
+	Lor|e
+	dolor sit amet
+:end
+
+:start Command repetition counts (x)
+	|1234567890123456789
+:type x.
+	|34567890123456789
+:type 2.
+	|567890123456789
+:type .
+	|7890123456789
+:type 2x1.
+	|0123456789
+:type .
+	|123456789
+:end
+:start Command repetition (i,I,o,O,a,A)
+	|ipsum
+:type A dolor\<esc>0.
+	ipsum dolor dolo|r
+:type ILorem \<esc>.
+	Lorem| Lorem ipsum dolor dolor
+:type osit amet\<esc>.
+	Lorem Lorem ipsum dolor dolor
+	sit amet
+	sit ame|t
+:type Oadipisicing\<esc>.
+	Lorem Lorem ipsum dolor dolor
+	sit amet
+	adipisicin|g
+	adipisicing
+	sit amet
+:type a consecetur\<esc>j.
+	Lorem Lorem ipsum dolor dolor
+	sit amet
+	adipisicing consecetur
+	adipisicing consecetu|r
+	sit amet
+:type 9hiet \<esc>l.
+	Lorem Lorem ipsum dolor dolor
+	sit amet
+	adipisicing consecetur
+	adipisicing et et| consecetur
+	sit amet
+:end
+

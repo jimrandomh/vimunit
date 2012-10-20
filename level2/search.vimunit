@@ -1,0 +1,36 @@
+
+:start Search (/, n, N)
+	|Lorem ipsum dolor
+	ipsum ipsum sit amet ipsum
+:type /ips\<NL>
+	Lorem |ipsum dolor
+	ipsum ipsum sit amet ipsum
+:type n
+	Lorem ipsum dolor
+	|ipsum ipsum sit amet ipsum
+:type N
+	Lorem |ipsum dolor
+	ipsum ipsum sit amet ipsum
+:type 2n
+	Lorem ipsum dolor
+	ipsum |ipsum sit amet ipsum
+:type 2N
+	Lorem |ipsum dolor
+	ipsum ipsum sit amet ipsum
+:type N
+	Lorem ipsum dolor
+	ipsum ipsum sit amet |ipsum
+:type 2n
+	Lorem ipsum dolor
+	|ipsum ipsum sit amet ipsum
+:type /ips\<NL>
+	Lorem ipsum dolor
+	ipsum |ipsum sit amet ipsum
+:type /\<NL>
+	Lorem ipsum dolor
+	ipsum ipsum sit amet |ipsum
+:type /notfound\<NL>
+	Lorem ipsum dolor
+	ipsum ipsum sit amet |ipsum
+:end
+

@@ -1,0 +1,74 @@
+
+:start Visual mode yanking (v,y)
+	Lorem |ipsum dolor
+:type v5lyP
+	Lorem ipsum| ipsum dolor
+:type $v5hyP
+	Lorem ipsum ipsum dolo|r dolor
+:end
+
+:start Visual mode replacement (v,V,p)
+	Lorem |ipsum dolor
+:type yyv5lp
+	Lorem Lorem ipsum dolor
+	|dolor
+:type ddd6l6l
+	Lorem |ipsum dolor
+:type yyv5lP
+	Lorem 
+	|Lorem ipsum dolor
+	dolor
+:type Vp
+	Lorem 
+	ipsum| 
+	dolor
+:end
+
+:start Visual mode deletion (v with hjkl,d,x)
+	Lorem |ipsum dolor
+	sit amet
+	consectetur
+	adipisicing
+:type v5ld
+	Lorem |dolor
+	sit amet
+	consectetur
+	adipisicing
+:type vllx
+	Lorem |or
+	sit amet
+	consectetur
+	adipisicing
+:type vhh\<esc>
+	Lore|m or
+	sit amet
+	consectetur
+	adipisicing
+:type vjd
+	Lore|met
+	consectetur
+	adipisicing
+:type v$jd
+	Lore|adipisicing
+:end
+
+:start Line visual mode yanking (V with Y)
+	Lorem |ipsum
+	dolor sit
+	amet
+:type Vd
+	|dolor sit
+	amet
+:type plVjy
+	dolor sit
+	|Lorem ipsum
+	amet
+:type Vkly
+	d|olor sit
+	Lorem ipsum
+	amet
+:type Vx
+	|Lorem ipsum
+	amet
+:end
+

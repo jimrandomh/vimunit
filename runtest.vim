@@ -1,3 +1,7 @@
+set nocompatible
+set undolevels=50
+set shortmess=ats
+
 function Main()
 	let testFiles = GetTestFiles()
 	call RunTestFiles(testFiles)
@@ -11,6 +15,7 @@ endfunction
 
 function GetTestFiles()
 	return split(glob("./**/*.vimunit"), "\n")
+	"return ['level2/undo.vimunit']
 endfunction
 
 function RunTestFiles(files)
@@ -66,7 +71,7 @@ function RunTest(filename, description, firstLine, lines)
 			else
 				if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, ii-1))
 					let wasSuccessful = 0
-					call InitBuffer(a:lines[bufStart : ii])
+					call InitBuffer(GetBufferLines(a:lines, bufStart, ii))
 				endif
 			endif
 			let bufStart = ii+1
@@ -91,8 +96,14 @@ function GetBufferLines(lines, start, end)
 endfunction
 
 function HandleKeys(keys)
-	"call feedkeys(a:keys, 't')
-	:execute ("normal ".UnescapeKeys(a:keys))
+	" Split into multiple undo entries
+	let savedCursor = getpos('.')
+	:undo
+	:redo
+	call setpos('.', savedCursor)
+	
+	" Run commands
+	execute ("normal ".UnescapeKeys(a:keys))
 endfunction
 
 function UnescapeKeys(keys)
@@ -132,10 +143,8 @@ function ExpectBuffer(filename, firstLineNumber, lines)
 		endif
 		if getline(ii+1) != line
 			call LogTest(a:filename.":".(a:firstLineNumber+ii+1).": Text doesn't match")
-			"call LogTest("    Expected: " . line)
-			"call LogTest("    Actual: " . getline(ii+1))
 			call LogTest("Expected:\n".join(a:lines, "\n"))
-			call LogTest("Actual:\n".join(getline(1, line('$')), "\n"))
+			call LogTest("Actual:\n".join(getline(0, '$'), "\n"))
 			return 0
 		endif
 		let ii = ii+1
