@@ -111,12 +111,11 @@ Level 3
 - Motions: t,f,T,F,;,',%,-,+,_,space,enter,|
 - Commands: J,*,#,q,@
 - Marks
-- Insert-mode entering commands with counts
 - End of line corner case for dw
-- Repetition with visual mode
 
 Level 4
 - Block visual mode
+- Repetition with visual mode
 - Compose /text search as a motion
 - Basic text objects
 - Increment/decrement commands
@@ -124,6 +123,7 @@ Level 4
 - Jumplist and backtracking
 - Obscure easy commands and alternate bindings
 - Commands that're weird in visual mode: X,Y,D,J
+- Insert-mode entering commands with counts
 
 Level 5
 - Basic ex commands

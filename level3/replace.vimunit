@@ -1,0 +1,28 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Replace mode (R)
+	Lo|rem ipsum dolor
+	sit amet
+:type Rxyz\<esc>
+	Loxy|z ipsum dolor
+	sit amet
+:type $Rsit amet\<CR>xyz\<esc>
+	Loxyz ipsum dolosit amet
+	xy|z
+	sit amet
+:type R123\<esc>k.
+	Loxy12|3psum dolosit amet
+	xy123
+	sit amet
+:end
+
+:start Command r (replace char)
+	Lo|rem ipsum dolor
+:type rx
+	Lo|xem ipsum dolor
+:type 3ry
+	Loyy|y ipsum dolor
+:type w.
+	Loyyy yy|yum dolor
+:end
+

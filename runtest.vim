@@ -1,21 +1,26 @@
 set nocompatible
 set undolevels=50
 set shortmess=ats
+set ts=4
+set sw=4
+
+let totalSuccesses = 0
+let totalFailures = 0
 
 function Main()
 	let testFiles = GetTestFiles()
 	call RunTestFiles(testFiles)
+	
+	call LogTest("OVERALL: " . g:totalSuccesses . " succeeded, " . g:totalFailures . " failed\n")
 
-	echo 'Test results'
-	for message in g:logLines
-		echo message
-	endfor
+	let logText = join(g:logLines, "\n")
+	let logLines = split(logText, "\n")
+	call writefile(logLines, 'testresults.txt')
 	:q!
 endfunction
 
 function GetTestFiles()
 	return split(glob("./**/*.vimunit"), "\n")
-	"return ['level2/undo.vimunit']
 endfunction
 
 function RunTestFiles(files)
@@ -40,12 +45,13 @@ function RunTestFile(filename)
 			else
 				let testDescription = substitute(contents[testStart], '^:start\s*\(.*\)$', '\1', '')
 				let testLines = contents[testStart+1:ii-1]
+				call LogTest(testDescription)
 				if RunTest(a:filename, testDescription, testStart+1, testLines)
 					let successes = successes+1
-					call LogTest(testDescription . ': ok')
+					let g:totalSuccesses = g:totalSuccesses+1
 				else
 					let failures = failures+1
-					call LogTest(testDescription . ': FAILED')
+					let g:totalFailures = g:totalFailures+1
 				endif
 				let testStart = -1
 			endif
@@ -53,7 +59,7 @@ function RunTestFile(filename)
 		let ii = ii+1
 	endwhile
 	
-	call LogTest(a:filename . ': ' . successes . ' succeeded, ' . failures . ' failed')
+	call LogTest(a:filename . ": " . successes . " succeeded, " . failures . " failed\n")
 	
 	" Clear the buffer
 	:%d
@@ -71,7 +77,7 @@ function RunTest(filename, description, firstLine, lines)
 			else
 				if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, ii-1))
 					let wasSuccessful = 0
-					call InitBuffer(GetBufferLines(a:lines, bufStart, ii))
+					call InitBuffer(GetBufferLines(a:lines, bufStart, ii-1))
 				endif
 			endif
 			let bufStart = ii+1
@@ -98,16 +104,16 @@ endfunction
 function HandleKeys(keys)
 	" Split into multiple undo entries
 	let savedCursor = getpos('.')
-	:undo
-	:redo
+	silent :undo
+	silent :redo
 	call setpos('.', savedCursor)
 	
 	" Run commands
-	execute ("normal ".UnescapeKeys(a:keys))
+	silent execute ("normal ".UnescapeKeys(a:keys))
 endfunction
 
 function UnescapeKeys(keys)
-	return eval('"'.a:keys.'"')
+	return eval('"'.substitute(a:keys, '"', '\"', 'g').'"')
 endfunction
 
 function InitBuffer(lines)
@@ -130,42 +136,33 @@ function InitBuffer(lines)
 endfunction
 
 function ExpectBuffer(filename, firstLineNumber, lines)
-	let ii=0
-	let cursorLine = -1
-	let cursorCol = -1
+	let actual = GetCurrentBufferContents()
+	let expected = join(a:lines, "\n")
 	
-	while ii < len(a:lines)
-		let line = a:lines[ii]
-		if line =~ '|'
-			let cursorCol = stridx(line, '|')+1
-			let cursorLine = ii+1
-			let line = substitute(line, '|', '', '')
-		endif
-		if getline(ii+1) != line
-			call LogTest(a:filename.":".(a:firstLineNumber+ii+1).": Text doesn't match")
-			call LogTest("Expected:\n".join(a:lines, "\n"))
-			call LogTest("Actual:\n".join(getline(0, '$'), "\n"))
-			return 0
-		endif
-		let ii = ii+1
-	endwhile
-	
-	if cursorLine >= 1
-		if col('.') != cursorCol || line('.') != cursorLine
-			call LogTest(a:filename.":".(a:firstLineNumber+1).": Wrong cursor position")
-			call LogTest("    Expected: " . cursorLine . "," . cursorCol)
-			call LogTest("    Actual: " . line('.') . "," . col('.'))
-			return 0
-		endif
-	endif
-	
-	" Check buffer for extra lines
-	let lastLine = line('$')
-	if lastLine != len(a:lines)
-		call LogTest(a:filename.":".(a:firstLineNumber+len(a:lines)).": extra lines at end of buffer")
+	if actual != expected
+		call LogTest(a:filename.":".(a:firstLineNumber+1).": Text doesn't match")
+		call LogTest("Expected:\n".expected)
+		call LogTest("Actual:\n".actual)
 		return 0
 	endif
+
 	return 1
+endfunction
+
+function GetCurrentBufferContents()
+	let lines = getline(0,'$')
+	let cursorLine = line('.') - 1
+	let cursorCol = col('.') - 1
+	let cursorLineText = lines[cursorLine]
+	
+	let prefix = ""
+	if cursorCol > 0
+		let prefix = cursorLineText[0 : (cursorCol-1)]
+	endif
+	let suffix = cursorLineText[cursorCol :]
+	let lines[cursorLine] = prefix . '|' . suffix
+	
+	return join(lines, "\n")
 endfunction
 
 let logLines = []

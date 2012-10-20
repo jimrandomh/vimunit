@@ -1,0 +1,237 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Command J (join lines)
+	|Lorem
+	ipsum
+	    dolor
+:type J
+	Lorem| ipsum
+	    dolor
+:type J
+	Lorem ipsum| dolor
+:type uu3J$
+	Lorem ipsum dolo|r
+:type uVjjJ2h
+	Lorem ips|um dolor
+:end
+
+:start Command *,# (search under cursor)
+	|lorem ipsum dolor lorem lorem dolor ipsum lorem
+:type *
+	lorem ipsum dolor |lorem lorem dolor ipsum lorem
+:type #
+	|lorem ipsum dolor lorem lorem dolor ipsum lorem
+:type *2n
+	lorem ipsum dolor lorem lorem dolor ipsum |lorem
+:type 2#
+	lorem ipsum dolor |lorem lorem dolor ipsum lorem
+:type N
+	lorem ipsum dolor lorem |lorem dolor ipsum lorem
+:type ll*
+	lorem ipsum dolor lorem lorem dolor ipsum |lorem
+:end
+
+:start Wordwise motion special cases (dw,cw)
+	Lorem ipsum do|lor
+	sit amet
+:type dw
+	Lorem ipsum d|o
+	sit amet
+:type ucwsit\<esc>
+	Lorem ipsum dosi|t
+	sit amet
+:type bbcwlorem\<esc>
+	Lorem lore|m dosit
+	sit amet
+:type cWlorem\<esc>
+	Lorem lorelore|m dosit
+	sit amet
+:end
+
+:start Marks (m,')
+	Lo|rem
+	ipsum
+	dolor
+	sit amet
+:type ma$
+	Lore|m
+	ipsum
+	dolor
+	sit amet
+:type 'a
+	Lo|rem
+	ipsum
+	dolor
+	sit amet
+:type wd'a
+	|dolor
+	sit amet
+:type u
+	|Lorem
+	ipsum
+	dolor
+	sit amet
+:type d'a
+	|ipsum
+	dolor
+	sit amet
+:end
+
+:start Registers
+	Lo|rem ipsum dolor
+:type "ryy"syw"rp
+	Lorem ipsum dolor
+	|Lorem ipsum dolor
+:type "sp
+	Lorem ipsum dolor
+	Lrem| orem ipsum dolor
+:type dd"sp
+	Lrem| orem ipsum dolor
+:type "xp
+	Lrem orem ipsum dolor
+	|Lrem orem ipsum dolor
+:end
+
+:start Commands >,< (indent,dedent)
+	Lo|rem ipsum
+	dolor sit
+	amet
+:type >>
+		|Lorem ipsum
+	dolor sit
+	amet
+:type >3>
+			|Lorem ipsum
+		dolor sit
+		amet
+:type 2<<
+		|Lorem ipsum
+	dolor sit
+		amet
+:type jj2>k
+			|Lorem ipsum
+		dolor sit
+			amet
+:type wvj2<
+	|Lorem ipsum
+	dolor sit
+		amet
+:end
+
+:start Command g~ (toggle case)
+	Lo|rem ipsum
+	dolor sit amet
+:type g~w
+	Lo|REM ipsum
+	dolor sit amet
+:type g~g~
+	|lOrem IPSUM
+	dolor sit amet
+:type g~~
+	|LoREM ipsum
+	dolor sit amet
+:type 2g~~
+	|lOrem IPSUM
+	DOLOR SIT AMET
+:end
+
+:start Commands gu,gU,g? (lowercase, uppercase, rot13)
+	LO|REM IPSUM
+	DOLOR SIT
+	AMET
+:type guw
+	LO|rem IPSUM
+	DOLOR SIT
+	AMET
+:type 3guu
+	lo|rem ipsum
+	dolor sit
+	amet
+:type gUw
+	lo|REM ipsum
+	dolor sit
+	amet
+:type 3gUU
+	LO|REM IPSUM
+	DOLOR SIT
+	AMET
+:type guj
+	lo|rem ipsum
+	dolor sit
+	AMET
+:type g?w
+	lo|erz ipsum
+	dolor sit
+	AMET
+:type 3g??
+	yb|rem vcfhz
+	qbybe fvg
+	NZRG
+:end
+
+:start Command c (change motion)
+	Lo|rem ipsum
+	dolor sit amet
+:type c$...not lorem\<esc>
+	Lo...not lore|m
+	dolor sit amet
+:end
+
+:start Command C (change line)
+	Lo|rem
+	ipsum
+	dolor
+:type CNot lorem\<esc>
+	LoNot lore|m
+	ipsum
+	dolor
+:type 2Casdf\<esc>
+	LoNot loreasd|f
+	dolor
+:end
+
+:start Command D (delete line)
+	L|orem
+	ipsum
+	dolor
+	sit
+:type D
+	|L
+	ipsum
+	dolor
+	sit
+:type 2D
+	|dolor
+	sit
+:type D
+	|
+	sit
+:end
+
+
+:start Command s (substitute chars)
+	Lo|rem ipsum dolor
+	sit amet
+:type sxyz\<esc>
+	Loxy|zem ipsum dolor
+	sit amet
+:type 5sxyz\<esc>
+	Loxyxy|zpsum dolor
+	sit amet
+:type 100sxyz\<esc>
+	Loxyxyxy|z
+	sit amet
+:end
+
+:start Command S (substitute lines)
+	  Lo|rem
+	ipsum
+	dolor
+:type SNot lorem\<esc>
+	  Not lore|m
+	ipsum
+	dolor
+:type 3Sxyz\<esc>
+	  xy|z
+:end
+

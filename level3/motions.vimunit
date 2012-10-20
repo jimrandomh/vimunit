@@ -1,0 +1,19 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Motion | (go to column)
+	Lo|rem ipsum dolor
+:type |
+	|Lorem ipsum dolor
+:type 10|
+	Lorem ips|um dolor
+:type 100|
+	Lorem ipsum dolo|r
+:end
+
+#:start Motion <CR>/+/^M
+#:start Motion -
+#:start Motion _
+#:start Motion <space> (right, wrapping)
+#:start Motions t,T,f,F and ; (to char)
+#:start Motion % (matching delimiter)
+#:start Motions ge,gE (back to end of word)

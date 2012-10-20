@@ -1,0 +1,40 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Macro basics (q,@)
+	Lo|rem ipsum dolor
+:type qallXq
+	Lor|m ipsum dolor
+:type @a
+	Lorm|ipsum dolor
+:type 2@a
+	Lormis|m dolor
+:type @@
+	Lormism|dolor
+:type u
+	Lormism| dolor
+:type qbrxhq
+	Lormis|mxdolor
+:type @@
+	Lormism|dolor
+:type @b
+	Lormis|mxolor
+:end
+
+:start Macros abort on bell
+	|Lorem ipsum
+	dolor
+	sit
+	amet
+:type qalldd
+	|dolor
+	sit
+	amet
+:type $@a
+	dolo|r
+	sit
+	amet
+:type 0@@
+	|sit
+	amet
+:end
+
