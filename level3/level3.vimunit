@@ -53,13 +53,18 @@
 	ipsum
 	dolor
 	sit amet
-:type ma$
-	Lore|m
+:type ix\<esc>x
+	Lo|rem
+	ipsum
+	dolor
+	sit amet
+:type ma
+	Lo|rem
 	ipsum
 	dolor
 	sit amet
 :type 'a
-	Lo|rem
+	|Lorem
 	ipsum
 	dolor
 	sit amet
@@ -87,7 +92,7 @@
 	Lrem| orem ipsum dolor
 :type dd"sp
 	Lrem| orem ipsum dolor
-:type "xp
+:type ""p
 	Lrem orem ipsum dolor
 	|Lrem orem ipsum dolor
 :end
@@ -115,7 +120,7 @@
 :type wvj2<
 	|Lorem ipsum
 	dolor sit
-		amet
+			amet
 :end
 
 :start Command g~ (toggle case)

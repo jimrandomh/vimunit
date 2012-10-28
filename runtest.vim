@@ -7,15 +7,20 @@ set sw=4
 let totalSuccesses = 0
 let totalFailures = 0
 
+let tests = []
+let currentTest = 0
+
 function Main()
 	let testFiles = GetTestFiles()
-	call RunTestFiles(testFiles)
-	
-	call LogTest("OVERALL: " . g:totalSuccesses . " succeeded, " . g:totalFailures . " failed\n")
+	call LoadTestFiles(testFiles)
+	call SetBufferContents(g:tests[0]["before"])
+	call RunNextTest()
+endfunction
 
-	let logText = join(g:logLines, "\n")
-	let logLines = split(logText, "\n")
-	call writefile(logLines, 'testresults.txt')
+function OnFinish()
+	call LogTest("Succeeded: " . g:totalSuccesses)
+	call LogTest("Failed: " . g:totalFailures)
+	call SaveLogAs("testresults.txt")
 	:q!
 endfunction
 
@@ -23,13 +28,13 @@ function GetTestFiles()
 	return split(glob("./**/*.vimunit"), "\n")
 endfunction
 
-function RunTestFiles(files)
+function LoadTestFiles(files)
 	for file in a:files
-		call RunTestFile(file)
+		call LoadTestFile(file)
 	endfor
 endfunction
 
-function RunTestFile(filename)
+function LoadTestFile(filename)
 	let contents = readfile(a:filename)
 	let ii = 0
 	let testStart = -1
@@ -45,108 +50,122 @@ function RunTestFile(filename)
 			else
 				let testDescription = substitute(contents[testStart], '^:start\s*\(.*\)$', '\1', '')
 				let testLines = contents[testStart+1:ii-1]
-				call LogTest(testDescription)
-				if RunTest(a:filename, testDescription, testStart+1, testLines)
-					let successes = successes+1
-					let g:totalSuccesses = g:totalSuccesses+1
-				else
-					let failures = failures+1
-					let g:totalFailures = g:totalFailures+1
-				endif
+				
+				call LoadTest(a:filename, testDescription, testStart+1, testLines)
 				let testStart = -1
 			endif
 		endif
 		let ii = ii+1
 	endwhile
-	
-	call LogTest(a:filename . ": " . successes . " succeeded, " . failures . " failed\n")
-	
-	" Clear the buffer
-	:%d
 endfunction
 
-function RunTest(filename, description, firstLine, lines)
+function LoadTest(filename, description, firstLine, lines)
 	let ii = 0
 	let bufStart = 0
 	let wasSuccessful = 1
+	let expectedBuffers = []
+	let typedKeys = []
 	
 	while ii < len(a:lines)
 		if a:lines[ii] =~ '^:.*'
 			if bufStart == 0
-				call InitBuffer(GetBufferLines(a:lines, 0, ii-1))
+				let expectedBuffers += [{"lines": ParseTestDescriptionLines(a:lines, 0, ii-1), "firstLine": a:firstLine+1}]
 			else
-				if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, ii-1))
-					let wasSuccessful = 0
-					call InitBuffer(GetBufferLines(a:lines, bufStart, ii-1))
-				endif
+				"if !ExpectBuffer(a:filename, a:firstLine+bufStart, ParseTestDescriptionLines(a:lines, bufStart, ii-1))
+				let expectedBuffers += [{"lines": ParseTestDescriptionLines(a:lines, bufStart, ii-1), "firstLine": a:firstLine+bufStart+1}]
 			endif
 			let bufStart = ii+1
 			if a:lines[ii] =~ '^:type.*'
-				let keys = substitute(a:lines[ii], '^:type\s*\(.*\)$', '\1', '')
-				call HandleKeys(keys)
+				let keys = ParseTypeKeysLine(a:lines[ii])
+				let typedKeys += [keys]
 			else
-				echoerr a:filename.':'.(a:firstLine+ii).': Unrecognized directive'
+				echoerr a:filename.":".(a:firstLine+ii).": Unrecognized directive"
 				return 0
 			endif
 		endif
-		let ii = ii+1
+		let ii += 1
 	endwhile
-	if !ExpectBuffer(a:filename, a:firstLine+bufStart, GetBufferLines(a:lines, bufStart, len(a:lines)))
-		let wasSuccessful = 0
-	endif
-	return wasSuccessful
-endfunction
-
-function GetBufferLines(lines, start, end)
-	return map(a:lines[a:start : a:end], 'substitute(v:val, "^\t", "", "")')
-endfunction
-
-function HandleKeys(keys)
-	" Split into multiple undo entries
-	let savedCursor = getpos('.')
-	silent :undo
-	silent :redo
-	call setpos('.', savedCursor)
+	let expectedBuffers += [{"lines": ParseTestDescriptionLines(a:lines, bufStart, len(a:lines)), "firstLine": a:firstLine+bufStart}]
 	
-	" Run commands
-	silent execute ("normal ".UnescapeKeys(a:keys))
+	let ii = 0
+	while ii < len(typedKeys)
+		let before = expectedBuffers[ii]["lines"]
+		let after = expectedBuffers[ii+1]["lines"]
+		let test = {"filename": a:filename, "description": a:description, "firstLine": expectedBuffers[ii+1]["firstLine"], "before": before, "after": after, "keys": typedKeys[ii]}
+		let g:tests += [test]
+		let ii += 1
+	endwhile
 endfunction
 
-function UnescapeKeys(keys)
-	return eval('"'.substitute(a:keys, '"', '\"', 'g').'"')
+function ParseTypeKeysLine(line)
+	let keystr = substitute(a:line, '^:type\s*\(.*\)$', '\1', "")
+	let unescaped = eval('"'.substitute(keystr, '"', '\\"', "g").'"')
+	return unescaped
 endfunction
 
-function InitBuffer(lines)
+function ParseTestDescriptionLines(lines, start, end)
+	let unindentedLines = map(a:lines[a:start : a:end], 'substitute(v:val, "^\t", "", "")')
+	return join(unindentedLines, "\n")
+endfunction
+
+function RunNextTest()
+	if g:currentTest > 0
+		let prevTest = g:tests[g:currentTest-1]
+		call CheckTestResult(prevTest)
+	endif
+	
+	if g:currentTest >= len(g:tests)
+		call OnFinish()
+		return 0
+	endif
+
+	let test = g:tests[g:currentTest]
+	call RunTest(test)
+	let g:currentTest += 1
+endfunction
+
+
+function CheckTestResult(test)
+	let result = GetCurrentBufferContents()
+	if result != a:test["after"]
+		call LogTest(a:test["filename"].":".(a:test["firstLine"]).": Text doesn't match")
+		call LogTest("Expected:\n" . IndentString(a:test["after"]))
+		call LogTest("Actual:\n" . IndentString(result))
+		call LogTest("\n")
+		let g:totalFailures += 1
+	else
+		let g:totalSuccesses += 1
+	endif
+endfunction
+
+function RunTest(test)
+	if GetCurrentBufferContents() != a:test["before"]
+		call SetBufferContents(a:test["before"])
+	endif
+	
+	call feedkeys(a:test["keys"], "t")
+	call feedkeys("\<esc>:call RunNextTest()\n", "t")
+endfunction
+
+
+function SetBufferContents(text)
 	" Clear the buffer
 	:%d
 	
 	" Add lines. When a '|' is found, remove it but put the cursor there.
+	let lines = split(a:text, "\n")
 	let ii=0
-	while ii < len(a:lines)
-		let line = a:lines[ii]
+	while ii < len(lines)
+		let line = lines[ii]
 		if line =~ '|'
 			let line = substitute(line, '|', '', '')
 			call setline(ii+1, line)
-			call setpos('.', [0, ii+1, 1+stridx(a:lines[ii], '|'), 0])
+			call setpos('.', [0, ii+1, 1+stridx(lines[ii], '|'), 0])
 		else
-			call setline(ii+1, a:lines[ii])
+			call setline(ii+1, lines[ii])
 		endif
 		let ii = ii+1
 	endwhile
-endfunction
-
-function ExpectBuffer(filename, firstLineNumber, lines)
-	let actual = GetCurrentBufferContents()
-	let expected = join(a:lines, "\n")
-	
-	if actual != expected
-		call LogTest(a:filename.":".(a:firstLineNumber+1).": Text doesn't match")
-		call LogTest("Expected:\n".expected)
-		call LogTest("Actual:\n".actual)
-		return 0
-	endif
-
-	return 1
 endfunction
 
 function GetCurrentBufferContents()
@@ -165,11 +184,24 @@ function GetCurrentBufferContents()
 	return join(lines, "\n")
 endfunction
 
+function IndentString(str)
+	let lines = split(a:str, "\n")
+	let indentedLines = map(lines, '"\t" . v:val')
+	return join(indentedLines, "\n")
+endfunction
+
+
 let logLines = []
 
 function LogTest(message)
 	call add(g:logLines, a:message)
 endfunction
 
-call Main()
+function SaveLogAs(filename)
+	let logText = join(g:logLines, "\n")
+	let logLines = split(logText, "\n")
+	call writefile(logLines, a:filename)
+endfunction
 
+
+call Main()
