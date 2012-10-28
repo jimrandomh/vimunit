@@ -9,33 +9,25 @@
 :type u
 	Lorem ipsum
 	123|456789
-:type dd
-	|Lorem ipsum
-:type u
+:type ddu
 	Lorem ipsum
 	|123456789
-:type 3lx0
-	Lorem ipsum
-	|12356789
-:type u
+:type 3lx0u
 	Lorem ipsum
 	123|456789
 :type 2xu
 	Lorem ipsum
 	123|456789
-:type xl
-	Lorem ipsum
-	1235|6789
-:type xl
-	Lorem ipsum
-	12357|89
-:type uu
+:type xlxluu
 	Lorem ipsum
 	123|456789
 :type xlxl2u
 	Lorem ipsum
 	123|456789
 :type iHello\<esc>u
+	Lorem ipsum
+	123|456789
+:type iHeL\<bs>llo\<esc>u
 	Lorem ipsum
 	123|456789
 :type d0up

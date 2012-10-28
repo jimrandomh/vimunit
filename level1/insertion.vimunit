@@ -13,6 +13,14 @@
 	|sit amet
 :end
 
+:start Insert mode backspace
+	Lorem |dolor
+:type ixx\<bs>\<bs>ipsum \<esc>
+	Lorem ipsum| dolor
+:type i\<bs>
+	Lorem ips|u dolor
+:end
+
 :start Command a (append)
 	|L ipsum
 	sit amet

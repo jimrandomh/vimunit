@@ -33,6 +33,7 @@
 :type .
 	|123456789
 :end
+
 :start Command repetition (i,I,o,O,a,A)
 	|ipsum
 :type A dolor\<esc>0.
@@ -61,5 +62,13 @@
 	adipisicing consecetur
 	adipisicing et et| consecetur
 	sit amet
+:end
+
+:start Command repetition (insert with backspace)
+	Lorem |dolor
+:type ixx\<bs>\<bs>ipsum \<esc>
+	Lorem ipsum| dolor
+:type l.
+	Lorem ipsum ipsum| dolor
 :end
 

@@ -108,9 +108,10 @@ Level 3
 - Commands: <,>,gu,gU,g~,g?,r,R,s,S,c,C,D
 - Macros
 - Registers
-- Motions: t,f,T,F,;,',%,-,+,_,space,enter,|
+- Letterwise motions: t,f,T,F,;,,
+- Motions: %,-,+,_,space,backspace,enter,|
 - Commands: J,*,#,q,@
-- Marks
+- Marks: m,'
 - End of line corner case for dw
 
 Level 4

@@ -10,10 +10,216 @@
 	Lorem ipsum dolo|r
 :end
 
-#:start Motion <CR>/+/^M
-#:start Motion -
-#:start Motion _
-#:start Motion <space> (right, wrapping)
-#:start Motions t,T,f,F and ; (to char)
-#:start Motion % (matching delimiter)
-#:start Motions ge,gE (back to end of word)
+# These should be synonyms. Also a synonym is ^M, but that's only because
+# terminals don't distinguish it from <CR>; it's sensible to remap it to
+# something else if you're not in a terminal.
+:start Motion <CR>/+
+	Lo|rem
+	 ipsum
+	dolor
+:type \<CR>
+	Lorem
+	 |ipsum
+	dolor
+:type +
+	Lorem
+	 ipsum
+	|dolor
+:type kk2+ll
+	Lorem
+	 ipsum
+	do|lor
+:type +
+	Lorem
+	 ipsum
+	do|lor
+:type kd+
+	|Lorem
+:end
+
+:start Motion _
+	Lo|rem
+	  ipsum
+	dolor
+:type _
+	|Lorem
+	  ipsum
+	dolor
+:type 2_
+	Lorem
+	  |ipsum
+	dolor
+:type d_
+	Lorem
+	|dolor
+:end
+
+:start Motion -
+	Lorem
+	  ipsum
+	dolo|r
+:type -
+	Lorem
+	  |ipsum
+	dolor
+:type j2-
+	|Lorem
+	  ipsum
+	dolor
+:type jd-
+	|dolor
+:type d-
+	|dolor
+:end
+
+# The <space> motion is like l, except that it wraps (under the default value
+# for vim's 'whichwrap' option.)
+:start Motion <space> (right, wrapping)
+	Lor|em
+	  ipsum
+	dolor
+:type \<space>
+	Lore|m
+	  ipsum
+	dolor
+:type 2\<space>
+	Lorem
+	 | ipsum
+	dolor
+:type 100\<space>
+	Lorem
+	  ipsum
+	dolo|r
+:end
+
+:start Motion <bs> (left, wrapping)
+	Lorem
+	  ipsum
+	|dolor
+:type \<bs>
+	Lorem
+	  ipsu|m
+	dolor
+:type 100\<bs>
+	|Lorem
+	  ipsum
+	dolor
+:end
+
+:start Motions t,T,f,F (to char)
+	Prevline
+	|Lorem ipsum dolor
+	Nextline
+:type ti
+	Prevline
+	Lorem| ipsum dolor
+	Nextline
+:type toto
+	Prevline
+	Lorem ipsum |dolor
+	Nextline
+:type 03to
+	Prevline
+	Lorem ipsum do|lor
+	Nextline
+:type Tr
+	Prevline
+	Lor|em ipsum dolor
+	Nextline
+:type 2fo
+	Prevline
+	Lorem ipsum dol|or
+	Nextline
+:type Fp
+	Prevline
+	Lorem i|psum dolor
+	Nextline
+:type tN
+	Prevline
+	Lorem i|psum dolor
+	Nextline
+:type TP
+	Prevline
+	Lorem i|psum dolor
+	Nextline
+:end
+
+:start Motions ,; (repeat last tTfF motion or its inverse)
+	|Lorem ipsum em me lorem
+:type fm;
+	Lorem ipsu|m em me lorem
+:type ,
+	Lore|m ipsum em me lorem
+:type 3;
+	Lorem ipsum em |me lorem
+:type 2,
+	Lorem ipsu|m em me lorem
+:type Fm
+	Lore|m ipsum em me lorem
+:type 2,
+	Lorem ipsum e|m me lorem
+:type ;
+	Lorem ipsu|m em me lorem
+:type tm
+	Lorem ipsum |em me lorem
+:type ;
+	Lorem ipsum |em me lorem
+:type ,
+	Lorem ipsum| em me lorem
+:type Tm
+	Lorem ipsum| em me lorem
+:type 2;
+	Lorem| ipsum em me lorem
+:type ,
+	Lorem ips|um em me lorem
+:type hhdhxuiasdf\<esc>
+	Lorem asd|fpsum em me lorem
+:type ;
+	Lorem| asdfpsum em me lorem
+:end
+
+# This doesn't even begin to get into the weird special cases, like matching
+# /* */ comments, #ifdef/#endif, delimiters preceded by backslashes and
+# delimiters inside what look like string literals (all of which are handled by
+# vim). These may be tested in later levels.
+:start Motion % (matching delimiter, for ({[ and )}])
+	if|(arr[getIdx()]) {
+		act();
+	}
+:type %
+	if(arr[getIdx()]|) {
+		act();
+	}
+:type %
+	if|(arr[getIdx()]) {
+		act();
+	}
+:type 0%
+	if(arr[getIdx()]|) {
+		act();
+	}
+:type l%
+	if(arr[getIdx()]) {
+		act();
+	|}
+:type k$h%
+	if(arr[getIdx()]) {
+		act|();
+	}
+:type kh%
+	if(arr[getIdx()|]) {
+		act();
+	}
+:end
+
+:start Motions ge,gE (back to end of word)
+	Lorem ipsum dolo|r
+	si!,3.4@#$(t amet
+:type ge
+	Lorem ipsu|m dolor
+	si!,3.4@#$(t amet
+:type j$2gE
+	Lorem ipsum dolo|r
+	si!,3.4@#$(t amet
+:end
+
