@@ -111,7 +111,7 @@ Level 3
 - Letterwise motions: t,f,T,F,;,,
 - Motions: %,-,+,_,space,backspace,enter,|
 - Commands: J,*,#,q,@
-- Marks: m,'
+- Marks: m,',`
 - End of line corner case for dw
 
 Level 4
@@ -121,21 +121,29 @@ Level 4
 - Basic text objects
 - Increment/decrement commands
 - Bells
-- Jumplist and backtracking
-- Obscure easy commands and alternate bindings
-- Commands that're weird in visual mode: X,Y,D,J
+- Jumplist and backtracking: ^O,^I
 - Insert-mode entering commands with counts
+- Misc commands: gJ, gR, gp, gP, 
+- Misc visual commands: X,Y,C,D,r,gu/gU/g~/g?,
+- Misc motions: g_, G, gg, {count}%
+- Arrow keys in insert mode (and interaction with repetition)
+- Text object motions
+- Text object selection
 
 Level 5
 - Basic ex commands
 - Basic regular expression search
+- Special registers
+- Special marks
+- Insert mode commands: ^W, ^U, del, ^A, ^R, ^T, ^D, ^E, ^Y, 
 
 Level 6
 - Basic modelines (options tabsize,shiftwidth,textwidth,wrap,wrapmargin,winheight)
       This is only for fixing values of parameters that would affect the other
       tests; emulating modeline support as part of the test framework is fine,
       and no usage besides the narrow usage found in tests need be supported.
-- Line wrapping: gj, gk, gq
+- Line wrapping: gj, gk
+- Formatting: gq
 - Window scrolling commands
 - Window-relative motions
       (Also tests to see if the window ever gets scrolled inappropriately, eg if

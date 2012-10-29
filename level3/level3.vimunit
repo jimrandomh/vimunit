@@ -15,6 +15,17 @@
 	Lorem ips|um dolor
 :end
 
+:start Command J (whitespace special cases)
+	|(I have trailing ws    
+	Lorem ipsum
+	)
+:type J
+	(I have trailing ws    |Lorem ipsum
+	)
+:type .
+	(I have trailing ws    Lorem ipsum|)
+:end
+
 :start Command *,# (search under cursor)
 	|lorem ipsum dolor lorem lorem dolor ipsum lorem
 :type *
@@ -48,31 +59,31 @@
 	sit amet
 :end
 
-:start Marks (m,')
+:start Marks (m,',`)
 	Lo|rem
 	ipsum
 	dolor
 	sit amet
-:type ix\<esc>x
-	Lo|rem
-	ipsum
-	dolor
-	sit amet
-:type ma
-	Lo|rem
-	ipsum
-	dolor
-	sit amet
-:type 'a
+:type ma'a
 	|Lorem
 	ipsum
 	dolor
 	sit amet
-:type wd'a
+:type `a
+	Lo|rem
+	ipsum
+	dolor
+	sit amet
+:type $d`a
+	Lo|m
+	ipsum
+	dolor
+	sit amet
+:type jd'a
 	|dolor
 	sit amet
 :type u
-	|Lorem
+	|Lom
 	ipsum
 	dolor
 	sit amet

@@ -14,6 +14,18 @@
 	Loxy12|3psum dolosit amet
 	xy123
 	sit amet
+:type u
+	Loxy|z ipsum dolosit amet
+	xy123
+	sit amet
+:type R54327\<bs>1\<esc>
+	Loxy5432|1um dolosit amet
+	xy123
+	sit amet
+:type u
+	Loxy|z ipsum dolosit amet
+	xy123
+	sit amet
 :end
 
 :start Command r (replace char)
