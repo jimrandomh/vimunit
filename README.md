@@ -1,8 +1,11 @@
 vim-unit
+============================
+
 Unit Tests for Vim Imitators
 by jimrandomh
 
-What This Is
+Overview
+--------
 
 The vim text editor and its keyboard mapping scheme has significant advantages
 for editing text, but it doesn't integrate with programming languages as well
@@ -26,6 +29,7 @@ reference, to ensure accuracy.
 
 
 What's Tested
+-------------
 
 This test suite covers vim commands, motions, and the subtleties thereof. It
 does not test the parts of vim which a third-party editor is likely to replace.
@@ -41,6 +45,7 @@ these, or test them manually.
 
 
 Using the Test Suite
+--------------------
 
 Test cases are organized into files by subject and level. Each file contains
 multiple test cases, and each test begins with a line ":start <description>" and
@@ -81,6 +86,7 @@ scratch.
 
 
 Compatibility Levels
+--------------------
 
 Level 0
 - The test framework works
@@ -114,6 +120,8 @@ Level 3
 - Marks: m,',`
 - End of line corner case for dw
 
+These levels are planned, but not yet implemented:
+
 Level 4
 - Block visual mode
 - Repetition with visual mode
@@ -130,14 +138,14 @@ Level 4
 - Text object motions
 - Text object selection
 
-Level 5
+=== Level 5 ===
 - Basic ex commands
 - Basic regular expression search
 - Special registers
 - Special marks
 - Insert mode commands: ^W, ^U, del, ^A, ^R, ^T, ^D, ^E, ^Y, 
 
-Level 6
+=== Level 6 ===
 - Basic modelines (options tabsize,shiftwidth,textwidth,wrap,wrapmargin,winheight)
       This is only for fixing values of parameters that would affect the other
       tests; emulating modeline support as part of the test framework is fine,
@@ -155,7 +163,7 @@ Level 6
 - Motion-mode modifiers
 - Visual mode with a count
 
-Side branches:
+=== Side branches ===
 - Folding
 - Autoindent
 - Comment extension/wrapping
