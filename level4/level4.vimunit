@@ -1,0 +1,17 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+# Block visual mode
+# Repetition with visual mode
+# Compose /text search as a motion
+# Basic text objects
+# Increment/decrement commands
+# Bells
+# Jumplist and backtracking: ^O,^I
+# Insert-mode entering commands with counts
+# Misc commands: gJ, gR, gp, gP, 
+# Misc visual commands: X,Y,C,D,r,gu/gU/g~/g?,
+# Misc motions: g_, G, gg, {count}%
+# Arrow keys in insert mode (and interaction with repetition)
+# Text object motions
+# Text object selection
+
