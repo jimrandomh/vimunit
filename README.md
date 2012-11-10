@@ -138,14 +138,14 @@ Level 4
 - Text object motions
 - Text object selection
 
-=== Level 5 ===
+Level 5
 - Basic ex commands
 - Basic regular expression search
 - Special registers
 - Special marks
 - Insert mode commands: ^W, ^U, del, ^A, ^R, ^T, ^D, ^E, ^Y, 
 
-=== Level 6 ===
+Level 6
 - Basic modelines (options tabsize,shiftwidth,textwidth,wrap,wrapmargin,winheight)
       This is only for fixing values of parameters that would affect the other
       tests; emulating modeline support as part of the test framework is fine,
@@ -163,7 +163,7 @@ Level 4
 - Motion-mode modifiers
 - Visual mode with a count
 
-=== Side branches ===
+Side branches
 - Folding
 - Autoindent
 - Comment extension/wrapping
