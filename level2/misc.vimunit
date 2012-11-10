@@ -1,0 +1,8 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Backspacing in insert mode doesn't displace the put-buffer
+	Lorem| dolor
+:type yyi ipx\<bs>sum\<esc>
+	Lorem ipsu|m dolor
+:end
+
