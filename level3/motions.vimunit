@@ -163,7 +163,7 @@
 :type tm
 	Lorem ipsum |em me lorem
 :type ;
-	Lorem ipsum |em me lorem
+	Lorem ipsum em| me lorem
 :type ,
 	Lorem ipsum| em me lorem
 :type Tm
