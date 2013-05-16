@@ -112,23 +112,23 @@
 	Lo|rem ipsum
 	dolor sit
 	amet
-:type >>
+:type \<GT>\<GT>
 		|Lorem ipsum
 	dolor sit
 	amet
-:type >3>
+:type \<GT>3\<GT>
 			|Lorem ipsum
 		dolor sit
 		amet
-:type 2<<
+:type 2\<LT>\<LT>
 		|Lorem ipsum
 	dolor sit
 		amet
-:type jj2>k
+:type jj2\<GT>k
 			|Lorem ipsum
 		dolor sit
 			amet
-:type wvj2<
+:type wvj2\<LT>
 	|Lorem ipsum
 	dolor sit
 			amet

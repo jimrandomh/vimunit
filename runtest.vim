@@ -21,7 +21,7 @@ function OnFinish()
 	call LogTest("Succeeded: " . g:totalSuccesses)
 	call LogTest("Failed: " . g:totalFailures)
 	call SaveLogAs("testresults.txt")
-	:q!
+	":q!
 endfunction
 
 function GetTestFiles()
@@ -99,7 +99,8 @@ endfunction
 
 function ParseTypeKeysLine(line)
 	let keystr = substitute(a:line, '^:type\s*\(.*\)$', '\1', "")
-	let unescaped = eval('"'.substitute(keystr, '"', '\\"', "g").'"')
+	let gtstr = substitute(substitute(keystr, "\<GT>", ">", "g"), "\<LT>", "<", "g")
+	let unescaped = eval('"'.substitute(gtstr, '"', '\\"', "g").'"')
 	return unescaped
 endfunction
 
