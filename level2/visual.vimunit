@@ -11,17 +11,14 @@
 :start Visual mode replacement (v,V,p)
 	Lorem |ipsum dolor
 :type yyv5lp
-	Lorem Lorem ipsum dolor
-	|dolor
-:type ddd6l6l
-	Lorem |ipsum dolor
-:type yyv5lP
 	Lorem 
 	|Lorem ipsum dolor
 	dolor
-:type Vp
+:type yyv5lP
 	Lorem 
-	ipsum| 
+	
+	|Lorem ipsum dolor
+	ipsum dolor
 	dolor
 :end
 

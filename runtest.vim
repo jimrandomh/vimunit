@@ -3,6 +3,11 @@ set undolevels=50
 set shortmess=ats
 set ts=4
 set sw=4
+set autoindent
+set backspace=indent,eol,start
+set copyindent
+set textwidth=78
+set nocindent
 
 let totalSuccesses = 0
 let totalFailures = 0
@@ -203,6 +208,5 @@ function SaveLogAs(filename)
 	let logLines = split(logText, "\n")
 	call writefile(logLines, a:filename)
 endfunction
-
 
 call Main()
