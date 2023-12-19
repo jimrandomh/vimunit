@@ -1,0 +1,16 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Special cases of cw (change word)
+	Lo|rem ipsum dolor
+	sit amet
+:type cwabc\<esc>
+	Loab|c ipsum dolor
+	sit amet
+:type c2wabc\<esc>
+	Loabab|c dolor
+	sit amet
+:type $cw\<esc>
+	Loababc dol|o
+	sit amet
+:end
+
