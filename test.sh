@@ -1,5 +1,6 @@
 #!/bin/bash
-
-rm -f testresults.txt
-vim -u runtest.vim >/dev/null 0>&1 2>&1
-cat testresults.txt
+# Run the suite against vim (the reference implementation) and save the report.
+# For more options (neovim, parallelism, filtering), see ./vimunit run --help.
+cd "$(dirname "$0")"
+mkdir -p out
+exec ./vimunit run --log out/testresults-vim.txt "$@"

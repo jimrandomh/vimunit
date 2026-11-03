@@ -111,3 +111,166 @@
 	dolor sit amet
 :end
 
+:start Command X (at the start of a line fails; later keys still run)
+	Lorem
+	|ipsum
+:type Xx
+	Lorem
+	|psum
+:end
+
+:start Command [count]X (the register holds the text in its original order)
+	Lorem ip|sum
+:type 3X
+	Lorem|sum
+:type $p
+	Loremsum i|p
+:end
+
+:start Command x (on an empty line leaves the register alone)
+	|Lorem
+
+	ipsum
+:type yl
+	|Lorem
+
+	ipsum
+:type jx
+	Lorem
+	|
+	ipsum
+:type p
+	Lorem
+	|L
+	ipsum
+:end
+
+:start Commands p and P (charwise, cursor on the last put character)
+	|Lorem ipsum
+:type y3l
+	|Lorem ipsum
+:type $p
+	Lorem ipsumLo|r
+:type 0P
+	Lo|rLorem ipsumLor
+:end
+
+:start Commands [count]p and [count]P (charwise)
+	Lo|rem
+:type yl
+	Lo|rem
+:type 3p
+	Lorrr|rem
+:type 3P
+	Lorrrrr|rrem
+:end
+
+:start Commands p and P (linewise, cursor on the first non-blank)
+	    Lorem ip|sum
+	dolor
+:type yy
+	    Lorem ip|sum
+	dolor
+:type jp
+	    Lorem ipsum
+	dolor
+	    |Lorem ipsum
+:type kP
+	    Lorem ipsum
+	    |Lorem ipsum
+	dolor
+	    Lorem ipsum
+:end
+
+:start Commands [count]p and [count]P (linewise)
+	Lorem
+	  ip|sum
+:type yy
+	Lorem
+	  ip|sum
+:type 3p
+	Lorem
+	  ipsum
+	  |ipsum
+	  ipsum
+	  ipsum
+:type k3P
+	Lorem
+	  |ipsum
+	  ipsum
+	  ipsum
+	  ipsum
+	  ipsum
+	  ipsum
+	  ipsum
+:end
+
+:start Command [count]dd (count past the end of the buffer)
+:set startofline
+	  Lorem
+	ip|sum
+	dolor
+:type 5dd
+	  |Lorem
+:type p
+	  Lorem
+	|ipsum
+	dolor
+:end
+
+:start Command [count]dd (count on the last line fails)
+	Lorem
+	ipsum
+	do|lor
+:type 2dd
+	Lorem
+	ipsum
+	do|lor
+:end
+
+:start Command [count]yy (count past the end of the buffer)
+	Lorem
+	ip|sum
+	dolor
+:type 5yy
+	Lorem
+	ip|sum
+	dolor
+:type P
+	Lorem
+	|ipsum
+	dolor
+	ipsum
+	dolor
+:end
+
+:start Command y (cursor moves to the start of the yanked text)
+	Lorem
+	ipsum do|lor sit
+:type y$
+	Lorem
+	ipsum do|lor sit
+:type yl
+	Lorem
+	ipsum do|lor sit
+:type yh
+	Lorem
+	ipsum d|olor sit
+:type y0
+	Lorem
+	|ipsum dolor sit
+:end
+
+:start Command y (an upward linewise motion moves the cursor up)
+	Lorem ipsum
+	dolor si|t amet
+:type yj
+	Lorem ipsum
+	dolor si|t amet
+:type yy
+	Lorem ipsum
+	dolor si|t amet
+:type yk
+	Lorem ip|sum
+	dolor sit amet
+:end

@@ -1,6 +1,7 @@
 # This file is part of vim-unit: Unit tests for vim imitators
 
 :start Command u (undo)
+:set startofline
 	Lorem ipsum
 	123|456789
 :type x
@@ -24,17 +25,118 @@
 :type xlxl2u
 	Lorem ipsum
 	123|456789
-:type iHello\<esc>u
+:type iHello\<Esc>u
 	Lorem ipsum
 	123|456789
-:type iHeL\<bs>llo\<esc>u
+:type iHeL\<BS>llo\<Esc>u
 	Lorem ipsum
 	123|456789
 :type d0up
 	Lorem ipsum
 	112|323456789
-:type xa\<esc>u
+:type xa\<Esc>u
 	Lorem ipsum
 	112|323456789
 :end
 
+:start Command u (one insert is one undo step, even across lines)
+	Lorem |ipsum
+:type idolor\<CR>sit\<CR>amet \<Esc>
+	Lorem dolor
+	sit
+	amet| ipsum
+:type u
+	Lorem |ipsum
+:end
+
+:start Command u (moves the cursor back to the change)
+	|Lorem
+	ipsum
+	dolor sit amet
+:type jjwwx
+	Lorem
+	ipsum
+	dolor sit |met
+:type kk0
+	|Lorem
+	ipsum
+	dolor sit met
+:type u
+	Lorem
+	ipsum
+	dolor sit |amet
+:end
+
+:start Command u (with nothing to undo fails; later keys still run)
+	Lo|rem
+:type ux
+	Lo|em
+:end
+
+:start Command CTRL-R (redo)
+	|Lorem ipsum
+:type xwx
+	orem |psum
+:type uu
+	|Lorem ipsum
+:type \<C-R>
+	|orem ipsum
+:type \<C-R>
+	orem |psum
+:type \<C-R>
+	orem |psum
+:end
+
+:start Command CTRL-R (a new change discards the redo history)
+	|Lorem ipsum
+:type xx
+	|rem ipsum
+:type u
+	|orem ipsum
+:type x
+	|rem ipsum
+:type \<C-R>
+	|rem ipsum
+:type u
+	|orem ipsum
+:end
+
+:start Command u (undoing [count]dd restores the cursor column)
+:set startofline
+	Lorem
+	  ip|sum
+	dolor
+	sit
+	amet
+:type 3dd
+	Lorem
+	|amet
+:type u
+	Lorem
+	  ip|sum
+	dolor
+	sit
+	amet
+:end
+
+:start Command u (undoing o)
+	Lorem
+	ip|sum
+:type odolor\<Esc>
+	Lorem
+	ipsum
+	dolo|r
+:type u
+	Lorem
+	ip|sum
+:end
+
+:start Command u (undoing a repeat undoes only the repeat)
+	|Lorem ipsum
+:type dw.
+	|
+:type u
+	|ipsum
+:type u
+	|Lorem ipsum
+:end

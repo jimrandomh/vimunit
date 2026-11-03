@@ -1,0 +1,263 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Characters outside the Basic Multilingual Plane (emoji, mathematical
+# alphanumerics, CJK Extension B), which take two UTF-16 code units, with the
+# level 1 commands; word motions across scripts and character classes; search
+# and Visual mode with non-ASCII text.
+#
+# For word motions, Vim puts each character in a class, and a word is a run of
+# characters of the same class. Letters of all alphabets (Latin, Greek,
+# Cyrillic, fullwidth Latin) are word characters, in one class. Several kinds of
+# non-ASCII characters have classes of their own: CJK ideographs (including
+# those outside the BMP), hiragana, katakana, hangul and emoji. CJK and
+# fullwidth punctuation and mathematical alphanumerics count as punctuation,
+# and U+3000 IDEOGRAPHIC SPACE and U+00A0 NO-BREAK SPACE as blanks.
+
+:start Motion l and h (emoji outside the BMP)
+	|x😀🎉🚀y z
+:type l
+	x|😀🎉🚀y z
+:type 2l
+	x😀🎉|🚀y z
+:type l
+	x😀🎉🚀|y z
+:type 3h
+	x|😀🎉🚀y z
+:type $
+	x😀🎉🚀y |z
+:end
+
+:start Command x and X (emoji)
+	ok 👍|👎👌 done
+:type x
+	ok 👍|👌 done
+:type X
+	ok |👌 done
+:type x
+	ok | done
+:type $X
+	ok  do|e
+:end
+
+:start Command x and $ (math alphanumerics and CJK Extension B)
+	|𝐀𝐁𝐂 𠀋𡈽
+:type $
+	𝐀𝐁𝐂 𠀋|𡈽
+:type x
+	𝐀𝐁𝐂 |𠀋
+:type 0x
+	|𝐁𝐂 𠀋
+:type lll
+	𝐁𝐂 |𠀋
+:end
+
+:start Command xp and p (emoji)
+	|🙂🙃 ok
+:type xp
+	🙃|🙂 ok
+:type yl$p
+	🙃🙂 ok|🙂
+:type 0y2l$2p
+	🙃🙂 ok🙂🙃🙂🙃|🙂
+:end
+
+:start Motion w (accented letters are word characters)
+	|naïve café-crème déjà_vu
+:type w
+	naïve |café-crème déjà_vu
+:type w
+	naïve café|-crème déjà_vu
+:type w
+	naïve café-|crème déjà_vu
+:type w
+	naïve café-crème |déjà_vu
+:type w
+	naïve café-crème déjà_v|u
+:end
+
+:start Motion w (Latin, Greek and Cyrillic letters in one word)
+	|abcПривет defΩmega x
+:type w
+	abcПривет |defΩmega x
+:type w
+	abcПривет defΩmega |x
+:end
+
+:start Motion w (ideographs, hiragana and katakana are separate classes)
+	|日本語のテキストです。漢字
+:type w
+	日本語|のテキストです。漢字
+:type w
+	日本語の|テキストです。漢字
+:type w
+	日本語のテキスト|です。漢字
+:type w
+	日本語のテキストです|。漢字
+:type w
+	日本語のテキストです。|漢字
+:type w
+	日本語のテキストです。漢|字
+:end
+
+:start Motion w (CJK next to ASCII)
+	|abc日本def 한국어xyz
+:type w
+	abc|日本def 한국어xyz
+:type w
+	abc日本|def 한국어xyz
+:type w
+	abc日本def |한국어xyz
+:type w
+	abc日本def 한국어|xyz
+:type w
+	abc日本def 한국어xy|z
+:end
+
+:start Motion w (emoji are their own class)
+	|ok👍👍done 🎉!? end
+:type w
+	ok|👍👍done 🎉!? end
+:type w
+	ok👍👍|done 🎉!? end
+:type w
+	ok👍👍done |🎉!? end
+:type w
+	ok👍👍done 🎉|!? end
+:type w
+	ok👍👍done 🎉!? |end
+:end
+
+:start Motion w (CJK Extension B is the same class as other ideographs)
+	|日𠀋本の𡈽字です
+:type w
+	日𠀋本|の𡈽字です
+:type w
+	日𠀋本の|𡈽字です
+:type w
+	日𠀋本の𡈽字|です
+:end
+
+:start Motion w (fullwidth letters and punctuation)
+	|日本、ＡＢＣabc！？x
+:type w
+	日本|、ＡＢＣabc！？x
+:type w
+	日本、|ＡＢＣabc！？x
+:type w
+	日本、ＡＢＣabc|！？x
+:type w
+	日本、ＡＢＣabc！？|x
+:type b
+	日本、ＡＢＣabc|！？x
+:end
+
+:start Motion w (math alphanumerics)
+	|x𝐀𝐁y 𝐂+-z
+:type w
+	x|𝐀𝐁y 𝐂+-z
+:type w
+	x𝐀𝐁|y 𝐂+-z
+:type w
+	x𝐀𝐁y |𝐂+-z
+:type w
+	x𝐀𝐁y 𝐂+-|z
+:type b
+	x𝐀𝐁y |𝐂+-z
+:end
+
+:start Motion e and b (CJK classes)
+	|日本語のテキストです
+:type e
+	日本|語のテキストです
+:type e
+	日本語|のテキストです
+:type e
+	日本語のテキス|トです
+:type e
+	日本語のテキストで|す
+:type b
+	日本語のテキスト|です
+:type 2b
+	日本語|のテキストです
+:end
+
+# The spaces in the first line are U+3000 IDEOGRAPHIC SPACE, U+00A0 NO-BREAK
+# SPACE and an ordinary space.
+:start Motion W, B and E (non-ASCII blanks separate WORDs)
+	|日本　語 テ スト
+:type W
+	日本　|語 テ スト
+:type W
+	日本　語 |テ スト
+:type W
+	日本　語 テ |スト
+:type E
+	日本　語 テ ス|ト
+:type B
+	日本　語 テ |スト
+:type 2B
+	日本　|語 テ スト
+:end
+
+:start Search / and ? (CJK pattern)
+	|日本語のテキスト、テキスト
+	漢字のテキスト本
+:type /テキスト\<CR>
+	日本語の|テキスト、テキスト
+	漢字のテキスト本
+:type n
+	日本語のテキスト、|テキスト
+	漢字のテキスト本
+:type n
+	日本語のテキスト、テキスト
+	漢字の|テキスト本
+:type n
+	日本語の|テキスト、テキスト
+	漢字のテキスト本
+:type ?本\<CR>
+	日|本語のテキスト、テキスト
+	漢字のテキスト本
+:type N
+	日本語のテキスト、テキスト
+	漢字のテキスト|本
+:end
+
+:start Search / (emoji and accented pattern)
+	|café 🎉 cafe 🎉 Café
+:type /🎉\<CR>
+	café |🎉 cafe 🎉 Café
+:type n
+	café 🎉 cafe |🎉 Café
+:type /é\<CR>
+	café 🎉 cafe 🎉 Caf|é
+:type n
+	caf|é 🎉 cafe 🎉 Café
+:type N
+	café 🎉 cafe 🎉 Caf|é
+:end
+
+:start Visual v (selection over wide and non-BMP characters)
+	ab|😀日cd 語
+:type vld
+	ab|cd 語
+:type u
+	ab|😀日cd 語
+:type v$d
+	a|b
+:type u
+	ab|😀日cd 語
+:type $vhd
+	ab😀日c|d
+:end
+
+:start Visual v (extending by word over CJK)
+	|日本語のテキスト abc
+:type ved
+	|のテキスト abc
+:type vwd
+	|キスト abc
+:type u
+	|のテキスト abc
+:type wvy$p
+	のテキスト abc|テ
+:end

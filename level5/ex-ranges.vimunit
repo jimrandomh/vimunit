@@ -1,0 +1,350 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Line ranges and addresses for Ex commands: numbers, ., $, %, marks, '<,'>,
+# /pat/, ?pat?, +n and -n offsets, the ; separator, and a count typed before
+# the :.
+
+:start Ex address (line number jumps to the first non-blank)
+:set startofline
+	alpha
+	beta
+	  ga|mma
+	delta
+	epsilon
+:type :1\<CR>
+	|alpha
+	beta
+	  gamma
+	delta
+	epsilon
+:type :3\<CR>
+	alpha
+	beta
+	  |gamma
+	delta
+	epsilon
+:type :$\<CR>
+	alpha
+	beta
+	  gamma
+	delta
+	|epsilon
+:type :0\<CR>
+	|alpha
+	beta
+	  gamma
+	delta
+	epsilon
+:end
+
+:start Ex address (line number past the end goes to the last line)
+:set startofline
+	al|pha
+	beta
+	  gamma
+:type :99\<CR>
+	alpha
+	beta
+	  |gamma
+:end
+
+:start Ex address (relative offsets +n, -n, + and -)
+:set startofline
+	alpha
+	beta
+	ga|mma
+	delta
+	epsilon
+	zeta
+:type :+2\<CR>
+	alpha
+	beta
+	gamma
+	delta
+	|epsilon
+	zeta
+:type :-\<CR>
+	alpha
+	beta
+	gamma
+	|delta
+	epsilon
+	zeta
+:type :.-2\<CR>
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+	zeta
+:type :+++\<CR>
+	alpha
+	beta
+	gamma
+	delta
+	|epsilon
+	zeta
+:end
+
+:start Ex range (. and relative offsets)
+:set startofline
+	alpha
+	beta
+	ga|mma
+	delta
+	epsilon
+	zeta
+:type :.,+1d\<CR>
+	alpha
+	beta
+	|epsilon
+	zeta
+:type u
+	alpha
+	beta
+	|gamma
+	delta
+	epsilon
+	zeta
+:type :-,+d\<CR>
+	alpha
+	|epsilon
+	zeta
+:type u
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+	zeta
+:type :.,$d\<CR>
+	|alpha
+:end
+
+:start Ex range (past the end of the buffer is an error, even as an offset)
+	alpha
+	be|ta
+	gamma
+	delta
+:type :2,9d\<CR>
+	alpha
+	be|ta
+	gamma
+	delta
+:type :.,+9d\<CR>
+	alpha
+	be|ta
+	gamma
+	delta
+:end
+
+:start Ex range (% is the whole buffer)
+	alpha
+	be|ta
+	gamma
+:type :%d\<CR>
+	|
+:type p
+
+	|alpha
+	beta
+	gamma
+:end
+
+:start Ex range ($ with an offset)
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type :$-1,$d\<CR>
+	alpha
+	beta
+	|gamma
+:type :$-1d\<CR>
+	alpha
+	|gamma
+:end
+
+:start Ex range (marks)
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type majjmb:'a,'bd\<CR>
+	alpha
+	|epsilon
+:type :'a,'bd\<CR>
+	alpha
+	|epsilon
+:end
+
+:start Ex range from Visual mode ('<,'>)
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type Vj:d\<CR>
+	alpha
+	|delta
+	epsilon
+:type vl:d\<CR>
+	alpha
+	|epsilon
+:type u
+	alpha
+	|delta
+	epsilon
+:end
+
+:start Ex range ('<,'> after leaving Visual mode)
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type Vj\<Esc>G:'<,'>d\<CR>
+	alpha
+	|delta
+	epsilon
+:end
+
+:start Ex address (/pat/ searches from the next line)
+	alpha one
+	be|ta one
+	gamma one
+	delta two
+	epsilon one
+:type :/one/d\<CR>
+	alpha one
+	beta one
+	|delta two
+	epsilon one
+:type :/one/d\<CR>
+	alpha one
+	beta one
+	|delta two
+:type :/one/d\<CR>
+	|beta one
+	delta two
+:end
+
+:start Ex address (?pat? searches backward)
+	alpha one
+	beta two
+	gamma one
+	del|ta one
+	epsilon two
+:type :?one?d\<CR>
+	alpha one
+	beta two
+	|delta one
+	epsilon two
+:type :?two?d\<CR>
+	alpha one
+	|delta one
+	epsilon two
+:end
+
+:start Ex address (/pat/ with an offset, and as a jump)
+	alpha
+	beta
+	gamma
+	de|lta
+	epsilon
+:type :/alpha/+1d\<CR>
+	alpha
+	|gamma
+	delta
+	epsilon
+:type :/delta\<CR>
+	alpha
+	gamma
+	|delta
+	epsilon
+:end
+
+:start Ex address (/pat/ sets the last search pattern for n)
+:set startofline
+	al|pha one
+	beta
+	gamma one
+	delta one
+:type :/one/\<CR>
+	alpha one
+	beta
+	|gamma one
+	delta one
+:type n
+	alpha one
+	beta
+	gamma |one
+	delta one
+:end
+
+:start Ex range (, and ; separators)
+:set startofline
+	al|pha
+	beta
+	gamma
+	delta
+	epsilon
+	zeta
+:type :2,+3d\<CR>
+	alpha
+	|epsilon
+	zeta
+:type u
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+	zeta
+:type :2;+3d\<CR>
+	alpha
+	|zeta
+:end
+
+:start Ex range (/pat/;/pat/, with the search wrapping around)
+	al|pha
+	begin
+	beta
+	end
+	begin
+	gamma
+	end
+:type :/begin/;/end/d\<CR>
+	alpha
+	|begin
+	gamma
+	end
+:type :/begin/;/end/d\<CR>
+	|alpha
+:end
+
+:start Ex range (count before :)
+:set startofline
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type 3:d\<CR>
+	alpha
+	|epsilon
+:type u
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+:type 9:d\<CR>
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+:end

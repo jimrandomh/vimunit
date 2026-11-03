@@ -90,6 +90,7 @@
 :end
 
 :start Motion [count]j (down, multiple)
+:set startofline
 	Lore|m
 	ipsum
 	dol
@@ -114,6 +115,7 @@
 :end
 
 :start Motion [count]k (up, multiple)
+:set startofline
 	Lorem
 	ipsum
 
@@ -148,4 +150,122 @@
 :type dk
 	  |amet
 	consectetur
+:end
+
+:start Motion $ (j and k then stay at the end of each line)
+	Lorem ip|sum
+	dolor
+	sit amet consectetur
+
+	adipisicing
+:type $
+	Lorem ipsu|m
+	dolor
+	sit amet consectetur
+
+	adipisicing
+:type j
+	Lorem ipsum
+	dolo|r
+	sit amet consectetur
+
+	adipisicing
+:type j
+	Lorem ipsum
+	dolor
+	sit amet consectetu|r
+
+	adipisicing
+:type j
+	Lorem ipsum
+	dolor
+	sit amet consectetur
+	|
+	adipisicing
+:type j
+	Lorem ipsum
+	dolor
+	sit amet consectetur
+
+	adipisicin|g
+:type hk
+	Lorem ipsum
+	dolor
+	sit amet consectetur
+	|
+	adipisicing
+:type k
+	Lorem ipsum
+	dolor
+	sit amet |consectetur
+
+	adipisicing
+:end
+
+:start Motion $ (on an empty line, then j)
+	|
+	Lorem ipsum
+:type $j
+
+	Lorem ipsu|m
+:end
+
+:start Motion [count]$ (count past the last line)
+	Lo|rem
+	ipsum
+	dolor
+:type 5$
+	Lorem
+	ipsum
+	dolo|r
+:type 2$
+	Lorem
+	ipsum
+	dolo|r
+:end
+
+:start Motion ^ (on a whitespace-only line)
+	Lorem
+	|    
+		 ipsum
+:type ^
+	Lorem
+	   | 
+		 ipsum
+:type j0^
+	Lorem
+	    
+		 |ipsum
+:end
+
+:start Motion ^ (count is ignored)
+	  Lorem ip|sum
+	  dolor
+	  sit
+:type 3^
+	  |Lorem ipsum
+	  dolor
+	  sit
+:end
+
+:start Motions [count]j and [count]k (count past the last or first line)
+	Lo|rem
+	ipsum
+	dolor
+:type 100j
+	Lorem
+	ipsum
+	do|lor
+:type j
+	Lorem
+	ipsum
+	do|lor
+:type 100k
+	Lo|rem
+	ipsum
+	dolor
+:type k
+	Lo|rem
+	ipsum
+	dolor
 :end

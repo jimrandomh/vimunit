@@ -1,0 +1,192 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# The :g and :v commands: running an Ex command on every line that matches
+# (or doesn't match) a pattern.
+
+:start Ex :g/pat/d (cursor after the last deletion)
+:set startofline
+	alpha x
+	be|ta
+	gamma x
+	  delta
+	epsilon x
+	  zeta
+:type :g/x/d\<CR>
+	beta
+	  delta
+	  |zeta
+:type u
+	|alpha x
+	beta
+	gamma x
+	  delta
+	epsilon x
+	  zeta
+:end
+
+:start Ex :v and :g! (lines that don't match)
+:set startofline
+	alpha x
+	be|ta
+	gamma x
+	delta
+:type :v/x/d\<CR>
+	alpha x
+	|gamma x
+:type u
+	alpha x
+	|beta
+	gamma x
+	delta
+:type :g!/x/d\<CR>
+	alpha x
+	|gamma x
+:end
+
+:start Ex :g with no matches (error, no change)
+	alpha
+	be|ta
+:type :g/zzz/d\<CR>
+	alpha
+	be|ta
+:end
+
+:start Ex :g/^/m0 (reverse the buffer)
+:set startofline
+	alpha
+	be|ta
+	gamma
+	delta
+:type :g/^/m0\<CR>
+	|delta
+	gamma
+	beta
+	alpha
+:end
+
+:start Ex :g/pat/m0 (matching lines to the top, reversed)
+:set startofline
+	one alpha
+	two
+	th|ree alpha
+	four
+	five alpha
+:type :g/alpha/m0\<CR>
+	|five alpha
+	three alpha
+	one alpha
+	two
+	four
+:end
+
+:start Ex :g with a range
+	alpha x
+	be|ta x
+	gamma x
+	delta x
+:type :2,3g/x/d\<CR>
+	alpha x
+	|delta x
+:end
+
+:start Ex :g with :normal
+	alpha x
+	be|ta
+	gamma x
+	delta
+:type :g/x/normal Ay\<CR>
+	alpha xy
+	beta
+	gamma x|y
+	delta
+:type u
+	alpha |x
+	beta
+	gamma x
+	delta
+:type :g/x/normal ddp\<CR>
+	beta
+	alpha x
+	delta
+	|gamma x
+:end
+
+:start Ex :g with :normal deleting the next matching line
+:set startofline
+	alpha x
+	beta x
+	ga|mma
+	delta x
+	epsilon
+:type :g/x/normal jdd\<CR>
+	alpha x
+	gamma
+	|delta x
+:end
+
+:start Ex :g with :s (an empty :s pattern is the :g pattern)
+	alpha x
+	be|ta
+	gamma x
+	delta
+:type :g/x/s//X/\<CR>
+	alpha X
+	beta
+	|gamma X
+	delta
+:type :g/a/s/a/-/g\<CR>
+	-lph- X
+	bet-
+	g-mm- X
+	|delt-
+:end
+
+:start Ex :g with :t (copies are not matched again)
+:set startofline
+	alpha x
+	be|ta
+	gamma x
+:type :g/x/t.\<CR>
+	alpha x
+	alpha x
+	beta
+	gamma x
+	|gamma x
+:end
+
+:start Ex :g with :j (joined lines are skipped)
+	alpha x
+	beta x
+	ga|mma x
+	delta
+:type :g/x/j\<CR>
+	alpha x beta x
+	|gamma x delta
+:end
+
+:start Ex :g with a relative range (-1d)
+	alpha
+	be|ta
+	gamma x
+	delta
+	epsilon x
+:type :g/x/-1d\<CR>
+	alpha
+	gamma x
+	|epsilon x
+:end
+
+:start Ex :g without a command (cursor to the last match)
+:set startofline
+	al|pha
+	  beta x
+	gamma
+	  delta x
+	epsilon
+:type :g/x\<CR>
+	alpha
+	  beta x
+	gamma
+	  |delta x
+	epsilon
+:end

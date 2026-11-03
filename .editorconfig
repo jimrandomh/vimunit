@@ -1,0 +1,10 @@
+# Trailing whitespace in .vimunit files is significant (it's part of the test
+# buffers), and buffer lines are indented with exactly one tab.
+root = true
+
+[*.vimunit]
+charset = utf-8
+end_of_line = lf
+indent_style = tab
+trim_trailing_whitespace = false
+insert_final_newline = true

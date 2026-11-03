@@ -1,0 +1,9 @@
+{
+  "name": "vimunit-codemirror-vim-driver",
+  "private": true,
+  "description": "Runs the vim-unit suite against @replit/codemirror-vim in headless Chromium",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}

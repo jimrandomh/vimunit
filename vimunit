@@ -1,0 +1,1594 @@
+#!/usr/bin/env python3
+"""vimunit: tools for the vim-unit keystroke compatibility test suite.
+
+Subcommands:
+  run      Run the tests in Vim and/or Neovim, the reference implementations.
+  fill     Run the tests in a reference editor and write its results into the
+           test files wherever an expected state is missing (or, with
+           --update, wrong).
+  export   Export the parsed suite as JSON, for integrations with other editors.
+  report   Score a results file produced by an integration.
+  lint     Check test files for problems.
+  fmt      Normalize the formatting of test files.
+  options  Print the supported options and their baseline values.
+
+Run `./vimunit <subcommand> --help` for details. Requires Python 3.8+ and no
+third-party packages. See doc/format.md for the test file format.
+"""
+
+import argparse
+import concurrent.futures
+import json
+import os
+import re
+import select
+import shutil
+import signal
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+
+REPO = os.path.dirname(os.path.abspath(__file__))
+HARNESS = os.environ.get("VIMUNIT_HARNESS") or os.path.join(REPO, "harness", "vimunit.vim")
+TEST_SUFFIX = ".vimunit"
+EXPORT_SCHEMA_VERSION = 1
+
+DEFAULT_WINDOW = (80, 24)
+REFERENCE_EDITORS = ("vim", "nvim")
+
+# ---------------------------------------------------------------------------
+# Options
+#
+# Every test runs with these values unless it overrides them with a `:set`
+# directive. Only options in this table may be set. The baseline is Vim's
+# built-in default (as with `vim -N -u NONE`), except where noted.
+
+OPTIONS = [
+    # (name, type, baseline, group, description)
+    # --- Window and display. These matter for screen-line motions (gj, gk,
+    # g0, g$, gm), scrolling, and H/M/L. See also the :window directive.
+    ("wrap", bool, True, "display", "Long lines wrap onto further screen lines."),
+    ("linebreak", bool, False, "display", "Wrap at a character in 'breakat' rather than at the last column."),
+    ("breakindent", bool, False, "display", "Wrapped screen lines are indented like the start of the line."),
+    ("showbreak", str, "", "display", "String shown at the start of wrapped screen lines (takes up columns)."),
+    ("scrolloff", int, 0, "display", "Minimum number of lines kept above and below the cursor."),
+    ("sidescroll", int, 0, "display", "Columns to scroll horizontally when the cursor leaves the screen (nowrap)."),
+    ("sidescrolloff", int, 0, "display", "Minimum number of columns kept left and right of the cursor (nowrap)."),
+    ("scrolljump", int, 1, "display", "Minimum lines to scroll when the cursor moves off the screen."),
+    ("scroll", int, 0, "display", "Lines scrolled by CTRL-D and CTRL-U; 0 means half the window height."),
+    ("smoothscroll", bool, False, "display", "Scroll by screen lines rather than buffer lines."),
+    ("startofline", bool, True, "motion", "Commands like G, gg, dd, CTRL-D move the cursor to the first non-blank. (Neovim's default is off.)"),
+    # --- Indentation.
+    ("tabstop", int, 8, "indent", "Width of a tab character."),
+    ("shiftwidth", int, 8, "indent", "Width of one level of indentation for >, <, CTRL-T, CTRL-D, autoindent."),
+    ("softtabstop", int, 0, "indent", "Number of columns that <Tab> and <BS> act on in Insert mode."),
+    ("expandtab", bool, False, "indent", "Insert spaces instead of tabs."),
+    ("smarttab", bool, False, "indent", "<Tab> at the start of a line inserts 'shiftwidth'. (Neovim's default is on.)"),
+    ("shiftround", bool, False, "indent", "Round indentation from > and < to a multiple of 'shiftwidth'."),
+    ("autoindent", bool, True, "indent", "New lines copy the indent of the current line. (Differs from Vim's default, which is off.)"),
+    ("copyindent", bool, False, "indent", "Autoindent copies the existing indent characters exactly."),
+    ("preserveindent", bool, False, "indent", "Changing indent preserves existing indent characters."),
+    ("smartindent", bool, False, "indent", "Simple C-like automatic indenting after { and before }."),
+    ("cindent", bool, False, "indent", "C indenting rules (with default 'cinoptions')."),
+    # --- Formatting and joining.
+    ("textwidth", int, 0, "format", "Maximum line width for automatic wrapping and gq; 0 disables."),
+    ("wrapmargin", int, 0, "format", "Wrap this many columns from the right edge of the window when 'textwidth' is 0."),
+    ("formatoptions", str, "tcq", "format", "Flags controlling automatic formatting. (Neovim's default is tcqj.)"),
+    ("comments", str, "s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-", "format", "Comment leaders recognized by formatting and J with formatoptions+=j."),
+    ("commentstring", str, "/* %s */", "format", "Template for a comment, used by zf to add fold markers. (Neovim's default is empty.)"),
+    ("joinspaces", bool, False, "format", "J inserts two spaces after '.', '?' and '!'. (Differs from Vim's default, which is on.)"),
+    ("nrformats", str, "bin,hex", "edit", "Number formats recognized by CTRL-A and CTRL-X. (Differs from Vim's default, which includes octal.)"),
+    ("tildeop", bool, False, "edit", "~ behaves like an operator."),
+    ("delcombine", bool, False, "edit", "x deletes only the last combining character of a character."),
+    ("backspace", str, "indent,eol,start", "edit", "What <BS> can delete in Insert mode. (Differs from Vim's default, which is empty.)"),
+    ("whichwrap", str, "b,s", "motion", "Which keys move across line boundaries."),
+    ("virtualedit", str, "", "motion", "Allow the cursor where there is no character."),
+    ("selection", str, "inclusive", "visual", "Whether the character under the cursor is part of a Visual selection."),
+    ("selectmode", str, "", "visual", "When to start Select mode instead of Visual mode."),
+    ("keymodel", str, "", "visual", "Whether shifted special keys start a selection."),
+    ("iskeyword", str, "@,48-57,_,192-255", "motion", "Characters that make up a word (for w, b, e, *, iw, ...)."),
+    ("matchpairs", str, "(:),{:},[:]", "motion", "Pairs of characters that % jumps between."),
+    ("cpoptions", str, "aABceFsz", "edit", "Vi-compatibility flags. The 'z' flag enables the cw and d special cases."),
+    ("undolevels", int, 1000, "edit", "Maximum number of changes that can be undone."),
+    ("jumpoptions", str, "", "motion", "Jumplist behavior. (Neovim's default is clean.)"),
+    # --- Search.
+    ("ignorecase", bool, False, "search", "Ignore case in search patterns."),
+    ("smartcase", bool, False, "search", "Override 'ignorecase' when the pattern contains uppercase letters."),
+    ("wrapscan", bool, True, "search", "Searches wrap around the end of the buffer."),
+    ("magic", bool, True, "search", "Special characters in patterns ('magic')."),
+    ("gdefault", bool, False, "search", ":substitute replaces all matches in a line by default."),
+    ("incsearch", bool, False, "search", "Show matches while typing a search pattern."),
+    # --- Insert-mode completion.
+    ("complete", str, ".", "complete", "Where CTRL-N and CTRL-P look for completions. (Differs from Vim's default, to keep tests self-contained.)"),
+    ("completeopt", str, "menu", "complete", "Insert-mode completion behavior."),
+    ("infercase", bool, False, "complete", "Adjust the case of completed words."),
+    # --- Folding. Tests use marker folds; see doc/format.md.
+    ("foldmethod", str, "marker", "fold", "Fold method: marker or manual only. (Differs from Vim's default, which is manual.)"),
+    ("foldmarker", str, "{{{,}}}", "fold", "Fold start and end markers."),
+    ("foldlevel", int, 0, "fold", "Folds deeper than this are closed."),
+    ("foldenable", bool, True, "fold", "Folds are in effect."),
+    ("foldopen", str, "block,hor,mark,percent,quickfix,search,tag,undo", "fold", "Commands that open closed folds when the cursor moves into them."),
+    ("foldclose", str, "", "fold", "Close folds automatically when the cursor leaves them."),
+    ("foldminlines", int, 1, "fold", "Minimum lines a fold must span to be closed."),
+    ("foldnestmax", int, 20, "fold", "Maximum nesting of folds."),
+]
+OPTION_INFO = {o[0]: o for o in OPTIONS}
+BASELINE = {o[0]: o[2] for o in OPTIONS}
+OPTION_CHOICES = {"foldmethod": ("marker", "manual")}
+
+# ---------------------------------------------------------------------------
+# Keys
+#
+# In a :type line every character is a literal key, except backslash, which
+# introduces either a special key in Vim's <> notation (\<Esc>, \<C-V>) or a
+# literal backslash (\\). Keys are normalized to tokens: either a single
+# character or a canonical special-key name in angle brackets.
+
+_NAMED_KEYS = {
+    "esc": "<Esc>", "escape": "<Esc>",
+    "cr": "<CR>", "enter": "<CR>", "return": "<CR>",
+    "nl": "<NL>", "newline": "<NL>", "lf": "<NL>", "linefeed": "<NL>",
+    "bs": "<BS>", "backspace": "<BS>",
+    "tab": "<Tab>",
+    "del": "<Del>", "delete": "<Del>",
+    "insert": "<Insert>", "ins": "<Insert>",
+    "up": "<Up>", "down": "<Down>", "left": "<Left>", "right": "<Right>",
+    "home": "<Home>", "end": "<End>",
+    "pageup": "<PageUp>", "pagedown": "<PageDown>",
+    "s-up": "<S-Up>", "s-down": "<S-Down>", "s-left": "<S-Left>", "s-right": "<S-Right>",
+    "c-left": "<C-Left>", "c-right": "<C-Right>", "c-home": "<C-Home>", "c-end": "<C-End>",
+    "s-tab": "<S-Tab>",
+    "nul": "<Nul>", "c-@": "<Nul>",
+    # Control characters that are the same byte as a named key.
+    "c-[": "<Esc>", "c-m": "<CR>", "c-j": "<NL>", "c-i": "<Tab>",
+    "c-]": "<C-]>", "c-\\": "<C-\\>", "c-^": "<C-^>", "c-_": "<C-_>",
+    # Printable characters with names.
+    "space": " ", "lt": "<", "gt": ">", "bslash": "\\", "bar": "|",
+}
+for _c in "abcdefghklnopqrstuvwxyz":
+    _NAMED_KEYS["c-" + _c] = "<C-%s>" % _c.upper()
+for _n in range(1, 13):
+    _NAMED_KEYS["f%d" % _n] = "<F%d>" % _n
+
+SPECIAL_KEY_TOKENS = sorted(set(v for v in _NAMED_KEYS.values() if len(v) > 1))
+
+
+class KeyError_(ValueError):
+    pass
+
+
+def tokenize_keys(text):
+    """Split the text of a :type line into key tokens."""
+    tokens = []
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c != "\\":
+            tokens.append(c)
+            i += 1
+            continue
+        if i + 1 >= len(text):
+            raise KeyError_("trailing backslash (write \\\\ for a literal backslash)")
+        nxt = text[i + 1]
+        if nxt == "\\":
+            tokens.append("\\")
+            i += 2
+        elif nxt == "<":
+            end = text.find(">", i + 2)
+            # Allow <C->> style names: the name is at least one character.
+            if end == i + 2:
+                end = text.find(">", i + 3)
+            if end < 0:
+                raise KeyError_("unterminated \\<...> key name")
+            name = text[i + 2:end]
+            tok = _NAMED_KEYS.get(name.lower())
+            if tok is None:
+                raise KeyError_("unknown key name <%s>" % name)
+            tokens.append(tok)
+            i = end + 1
+        else:
+            raise KeyError_("unknown escape \\%s (use \\<...> for special keys, \\\\ for a backslash)" % nxt)
+    return tokens
+
+
+def keys_to_text(tokens):
+    """The inverse of tokenize_keys, producing canonical :type text. Spaces
+    are written literally, except at the start or end, where they would be
+    lost (the parser skips whitespace after ":type", and editors strip
+    trailing whitespace)."""
+    out = []
+    for i, t in enumerate(tokens):
+        if len(t) > 1:
+            out.append("\\" + t)
+        elif t == "\\":
+            out.append("\\\\")
+        elif t == " " and (i == 0 or i == len(tokens) - 1):
+            out.append("\\<Space>")
+        else:
+            out.append(t)
+    return "".join(out)
+
+
+# ---------------------------------------------------------------------------
+# Test file model and parser
+
+
+class State:
+    """Buffer contents plus cursor position (line and column are 0-based;
+    the column counts Unicode code points)."""
+
+    __slots__ = ("lines", "line", "col")
+
+    def __init__(self, lines, line, col):
+        self.lines = list(lines)
+        self.line = line
+        self.col = col
+
+    def __eq__(self, other):
+        return (isinstance(other, State) and self.lines == other.lines
+                and self.line == other.line and self.col == other.col)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def render(self, marker="|"):
+        out = list(self.lines)
+        if 0 <= self.line < len(out):
+            s = out[self.line]
+            out[self.line] = s[:self.col] + marker + s[self.col:]
+        return out
+
+    def byte_cursor(self):
+        """(1-based line, 1-based byte column), as Vim's cursor() takes."""
+        prefix = self.lines[self.line][:self.col]
+        return [self.line + 1, len(prefix.encode("utf-8")) + 1]
+
+    def to_json(self):
+        prefix = self.lines[self.line][:self.col]
+        return {
+            "lines": self.lines,
+            "cursor": {
+                "line": self.line,
+                "column": self.col,
+                "byteColumn": len(prefix.encode("utf-8")),
+                "utf16Column": len(prefix.encode("utf-16-le")) // 2,
+            },
+        }
+
+    @staticmethod
+    def from_vim(lines, cursor):
+        """Build from Vim's lines and (1-based line, 1-based byte column)."""
+        line = cursor[0] - 1
+        text = lines[line] if 0 <= line < len(lines) else ""
+        raw = text.encode("utf-8")
+        col = len(raw[:max(cursor[1] - 1, 0)].decode("utf-8", errors="ignore"))
+        return State(lines, line, col)
+
+
+class Step:
+    def __init__(self, keys_text, keys, lineno):
+        self.keys_text = keys_text
+        self.keys = keys
+        self.lineno = lineno          # 0-based line index of the :type line
+        self.expected = None          # State, or None if not yet filled in
+        self.exp_span = (lineno + 1, lineno + 1)
+
+
+class Test:
+    def __init__(self, path, lineno, description):
+        self.path = path              # path relative to the repository
+        self.lineno = lineno          # 0-based line index of :start
+        self.description = description
+        self.options = {}
+        self.window = None
+        self.definitions = []
+        self.xfail = {}
+        self.marker = "|"
+        self.initial = None
+        self.steps = []
+
+    @property
+    def id(self):
+        return "%s: %s" % (self.path, self.description)
+
+    @property
+    def level(self):
+        m = re.match(r"level(\d+)/", self.path)
+        return int(m.group(1)) if m else None
+
+    @property
+    def group(self):
+        """Level name ('level3') or other top-level directory ('side')."""
+        return self.path.split("/")[0] if "/" in self.path else ""
+
+    @property
+    def feature(self):
+        return os.path.splitext(os.path.basename(self.path))[0]
+
+    def effective_options(self):
+        opts = dict(BASELINE)
+        opts.update(self.options)
+        return opts
+
+    def effective_window(self):
+        return self.window or DEFAULT_WINDOW
+
+
+class ParseError(Exception):
+    def __init__(self, path, lineno, message):
+        Exception.__init__(self, "%s:%d: %s" % (path, lineno + 1, message))
+        self.path = path
+        self.lineno = lineno
+        self.message = message
+
+
+def parse_option_assignments(args, path, lineno):
+    result = {}
+    for arg in re.findall(r"(?:\\.|\S)+", args):
+        arg = re.sub(r"\\(.)", r"\1", arg)
+        m = re.match(r"^([a-z]+)(?:=(.*))?$", arg, re.S)
+        if not m:
+            raise ParseError(path, lineno, "bad option assignment %r" % arg)
+        name, value = m.group(1), m.group(2)
+        if value is None:
+            neg = name.startswith("no") and name[2:] in OPTION_INFO
+            base = name[2:] if neg else name
+            info = OPTION_INFO.get(base)
+            if info is None:
+                raise ParseError(path, lineno, "unknown or unsupported option %r (see `./vimunit options`)" % base)
+            if info[1] is not bool:
+                raise ParseError(path, lineno, "option %r needs a value (%s=...)" % (base, base))
+            result[base] = not neg
+            continue
+        info = OPTION_INFO.get(name)
+        if info is None:
+            raise ParseError(path, lineno, "unknown or unsupported option %r (see `./vimunit options`)" % name)
+        if info[1] is bool:
+            raise ParseError(path, lineno, "%r is a boolean option; write %s or no%s" % (name, name, name))
+        if info[1] is int:
+            if not re.match(r"^-?\d+$", value):
+                raise ParseError(path, lineno, "option %r needs a number" % name)
+            value = int(value)
+        if name in OPTION_CHOICES and value not in OPTION_CHOICES[name]:
+            raise ParseError(path, lineno, "option %r must be one of %s" % (name, ", ".join(OPTION_CHOICES[name])))
+        result[name] = value
+    return result
+
+
+def parse_buffer_block(block, marker, path):
+    """block: list of (lineno, text). Returns a State."""
+    lines = []
+    cursor = None
+    for lineno, text in block:
+        count = text.count(marker)
+        if count > 1 or (count == 1 and cursor is not None):
+            raise ParseError(path, lineno, "more than one cursor marker %r in buffer" % marker)
+        if count == 1:
+            col = text.index(marker)
+            cursor = (len(lines), col)
+            text = text[:col] + text[col + 1:]
+        lines.append(text)
+    if cursor is None:
+        raise ParseError(path, block[0][0], "buffer has no cursor marker %r" % marker)
+    return State(lines, cursor[0], cursor[1])
+
+
+def parse_file(path, relpath=None):
+    """Parse a .vimunit file. Returns (tests, errors)."""
+    relpath = relpath or path
+    with open(path, encoding="utf-8", newline="") as f:
+        text = f.read()
+    file_lines = text.split("\n")
+    if file_lines and file_lines[-1] == "":
+        file_lines.pop()
+    tests, errors = [], []
+    i = 0
+    n = len(file_lines)
+    while i < n:
+        line = file_lines[i].rstrip("\r")
+        if line.startswith(":start"):
+            end = i + 1
+            while end < n and not file_lines[end].startswith(":end"):
+                if file_lines[end].startswith(":start"):
+                    break
+                end += 1
+            if end >= n or not file_lines[end].startswith(":end"):
+                errors.append(ParseError(relpath, i, ":start without matching :end"))
+                i = end
+                continue
+            try:
+                tests.append(_parse_test(file_lines, i, end, relpath))
+            except ParseError as e:
+                errors.append(e)
+            i = end + 1
+        elif line.startswith(":"):
+            errors.append(ParseError(relpath, i, "directive outside of a test: %s" % line.split()[0]))
+            i += 1
+        elif line == "" or line.startswith("#"):
+            i += 1
+        else:
+            errors.append(ParseError(relpath, i, "unexpected text outside of a test"))
+            i += 1
+    seen = {}
+    for t in tests:
+        if t.description in seen:
+            errors.append(ParseError(relpath, t.lineno, "duplicate test description (also at line %d)" % (seen[t.description] + 1)))
+        seen.setdefault(t.description, t.lineno)
+    return tests, errors
+
+
+HEADER_DIRECTIVES = (":set", ":window", ":definition", ":xfail", ":cursor")
+
+
+def _parse_test(file_lines, start, end, path):
+    m = re.match(r"^:start\s*(.*?)\s*$", file_lines[start])
+    desc = m.group(1)
+    if not desc:
+        raise ParseError(path, start, "test has no description")
+    test = Test(path, start, desc)
+    block = []
+    block_start = None
+    current_step = None
+    header_done = False
+    definitions = []
+
+    def close_block(at):
+        nonlocal block, block_start
+        if current_step is None:
+            if not block:
+                raise ParseError(path, at, "test has no initial buffer before its first :type")
+            test.initial = parse_buffer_block(block, test.marker, path)
+        elif block:
+            current_step.expected = parse_buffer_block(block, test.marker, path)
+            current_step.exp_span = (block[0][0], block[-1][0] + 1)
+        block = []
+        block_start = None
+
+    for i in range(start + 1, end):
+        line = file_lines[i]
+        if line.endswith("\r"):
+            raise ParseError(path, i, "CRLF line endings are not supported")
+        if line.startswith(":"):
+            word = line.split(None, 1)[0]
+            rest = line[len(word):].strip()
+            if word in HEADER_DIRECTIVES:
+                if header_done:
+                    raise ParseError(path, i, "%s must come before the initial buffer" % word)
+                if word == ":set":
+                    test.options.update(parse_option_assignments(rest, path, i))
+                elif word == ":window":
+                    wm = re.match(r"^(\d+)x(\d+)$", rest)
+                    if not wm or int(wm.group(1)) < 12 or int(wm.group(2)) < 2:
+                        raise ParseError(path, i, ":window takes WIDTHxHEIGHT, at least 12x2 (e.g. :window 40x10)")
+                    test.window = (int(wm.group(1)), int(wm.group(2)))
+                elif word == ":definition":
+                    dm = re.match(r"^(\S+)\s+(\d+):(\d+)$", rest)
+                    if not dm:
+                        raise ParseError(path, i, ":definition takes NAME LINE:COLUMN (1-based)")
+                    definitions.append((dm.group(1), int(dm.group(2)), int(dm.group(3)), i))
+                elif word == ":xfail":
+                    xm = re.match(r"^(\S+)\s+(.+)$", rest)
+                    if not xm or xm.group(1) not in REFERENCE_EDITORS:
+                        raise ParseError(path, i, ":xfail takes an editor (%s) and a reason" % "/".join(REFERENCE_EDITORS))
+                    test.xfail[xm.group(1)] = xm.group(2)
+                elif word == ":cursor":
+                    if len(rest) != 1 or rest in "\t #:":
+                        raise ParseError(path, i, ":cursor takes a single character to use as the cursor marker")
+                    test.marker = rest
+                continue
+            header_done = True
+            if word == ":type":
+                close_block(i)
+                tm = re.match(r"^:type\s*(.*)$", line)
+                keys_text = tm.group(1)
+                try:
+                    keys = tokenize_keys(keys_text)
+                except KeyError_ as e:
+                    raise ParseError(path, i, str(e))
+                if not keys:
+                    raise ParseError(path, i, ":type with no keys")
+                current_step = Step(keys_text, keys, i)
+                test.steps.append(current_step)
+            else:
+                raise ParseError(path, i, "unknown directive %s" % word)
+        elif line.startswith("#"):
+            continue
+        elif line.startswith("\t") or line == "":
+            header_done = True
+            if block_start is None:
+                block_start = i
+            block.append((i, line[1:]))
+        else:
+            raise ParseError(path, i, "buffer lines must start with a tab (comments with # in column 1)")
+    close_block(end)
+    if not test.steps:
+        raise ParseError(path, start, "test has no :type steps")
+
+    for name, ln, col, where in definitions:
+        lines = test.initial.lines
+        if not (1 <= ln <= len(lines)) or not (1 <= col <= max(len(lines[ln - 1]), 1)):
+            raise ParseError(path, where, ":definition position %d:%d is outside the initial buffer" % (ln, col))
+        byte_col = len(lines[ln - 1][:col - 1].encode("utf-8")) + 1
+        test.definitions.append({"name": name, "line": ln, "column": col, "byteColumn": byte_col})
+    return test
+
+
+def find_test_files(paths):
+    """Expand files and directories (default: the whole suite) to .vimunit
+    files, as (absolute path, path relative to the repo) pairs."""
+    if not paths:
+        paths = [REPO]
+    found = []
+    for p in paths:
+        p = os.path.abspath(p)
+        if os.path.isdir(p):
+            for root, dirs, files in os.walk(p):
+                dirs[:] = sorted(d for d in dirs if not d.startswith(".") and d not in ("out", "integrations", "harness", "doc", "node_modules"))
+                for f in sorted(files):
+                    if f.endswith(TEST_SUFFIX):
+                        found.append(os.path.join(root, f))
+        elif os.path.isfile(p):
+            found.append(p)
+        else:
+            sys.exit("vimunit: no such file or directory: %s" % p)
+    result = []
+    seen = set()
+    for f in found:
+        if f in seen:
+            continue
+        seen.add(f)
+        rel = os.path.relpath(f, REPO)
+        if rel.startswith(".."):
+            rel = f
+        result.append((f, rel.replace(os.sep, "/")))
+    return result
+
+
+def _level_sort_key(item):
+    rel = item[1]
+    m = re.match(r"level(\d+)/", rel)
+    return (0, int(m.group(1)), rel) if m else (1, 0, rel)
+
+
+def load_suite(paths, filter_re=None, levels=None):
+    """Returns (list of (relpath, [tests])), errors)."""
+    files = sorted(find_test_files(paths), key=_level_sort_key)
+    suite, errors = [], []
+    for abspath, rel in files:
+        tests, errs = parse_file(abspath, rel)
+        errors.extend(errs)
+        if filter_re:
+            tests = [t for t in tests if re.search(filter_re, t.id)]
+        if levels is not None:
+            tests = [t for t in tests if t.group in levels]
+        if tests:
+            suite.append((rel, tests))
+    return suite, errors
+
+
+def parse_levels(spec):
+    """'0-3' or '2,4,side' -> set of group names."""
+    if not spec:
+        return None
+    groups = set()
+    for part in spec.split(","):
+        part = part.strip()
+        m = re.match(r"^(\d+)-(\d+)$", part)
+        if m:
+            for n in range(int(m.group(1)), int(m.group(2)) + 1):
+                groups.add("level%d" % n)
+        elif part.isdigit():
+            groups.add("level%s" % part)
+        else:
+            groups.add(part)
+    return groups
+
+
+# ---------------------------------------------------------------------------
+# Running tests in Vim and Neovim
+
+
+def editor_options(test, editor, baseline_overrides=None):
+    opts = dict(BASELINE)
+    if baseline_overrides:
+        opts.update(baseline_overrides)
+    opts.update(test.options)
+    out = {}
+    for name, value in opts.items():
+        if isinstance(value, bool):
+            value = 1 if value else 0
+        if editor == "nvim" and name == "cpoptions":
+            # Vim's 'z' flag (cw/d special cases) is Neovim's '_' flag; the d
+            # special case is always on in Neovim.
+            value = value.replace("_", "")
+            value = value.replace("z", "_")
+        out[name] = value
+    return out
+
+
+def harness_spec(tests, editor, baseline_overrides=None, window_override=None, resync=True):
+    """The JSON the harness runs. With resync=False, expected states are left
+    out, so a step that goes wrong isn't reset and later steps continue from
+    what actually happened (for rewriting expectations)."""
+    spec = []
+    for t in tests:
+        window = t.window or window_override or DEFAULT_WINDOW
+        spec.append({
+            "options": editor_options(t, editor, baseline_overrides),
+            "window": list(window),
+            "definitions": [{"name": d["name"], "line": d["line"], "col": d["byteColumn"]} for d in t.definitions],
+            "initial": {"lines": t.initial.lines, "cursor": t.initial.byte_cursor()},
+            "steps": [{
+                "keys": s.keys,
+                "expected": ({"lines": s.expected.lines, "cursor": s.expected.byte_cursor()}
+                             if s.expected is not None and resync else None),
+            } for s in t.steps],
+        })
+    return {"tests": spec}
+
+
+class StepResult:
+    """Outcome of one step in one editor."""
+
+    def __init__(self, test, index, state=None, mode=None, errmsg="", error=None, recording=""):
+        self.test = test
+        self.index = index
+        self.state = state
+        self.mode = mode
+        self.errmsg = errmsg
+        self.error = error            # harness-level problem, if any
+        self.recording = recording
+
+    @property
+    def step(self):
+        return self.test.steps[self.index]
+
+    def problem(self):
+        """A description of why this step is wrong, or None if it passed."""
+        if self.error:
+            return self.error
+        if self.mode is not None and self.mode != "n":
+            return "ended in mode %r instead of Normal mode (steps must end in Normal mode)" % self.mode
+        if self.recording:
+            return "still recording a macro into register %s at the end of the step" % self.recording
+        if self.step.expected is None:
+            return "no expected state"
+        if self.state != self.step.expected:
+            return "text doesn't match" if self.state.lines != self.step.expected.lines else "cursor position doesn't match"
+        return None
+
+
+def _which(editor):
+    exe = shutil.which(editor)
+    if not exe:
+        sys.exit("vimunit: %s not found in PATH" % editor)
+    return exe
+
+
+def _spawn_vim(exe, cmd_args, workdir):
+    """Start Vim in a pseudo-terminal. Vim needs a real terminal to keep its
+    window size and scrolling state correct."""
+    import pty
+    import fcntl
+    import struct
+    import termios
+    master, slave = pty.openpty()
+    rows, cols = DEFAULT_WINDOW[1] + 1, DEFAULT_WINDOW[0]
+    fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", rows, cols, 0, 0))
+    env = dict(os.environ)
+    # A dumb terminal has no escape-sequence key codes, so that typed keys such
+    # as <Esc>OA are never mistaken for terminal codes (e.g. the Up arrow).
+    env["TERM"] = "dumb"
+    env.pop("VIMINIT", None)
+    env.pop("MYVIMRC", None)
+    proc = subprocess.Popen(
+        [exe, "-N", "-u", "NONE", "-i", "NONE", "-n", "--noplugin"] + cmd_args,
+        stdin=slave, stdout=slave, stderr=slave, cwd=workdir, env=env,
+        start_new_session=True, close_fds=True)
+    os.close(slave)
+    return proc, master
+
+
+def _spawn_nvim(exe, cmd_args, workdir):
+    env = dict(os.environ)
+    env.pop("VIMINIT", None)
+    env.pop("NVIM_APPNAME", None)
+    env["NVIM_LOG_FILE"] = os.path.join(workdir, "nvim.log")
+    proc = subprocess.Popen(
+        [exe, "--headless", "-u", "NONE", "-i", "NONE", "-n", "--noplugin"] + cmd_args,
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        cwd=workdir, env=env, start_new_session=True, close_fds=True)
+    return proc, None
+
+
+def _vim_string(s):
+    return "'" + s.replace("'", "''") + "'"
+
+
+def run_tests_in_editor(tests, editor, timeout=10.0, baseline_overrides=None, window_override=None, resync=True):
+    """Run a list of tests (normally one file's worth) in one editor process,
+    restarting the editor if a test hangs. Returns a list of StepResults."""
+    exe = _which(editor)
+    results = {}
+    workdir = tempfile.mkdtemp(prefix="vimunit-")
+    try:
+        spec_path = os.path.join(workdir, "spec.json")
+        with open(spec_path, "w", encoding="utf-8") as f:
+            json.dump(harness_spec(tests, editor, baseline_overrides, window_override, resync), f, ensure_ascii=False)
+        start = 0
+        attempt = 0
+        while start < len(tests):
+            attempt += 1
+            out_path = os.path.join(workdir, "out%d.jsonl" % attempt)
+            open(out_path, "w").close()
+            cmd_args = [
+                "--cmd", "let g:vimunit_spec = %s" % _vim_string(spec_path),
+                "--cmd", "let g:vimunit_out = %s" % _vim_string(out_path),
+                "--cmd", "let g:vimunit_dir = %s" % _vim_string(workdir),
+                "--cmd", "let g:vimunit_start = %d" % start,
+                "-S", HARNESS,
+            ]
+            if editor == "vim":
+                proc, master = _spawn_vim(exe, cmd_args, workdir)
+            else:
+                proc, master = _spawn_nvim(exe, cmd_args, workdir)
+            timed_out = _wait_for_editor(proc, master, out_path, timeout)
+            records = _read_records(out_path)
+            done = any(r.get("done") for r in records)
+            last_t = start - 1
+            for r in records:
+                if "t" not in r:
+                    continue
+                t = r["t"]
+                last_t = max(last_t, t)
+                test = tests[t]
+                if "setup_error" in r:
+                    for i in range(len(test.steps)):
+                        results[(t, i)] = StepResult(test, i, error="harness could not set up the test: %s" % r["setup_error"])
+                    continue
+                state = State.from_vim(r["lines"], r["cursor"])
+                results[(t, r["s"])] = StepResult(test, r["s"], state, r.get("mode"), r.get("errmsg", ""), r.get("error"), r.get("recording", ""))
+            if done:
+                break
+            # The editor hung or died. Blame the first step without a result.
+            stuck = None
+            for t in range(max(start, last_t), len(tests)):
+                for i in range(len(tests[t].steps)):
+                    if (t, i) not in results:
+                        stuck = (t, i)
+                        break
+                if stuck:
+                    break
+            if stuck is None:
+                break
+            why = ("timed out after %gs" % timeout) if timed_out else ("%s exited unexpectedly" % editor)
+            t, i = stuck
+            results[(t, i)] = StepResult(tests[t], i, error=why)
+            for j in range(i + 1, len(tests[t].steps)):
+                results[(t, j)] = StepResult(tests[t], j, error="not run (an earlier step %s)" % why)
+            start = t + 1
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+    ordered = []
+    for t, test in enumerate(tests):
+        for i in range(len(test.steps)):
+            ordered.append(results.get((t, i)) or StepResult(test, i, error="no result"))
+    return ordered
+
+
+def _wait_for_editor(proc, master, out_path, timeout):
+    """Wait for the editor to exit, draining its terminal output. Kill it if
+    its output file stops growing for `timeout` seconds. Returns True if it
+    was killed."""
+    last_size = -1
+    last_progress = time.time()
+    while True:
+        if master is not None:
+            try:
+                r, _, _ = select.select([master], [], [], 0.05)
+                if r:
+                    if not os.read(master, 65536):
+                        pass
+            except OSError:
+                pass
+        else:
+            time.sleep(0.02)
+        if proc.poll() is not None:
+            break
+        try:
+            size = os.path.getsize(out_path)
+        except OSError:
+            size = 0
+        now = time.time()
+        if size != last_size:
+            last_size = size
+            last_progress = now
+        elif now - last_progress > timeout:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except OSError:
+                proc.kill()
+            proc.wait()
+            if master is not None:
+                os.close(master)
+            return True
+    if master is not None:
+        try:
+            os.close(master)
+        except OSError:
+            pass
+    return False
+
+
+def _read_records(path):
+    records = []
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                try:
+                    records.append(json.loads(line))
+                except ValueError:
+                    pass
+    return records
+
+
+def run_suite(suite, editor, jobs, timeout, isolated=False, baseline_overrides=None,
+              window_override=None, progress=True, resync=True):
+    """Run every file of the suite in parallel (one editor process per file,
+    or per test with isolated=True). Returns {test id: [StepResult]}."""
+    units = []
+    for rel, tests in suite:
+        if isolated:
+            units.extend([t] for t in tests)
+        else:
+            units.append(tests)
+    results = {}
+    lock = threading.Lock()
+    done_count = [0]
+
+    def work(unit):
+        res = run_tests_in_editor(unit, editor, timeout, baseline_overrides, window_override, resync)
+        with lock:
+            done_count[0] += 1
+            if progress and sys.stderr.isatty():
+                sys.stderr.write("\r%s: %d/%d %s" % (editor, done_count[0], len(units), " " * 10))
+                sys.stderr.flush()
+        return unit, res
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        for unit, res in pool.map(work, units):
+            for r in res:
+                results.setdefault(r.test.id, []).append(r)
+    if progress and sys.stderr.isatty():
+        sys.stderr.write("\r" + " " * 40 + "\r")
+    return results
+
+
+# ---------------------------------------------------------------------------
+# Reporting
+
+
+def _indent(lines, prefix="\t"):
+    return "\n".join(prefix + l for l in lines) if lines else prefix + "(empty)"
+
+
+def _before_state(test, index):
+    if index == 0:
+        return test.initial
+    prev = test.steps[index - 1].expected
+    return prev
+
+
+def format_failure(r, editor=None):
+    test, step = r.test, r.step
+    out = ["%s:%d: %s, step %d%s: %s" % (
+        test.path, step.lineno + 1, test.description, r.index + 1,
+        " [%s]" % editor if editor else "", r.problem())]
+    out.append("  keys: %s" % step.keys_text)
+    before = _before_state(test, r.index)
+    if before is not None:
+        out.append("  before:\n" + _indent(before.render(test.marker), "    \t"))
+    if step.expected is not None:
+        out.append("  expected:\n" + _indent(step.expected.render(test.marker), "    \t"))
+    if r.state is not None:
+        out.append("  actual:\n" + _indent(r.state.render(test.marker), "    \t"))
+    if r.errmsg:
+        out.append("  last error message: %s" % r.errmsg)
+    return "\n".join(out)
+
+
+def classify(test, step_results, editor):
+    """Returns per-step statuses: pass, fail, xfail, xpass."""
+    statuses = []
+    xfail = editor in test.xfail
+    for r in step_results:
+        ok = r.problem() is None
+        if xfail:
+            statuses.append("xpass" if ok else "xfail")
+        else:
+            statuses.append("pass" if ok else "fail")
+    return statuses
+
+
+def summarize(suite, results_by_editor, verbose=False, out=sys.stdout):
+    """Print failures and a per-level summary. Returns the number of
+    unexpected failures."""
+    total_bad = 0
+    for editor, results in results_by_editor.items():
+        failures = []
+        xpasses = []
+        by_group = {}
+        for rel, tests in suite:
+            for t in tests:
+                rs = results.get(t.id, [])
+                statuses = classify(t, rs, editor)
+                g = by_group.setdefault(t.group or "(top)", [0, 0, 0, 0, 0])
+                g[0] += 1
+                g[2] += len(statuses)
+                g[3] += sum(1 for s in statuses if s in ("pass", "xpass"))
+                g[4] += sum(1 for s in statuses if s == "xfail")
+                if all(s in ("pass", "xpass") for s in statuses):
+                    g[1] += 1
+                for r, s in zip(rs, statuses):
+                    if s == "fail":
+                        failures.append(r)
+                    elif s == "xpass":
+                        xpasses.append(r)
+                    elif s == "xfail" and verbose:
+                        failures.append(r)
+        for r in failures:
+            print(format_failure(r, editor if len(results_by_editor) > 1 else None), file=out)
+            print(file=out)
+        for r in xpasses:
+            print("%s:%d: %s, step %d: unexpectedly passed in %s (remove its :xfail %s line)" % (
+                r.test.path, r.step.lineno + 1, r.test.description, r.index + 1, editor, editor), file=out)
+        n_fail = sum(1 for r in failures if editor not in r.test.xfail)
+        total_bad += n_fail + len(xpasses)
+        print("== %s" % editor, file=out)
+        tot = [0, 0, 0, 0, 0]
+        for group in sorted(by_group, key=lambda g: (0, int(g[5:])) if re.match(r"level\d+$", g) else (1, g)):
+            g = by_group[group]
+            for k in range(5):
+                tot[k] += g[k]
+            print("  %-10s %4d/%-4d tests  %5d/%-5d steps%s" % (
+                group, g[1], g[0], g[3], g[2], ("  (%d expected failures)" % g[4]) if g[4] else ""), file=out)
+        print("  %-10s %4d/%-4d tests  %5d/%-5d steps" % ("total", tot[1], tot[0], tot[3], tot[2]), file=out)
+    return total_bad
+
+
+def report_disagreements(suite, results_by_editor, out=sys.stdout):
+    """Print steps where Vim and Neovim produced different results."""
+    eds = list(results_by_editor)
+    if len(eds) < 2:
+        return 0
+    a, b = eds[0], eds[1]
+    count = 0
+    for rel, tests in suite:
+        for t in tests:
+            ra = results_by_editor[a].get(t.id, [])
+            rb = results_by_editor[b].get(t.id, [])
+            for x, y in zip(ra, rb):
+                if x.state is None or y.state is None:
+                    continue
+                if x.state != y.state or (x.mode != y.mode):
+                    count += 1
+                    print("%s:%d: %s, step %d: %s and %s disagree" % (
+                        t.path, x.step.lineno + 1, t.description, x.index + 1, a, b), file=out)
+                    print("  keys: %s" % x.step.keys_text, file=out)
+                    print("  %s:\n%s" % (a, _indent(x.state.render(t.marker), "    \t")), file=out)
+                    print("  %s:\n%s" % (b, _indent(y.state.render(t.marker), "    \t")), file=out)
+                    if t.xfail:
+                        print("  (has :xfail %s)" % ", ".join(sorted(t.xfail)), file=out)
+                    print(file=out)
+                    break
+    print("%d test(s) where %s and %s disagree" % (count, a, b), file=out)
+    return count
+
+
+# ---------------------------------------------------------------------------
+# Writing results back into test files (fill / update)
+
+
+def render_block(state, marker):
+    out = []
+    for line in state.render(marker):
+        out.append("\t" + line if line != "" else "")
+    return out
+
+
+def rewrite_file(abspath, edits):
+    """edits: list of (span_start, span_end, new_lines), non-overlapping."""
+    with open(abspath, encoding="utf-8", newline="") as f:
+        text = f.read()
+    trailing_newline = text.endswith("\n")
+    lines = text.split("\n")
+    if trailing_newline:
+        lines.pop()
+    for start, end, new in sorted(edits, key=lambda e: e[0], reverse=True):
+        lines[start:end] = new
+    with open(abspath, "w", encoding="utf-8", newline="") as f:
+        f.write("\n".join(lines) + ("\n" if trailing_newline else ""))
+
+
+# ---------------------------------------------------------------------------
+# Subcommands
+
+
+def _add_selection_args(p):
+    p.add_argument("paths", nargs="*", help="test files or directories (default: the whole suite)")
+    p.add_argument("-k", "--filter", metavar="REGEX", help="only tests whose id ('path: description') matches")
+    p.add_argument("-l", "--levels", metavar="LEVELS", help="only these levels, e.g. 0-3 or 2,4,side")
+
+
+def _add_run_args(p):
+    p.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4, help="number of editor processes to run in parallel (default: number of CPUs)")
+    p.add_argument("--timeout", type=float, default=10.0, help="seconds without progress before a hung editor is killed (default: 10)")
+    p.add_argument("--isolated", action="store_true", help="start a fresh editor for every test (slow; finds tests that depend on leftover state)")
+
+
+def _parse_overrides(items):
+    overrides = {}
+    for item in items or []:
+        overrides.update(parse_option_assignments(item, "--set", 0))
+    return overrides
+
+
+def _load_or_die(args):
+    suite, errors = load_suite(args.paths, args.filter, parse_levels(args.levels))
+    for e in errors:
+        print(e, file=sys.stderr)
+    if errors:
+        if getattr(args, "ignore_errors", False):
+            bad = set(e.path for e in errors)
+            suite = [(rel, tests) for rel, tests in suite if rel not in bad]
+            print("vimunit: skipping %d file(s) with errors" % len(bad), file=sys.stderr)
+        else:
+            sys.exit("vimunit: %d error(s) in test files" % len(errors))
+    if not suite:
+        sys.exit("vimunit: no tests selected")
+    return suite
+
+
+def cmd_run(args):
+    suite = _load_or_die(args)
+    editors = list(REFERENCE_EDITORS) if args.editor == "both" else [args.editor]
+    overrides = _parse_overrides(args.set)
+    window = None
+    if args.window:
+        m = re.match(r"^(\d+)x(\d+)$", args.window)
+        if not m:
+            sys.exit("vimunit: --window takes WIDTHxHEIGHT")
+        window = (int(m.group(1)), int(m.group(2)))
+    results_by_editor = {}
+    for ed in editors:
+        results_by_editor[ed] = run_suite(suite, ed, args.jobs, args.timeout, args.isolated, overrides, window)
+    bad = summarize(suite, results_by_editor, args.verbose)
+    if len(editors) > 1 and args.disagreements:
+        print()
+        report_disagreements(suite, results_by_editor)
+    if args.json:
+        _write_results_json(args.json, suite, results_by_editor)
+    if args.log:
+        os.makedirs(os.path.dirname(os.path.abspath(args.log)), exist_ok=True)
+        with open(args.log, "w", encoding="utf-8") as f:
+            summarize(suite, results_by_editor, args.verbose, out=f)
+    return 1 if bad else 0
+
+
+def _write_results_json(path, suite, results_by_editor):
+    out = {}
+    for ed, results in results_by_editor.items():
+        recs = []
+        for rel, tests in suite:
+            for t in tests:
+                for r in results.get(t.id, []):
+                    rec = {"id": t.id, "step": r.index + 1, "status": "pass" if r.problem() is None else "fail"}
+                    if r.state is not None:
+                        rec.update(r.state.to_json())
+                    if r.problem():
+                        rec["problem"] = r.problem()
+                    recs.append(rec)
+        out[ed] = recs
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=1)
+
+
+def cmd_fill(args):
+    suite = _load_or_die(args)
+    overrides = {}
+    results = run_suite(suite, args.editor, args.jobs, args.timeout, args.isolated, overrides,
+                        resync=not args.update)
+    by_path = {}
+    for abspath, rel in find_test_files(args.paths):
+        by_path[rel] = abspath
+    filled = updated = problems = 0
+    for rel, tests in suite:
+        edits = []
+        for t in tests:
+            rs = results.get(t.id, [])
+            broken = False
+            for r in rs:
+                step = r.step
+                if broken:
+                    break
+                bad = r.error or (r.mode is not None and r.mode != "n") or r.recording or r.state is None
+                if bad:
+                    problems += 1
+                    print(format_failure(r), file=sys.stderr)
+                    print(file=sys.stderr)
+                    broken = step.expected is None
+                    continue
+                if any(t.marker in line for line in r.state.lines):
+                    problems += 1
+                    print("%s:%d: %s, step %d: the result contains the cursor marker %r; use a :cursor directive to pick another marker" % (
+                        t.path, step.lineno + 1, t.description, r.index + 1, t.marker), file=sys.stderr)
+                    broken = step.expected is None
+                    continue
+                if step.expected is None:
+                    edits.append((step.exp_span[0], step.exp_span[1], render_block(r.state, t.marker)))
+                    filled += 1
+                elif r.state != step.expected:
+                    if args.update:
+                        edits.append((step.exp_span[0], step.exp_span[1], render_block(r.state, t.marker)))
+                        updated += 1
+                    else:
+                        problems += 1
+                        print(format_failure(r), file=sys.stderr)
+                        print(file=sys.stderr)
+        if edits:
+            rewrite_file(by_path[rel], edits)
+    print("filled %d step(s), updated %d, %d problem(s)" % (filled, updated, problems))
+    if not args.update and problems:
+        print("(use --update to overwrite expected states that don't match %s)" % args.editor)
+    return 1 if problems else 0
+
+
+def test_to_json(t):
+    return {
+        "id": t.id,
+        "file": t.path,
+        "line": t.lineno + 1,
+        "group": t.group,
+        "level": t.level,
+        "feature": t.feature,
+        "description": t.description,
+        "options": t.options,
+        "window": {"width": t.effective_window()[0], "height": t.effective_window()[1]},
+        "windowSpecified": t.window is not None,
+        "definitions": [{"name": d["name"], "line": d["line"] - 1, "column": d["column"] - 1} for d in t.definitions],
+        "initial": t.initial.to_json(),
+        "steps": [{
+            "line": s.lineno + 1,
+            "keys": s.keys_text,
+            "keyTokens": s.keys,
+            "expected": s.expected.to_json() if s.expected is not None else None,
+        } for s in t.steps],
+    }
+
+
+def cmd_export(args):
+    suite = _load_or_die(args)
+    data = {
+        "schemaVersion": EXPORT_SCHEMA_VERSION,
+        "defaultWindow": {"width": DEFAULT_WINDOW[0], "height": DEFAULT_WINDOW[1]},
+        "baselineOptions": BASELINE,
+        "options": [{"name": o[0], "type": o[1].__name__, "baseline": o[2], "group": o[3], "description": o[4]} for o in OPTIONS],
+        "specialKeys": SPECIAL_KEY_TOKENS,
+        "tests": [test_to_json(t) for rel, tests in suite for t in tests],
+    }
+    text = json.dumps(data, ensure_ascii=False, indent=1 if args.pretty else None)
+    if args.output and args.output != "-":
+        with open(args.output, "w", encoding="utf-8") as f:
+            f.write(text + "\n")
+    else:
+        sys.stdout.write(text + "\n")
+    return 0
+
+
+def _results_state(rec):
+    """Parse the actual state from an integration's result record."""
+    lines = rec.get("lines")
+    cursor = rec.get("cursor")
+    if lines is None or cursor is None:
+        return None
+    if isinstance(cursor, dict):
+        line, col = cursor.get("line"), cursor.get("column")
+    else:
+        line, col = cursor[0], cursor[1]
+    unit = rec.get("unit", "codepoint")
+    text = lines[line] if 0 <= line < len(lines) else ""
+    if unit == "utf16":
+        # An editor that splits a character outside the BMP leaves a lone
+        # surrogate in the text, so encode with surrogatepass.
+        units = text.encode("utf-16-le", errors="surrogatepass")[:col * 2]
+        col = len(units.decode("utf-16-le", errors="surrogatepass"))
+    elif unit == "byte":
+        col = len(text.encode("utf-8")[:col].decode("utf-8", errors="ignore"))
+    return State(lines, line, col)
+
+
+def test_from_json(d):
+    """Rebuild a Test from its exported JSON (see test_to_json)."""
+    def state(j):
+        c = j["cursor"]
+        return State(j["lines"], c["line"], c["column"])
+    path = d["file"]
+    t = Test(path, d["line"] - 1, d["description"])
+    t.options = d.get("options", {})
+    if d.get("windowSpecified"):
+        t.window = (d["window"]["width"], d["window"]["height"])
+    t.initial = state(d["initial"])
+    for sj in d["steps"]:
+        step = Step(sj["keys"], sj["keyTokens"], sj["line"] - 1)
+        step.expected = state(sj["expected"]) if sj.get("expected") else None
+        t.steps.append(step)
+    return t
+
+
+def load_exported_suite(path, filter_re=None, levels=None):
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    suite = []
+    for d in data["tests"]:
+        t = test_from_json(d)
+        if filter_re and not re.search(filter_re, t.id):
+            continue
+        if levels is not None and t.group not in levels:
+            continue
+        if suite and suite[-1][0] == t.path:
+            suite[-1][1].append(t)
+        else:
+            suite.append((t.path, [t]))
+    return suite
+
+
+def cmd_report(args):
+    """Score an integration's results (JSON lines; see doc/integrating.md)."""
+    if args.tests:
+        suite = load_exported_suite(args.tests, args.filter, parse_levels(args.levels))
+    else:
+        suite = _load_or_die(args)
+    tests_by_id = {t.id: t for rel, tests in suite for t in tests}
+    got = {}
+    with open(args.results, encoding="utf-8") as f:
+        for n, line in enumerate(f, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError as e:
+                sys.exit("%s:%d: invalid JSON: %s" % (args.results, n, e))
+            got[(rec.get("id"), rec.get("step"))] = rec
+    known_fields = {"id", "step", "lines", "cursor", "unit", "error", "skipped", "mode"}
+    by_group = {}
+    failures = []
+    for rel, tests in suite:
+        for t in tests:
+            g = by_group.setdefault(t.group or "(top)", {"tests": 0, "tests_pass": 0, "steps": 0, "pass": 0, "skip": 0, "missing": 0})
+            g["tests"] += 1
+            all_ok = True
+            for i, s in enumerate(t.steps):
+                g["steps"] += 1
+                rec = got.get((t.id, i + 1))
+                if rec is None:
+                    g["missing"] += 1
+                    all_ok = False
+                    continue
+                if rec.get("skipped"):
+                    g["skip"] += 1
+                    all_ok = False
+                    continue
+                state = _results_state(rec)
+                mode = rec.get("mode")
+                if mode is not None and mode != "n" and not rec.get("error"):
+                    rec = dict(rec, error="ended in mode %r instead of Normal mode" % mode)
+                if rec.get("error") or state is None or s.expected is None or state != s.expected:
+                    all_ok = False
+                    extra = dict((k, v) for k, v in rec.items() if k not in known_fields)
+                    failures.append((t, i, state, rec.get("error"), extra))
+                else:
+                    g["pass"] += 1
+            if all_ok:
+                g["tests_pass"] += 1
+    if args.verbose:
+        for t, i, state, err, extra in failures:
+            s = t.steps[i]
+            print("%s:%d: %s, step %d: %s" % (t.path, s.lineno + 1, t.description, i + 1, err or "doesn't match"))
+            print("  keys: %s" % s.keys_text)
+            if s.expected is not None:
+                print("  expected:\n" + _indent(s.expected.render(t.marker), "    \t"))
+            if state is not None:
+                print("  actual:\n" + _indent(state.render(t.marker), "    \t"))
+            for k in sorted(extra):
+                print("  %s: %s" % (k, json.dumps(extra[k], ensure_ascii=False)))
+            print()
+    name = args.name or os.path.basename(args.results)
+    print("== %s" % name)
+    tot = {"tests": 0, "tests_pass": 0, "steps": 0, "pass": 0, "skip": 0, "missing": 0}
+    for group in sorted(by_group, key=lambda g: (0, int(g[5:])) if re.match(r"level\d+$", g) else (1, g)):
+        g = by_group[group]
+        for k in tot:
+            tot[k] += g[k]
+        extra = []
+        if g["skip"]:
+            extra.append("%d skipped" % g["skip"])
+        if g["missing"]:
+            extra.append("%d missing" % g["missing"])
+        print("  %-10s %4d/%-4d tests  %5d/%-5d steps%s" % (group, g["tests_pass"], g["tests"], g["pass"], g["steps"], ("  (" + ", ".join(extra) + ")") if extra else ""))
+    print("  %-10s %4d/%-4d tests  %5d/%-5d steps" % ("total", tot["tests_pass"], tot["tests"], tot["pass"], tot["steps"]))
+    # The highest level N such that every test in levels 0..N passes.
+    compliant = -1
+    n = 0
+    while ("level%d" % n) in by_group:
+        g = by_group["level%d" % n]
+        if g["tests_pass"] != g["tests"]:
+            break
+        compliant = n
+        n += 1
+    print("  compliance level: %s" % (compliant if compliant >= 0 else "none"))
+    return 0
+
+
+# Options whose value commonly differs between Vim, Neovim and other editors
+# with Vim modes. `lint --deep` reruns the suite with each of these changed;
+# a test whose result changes must say which value it expects with :set (or
+# :window), so that editors which can't emulate that value can skip it.
+PERTURBATIONS = [
+    ("startofline", {"startofline": False}),
+    ("joinspaces", {"joinspaces": True}),
+    ("autoindent", {"autoindent": False}),
+    ("smarttab", {"smarttab": True}),
+    ("formatoptions", {"formatoptions": "tcqj"}),
+    ("nrformats", {"nrformats": "bin,octal,hex"}),
+    ("tabstop", {"tabstop": 4}),
+    ("shiftwidth", {"shiftwidth": 4}),
+    ("expandtab", {"expandtab": True}),
+    ("softtabstop", {"softtabstop": 4}),
+    ("wrap", {"wrap": False}),
+    ("ignorecase", {"ignorecase": True}),
+    ("scrolloff", {"scrolloff": 3}),
+    ("whichwrap", {"whichwrap": ""}),
+]
+PERTURB_WINDOW = (37, 11)
+
+
+def _state_key(r):
+    return (tuple(r.state.lines), r.state.line, r.state.col) if r.state is not None else (r.error or r.mode,)
+
+
+def deep_lint(suite, jobs, timeout):
+    """Find tests that depend on undeclared options or on leftover state."""
+    problems = []
+    base = run_suite(suite, "vim", jobs, timeout)
+    runs = [(name, overrides, None) for name, overrides in PERTURBATIONS]
+    runs.append(("window", {}, PERTURB_WINDOW))
+    runs.append(("isolation", None, None))
+    for name, overrides, window in runs:
+        sys.stderr.write("lint: checking %s\n" % name)
+        if overrides is None:
+            res = run_suite(suite, "vim", jobs, timeout, isolated=True)
+        else:
+            res = run_suite(suite, "vim", jobs, timeout, baseline_overrides=overrides, window_override=window)
+        for rel, tests in suite:
+            for t in tests:
+                if name == "window" and t.window is not None:
+                    continue
+                if name in t.options:
+                    continue
+                a = base.get(t.id, [])
+                b = res.get(t.id, [])
+                for x, y in zip(a, b):
+                    if _state_key(x) != _state_key(y):
+                        where = "%s:%d: %s, step %d" % (t.path, x.step.lineno + 1, t.description, x.index + 1)
+                        if name == "isolation":
+                            problems.append("%s: result differs when the test runs in a fresh editor; it depends on state left over from an earlier test" % where)
+                        elif name == "window":
+                            problems.append("%s: result depends on the window size; add a :window directive" % where)
+                        else:
+                            val = BASELINE[name]
+                            decl = (name if val else "no" + name) if isinstance(val, bool) else "%s=%s" % (name, val)
+                            problems.append("%s: result depends on '%s'; declare it with :set %s (or another value)" % (where, name, decl))
+                        break
+    return problems
+
+
+def cmd_lint(args):
+    suite, errors = load_suite(args.paths, args.filter, parse_levels(args.levels))
+    problems = [str(e) for e in errors]
+    for rel, tests in suite:
+        for t in tests:
+            states = [(t.initial, None)] + [(s.expected, s) for s in t.steps if s.expected is not None]
+            for state, step in states:
+                where = "%s:%d" % (t.path, (step.lineno if step else t.lineno) + 1)
+                line = state.lines[state.line]
+                if state.col > 0 and state.col >= len(line) and "virtualedit" not in t.options:
+                    problems.append("%s: %s: cursor is past the end of the line (impossible in Normal mode)" % (where, t.description))
+            for s in t.steps:
+                if s.expected is None:
+                    problems.append("%s:%d: %s: step has no expected state (run ./vimunit fill)" % (t.path, s.lineno + 1, t.description))
+                if s.keys_text != keys_to_text(s.keys) and args.strict:
+                    problems.append("%s:%d: %s: keys are not in canonical form (%s)" % (t.path, s.lineno + 1, t.description, keys_to_text(s.keys)))
+            if t.window and t.initial.line >= t.window[1]:
+                problems.append("%s:%d: %s: initial cursor is below the first screenful of the window" % (t.path, t.lineno + 1, t.description))
+    if args.deep and not errors:
+        problems.extend(deep_lint(suite, args.jobs, args.timeout))
+    for p in problems:
+        print(p)
+    print("%d problem(s)" % len(problems))
+    return 1 if problems else 0
+
+
+def options_markdown():
+    out = ["| Option | Baseline | Description |", "|--------|----------|-------------|"]
+    for name, typ, base, grp, desc in OPTIONS:
+        if typ is bool:
+            val = "on" if base else "off"
+        elif base == "":
+            val = "(empty)"
+        else:
+            val = "`%s`" % base
+        out.append("| `%s` | %s | %s |" % (name, val, desc.replace("|", "\\|")))
+    return "\n".join(out)
+
+
+def format_file_text(text):
+    """Normalize a test file: canonical key notation in :type lines, one blank
+    line between top-level blocks, a single final newline. Buffer lines are
+    never changed."""
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    out = []
+    in_test = False
+    for line in lines:
+        if not in_test:
+            if line.startswith(":start"):
+                in_test = True
+                if out and out[-1] != "" and not out[-1].startswith("#"):
+                    out.append("")
+                out.append(line)
+            elif line.strip() == "":
+                if out and out[-1] != "":
+                    out.append("")
+            else:
+                if out and out[-1] == ":end":
+                    out.append("")
+                out.append(line)
+            continue
+        if line.startswith(":end"):
+            in_test = False
+            out.append(":end")
+        elif line.startswith(":type"):
+            m = re.match(r"^:type\s*(.*)$", line)
+            try:
+                out.append(":type " + keys_to_text(tokenize_keys(m.group(1))))
+            except KeyError_:
+                out.append(line)
+        else:
+            out.append(line)
+    while out and out[-1] == "":
+        out.pop()
+    while out and out[0] == "":
+        out.pop(0)
+    return "\n".join(out) + "\n"
+
+
+def cmd_fmt(args):
+    changed = 0
+    for abspath, rel in find_test_files(args.paths):
+        with open(abspath, encoding="utf-8", newline="") as f:
+            text = f.read()
+        new = format_file_text(text)
+        if new == text:
+            continue
+        # Formatting must never change what the tests mean.
+        before, _ = parse_file(abspath, rel)
+        changed += 1
+        if args.check:
+            print("would reformat %s" % rel)
+            continue
+        with open(abspath, "w", encoding="utf-8", newline="") as f:
+            f.write(new)
+        after, errs = parse_file(abspath, rel)
+        sig = lambda ts: [(t.description, t.options, t.window, t.initial, [(s.keys, s.expected) for s in t.steps]) for t in ts]
+        if errs or sig(before) != sig(after):
+            with open(abspath, "w", encoding="utf-8", newline="") as f:
+                f.write(text)
+            sys.exit("vimunit: formatting %s would change its tests; left it unchanged (please report this bug)" % rel)
+        print("reformatted %s" % rel)
+    if args.check:
+        return 1 if changed else 0
+    return 0
+
+
+def cmd_options(args):
+    if args.markdown:
+        print(options_markdown())
+        return 0
+    groups = []
+    for o in OPTIONS:
+        if o[3] not in groups:
+            groups.append(o[3])
+    for g in groups:
+        print("[%s]" % g)
+        for name, typ, base, grp, desc in OPTIONS:
+            if grp != g:
+                continue
+            if typ is bool:
+                val = name if base else "no" + name
+            else:
+                val = "%s=%s" % (name, base)
+            print("  %-48s %s" % (val, desc))
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(prog="vimunit", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command")
+
+    p = sub.add_parser("run", help="run tests in vim and/or nvim")
+    _add_selection_args(p)
+    _add_run_args(p)
+    p.add_argument("-e", "--editor", choices=REFERENCE_EDITORS + ("both",), default="vim")
+    p.add_argument("-v", "--verbose", action="store_true", help="also show expected failures")
+    p.add_argument("--disagreements", action=argparse.BooleanOptionalAction, default=True, help="with --editor both, list tests where vim and nvim differ")
+    p.add_argument("--json", metavar="FILE", help="also write per-step results as JSON")
+    p.add_argument("--log", metavar="FILE", help="also write the report to a file")
+    p.add_argument("--set", action="append", metavar="OPTIONS", help="change the baseline value of options for tests that don't set them (to find tests that depend on an option)")
+    p.add_argument("--window", metavar="WxH", help="change the default window size for tests without a :window directive")
+    p.add_argument("--ignore-errors", action="store_true", help="leave out files that don't parse, instead of failing")
+    p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("fill", help="write a reference editor's results into test files")
+    _add_selection_args(p)
+    _add_run_args(p)
+    p.add_argument("-e", "--editor", choices=REFERENCE_EDITORS, default="vim")
+    p.add_argument("--update", action="store_true", help="also overwrite expected states that don't match")
+    p.set_defaults(func=cmd_fill)
+
+    p = sub.add_parser("export", help="export the suite as JSON")
+    _add_selection_args(p)
+    p.add_argument("-o", "--output", help="output file (default: stdout)")
+    p.add_argument("--pretty", action="store_true", help="indent the JSON")
+    p.add_argument("--ignore-errors", action="store_true", help="leave out files that don't parse, instead of failing")
+    p.set_defaults(func=cmd_export)
+
+    p = sub.add_parser("report", help="score an integration's results file")
+    _add_selection_args(p)
+    p.add_argument("--results", required=True, help="results file (JSON lines)")
+    p.add_argument("--tests", metavar="FILE", help="score against this export (from ./vimunit export) instead of the test files")
+    p.add_argument("--name", help="name to show in the report")
+    p.add_argument("--ignore-errors", action="store_true", help="leave out files that don't parse, instead of failing")
+    p.add_argument("-v", "--verbose", action="store_true", help="show each failure")
+    p.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("lint", help="check test files for problems")
+    _add_selection_args(p)
+    p.add_argument("--strict", action="store_true", help="also require canonical key notation")
+    p.add_argument("--deep", action="store_true", help="also rerun the tests in vim with commonly-differing options changed, and in isolation, to find undeclared dependencies")
+    p.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4, help="editor processes to run in parallel for --deep")
+    p.add_argument("--timeout", type=float, default=10.0, help="seconds without progress before a hung editor is killed")
+    p.set_defaults(func=cmd_lint)
+
+    p = sub.add_parser("fmt", help="normalize the formatting of test files")
+    p.add_argument("paths", nargs="*", help="test files or directories (default: the whole suite)")
+    p.add_argument("--check", action="store_true", help="only list files that would change")
+    p.set_defaults(func=cmd_fmt)
+
+    p = sub.add_parser("options", help="list supported options and baseline values")
+    p.add_argument("--markdown", action="store_true", help="print a Markdown table (as in doc/format.md)")
+    p.set_defaults(func=cmd_options)
+
+    args = parser.parse_args(argv)
+    if not args.command:
+        parser.print_help()
+        return 2
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

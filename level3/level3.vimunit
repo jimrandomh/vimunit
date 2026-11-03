@@ -48,18 +48,19 @@
 :type dw
 	Lorem ipsum d|o
 	sit amet
-:type ucwsit\<esc>
+:type ucwsit\<Esc>
 	Lorem ipsum dosi|t
 	sit amet
-:type bbcwlorem\<esc>
+:type bbcwlorem\<Esc>
 	Lorem lore|m dosit
 	sit amet
-:type cWlorem\<esc>
+:type cWlorem\<Esc>
 	Lorem lorelore|m dosit
 	sit amet
 :end
 
 :start Marks (m,',`)
+:set startofline
 	Lo|rem
 	ipsum
 	dolor
@@ -94,6 +95,7 @@
 :end
 
 :start Registers
+:set startofline
 	Lo|rem ipsum dolor
 :type "ryy"syw"rp
 	Lorem ipsum dolor
@@ -109,26 +111,27 @@
 :end
 
 :start Commands >,< (indent,dedent)
+:set tabstop=4 shiftwidth=4 noexpandtab startofline
 	Lo|rem ipsum
 	dolor sit
 	amet
-:type \<GT>\<GT>
+:type >>
 		|Lorem ipsum
 	dolor sit
 	amet
-:type \<GT>3\<GT>
+:type >3>
 			|Lorem ipsum
 		dolor sit
 		amet
-:type 2\<LT>\<LT>
+:type 2<<
 		|Lorem ipsum
 	dolor sit
 		amet
-:type jj2\<GT>k
+:type jj2>k
 			|Lorem ipsum
 		dolor sit
 			amet
-:type wvj2\<LT>
+:type wvj2<
 	|Lorem ipsum
 	dolor sit
 			amet
@@ -188,7 +191,7 @@
 :start Command c (change motion)
 	Lo|rem ipsum
 	dolor sit amet
-:type c$...not lorem\<esc>
+:type c$...not lorem\<Esc>
 	Lo...not lore|m
 	dolor sit amet
 :end
@@ -197,11 +200,11 @@
 	Lo|rem
 	ipsum
 	dolor
-:type CNot lorem\<esc>
+:type CNot lorem\<Esc>
 	LoNot lore|m
 	ipsum
 	dolor
-:type 2Casdf\<esc>
+:type 2Casdf\<Esc>
 	LoNot loreasd|f
 	dolor
 :end
@@ -224,30 +227,29 @@
 	sit
 :end
 
-
 :start Command s (substitute chars)
 	Lo|rem ipsum dolor
 	sit amet
-:type sxyz\<esc>
+:type sxyz\<Esc>
 	Loxy|zem ipsum dolor
 	sit amet
-:type 5sxyz\<esc>
+:type 5sxyz\<Esc>
 	Loxyxy|zpsum dolor
 	sit amet
-:type 100sxyz\<esc>
+:type 100sxyz\<Esc>
 	Loxyxyxy|z
 	sit amet
 :end
 
 :start Command S (substitute lines)
+:set autoindent
 	  Lo|rem
 	ipsum
 	dolor
-:type SNot lorem\<esc>
+:type SNot lorem\<Esc>
 	  Not lore|m
 	ipsum
 	dolor
-:type 3Sxyz\<esc>
+:type 3Sxyz\<Esc>
 	  xy|z
 :end
-

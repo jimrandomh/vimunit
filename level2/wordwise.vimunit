@@ -111,3 +111,167 @@
 	sit amet consectetur|.
 :end
 
+:start Motion w (runs of punctuation)
+	|Lorem.,;ipsum)(dolor sit
+:type w
+	Lorem|.,;ipsum)(dolor sit
+:type w
+	Lorem.,;|ipsum)(dolor sit
+:type w
+	Lorem.,;ipsum|)(dolor sit
+:type w
+	Lorem.,;ipsum)(|dolor sit
+:type w
+	Lorem.,;ipsum)(dolor |sit
+:end
+
+:start Motion w (underscores and digits are word characters)
+	|Lorem_ipsum42+dolor sit
+:type w
+	Lorem_ipsum42|+dolor sit
+:type w
+	Lorem_ipsum42+|dolor sit
+:type w
+	Lorem_ipsum42+dolor |sit
+:end
+
+:start Motion w (an empty line is a word)
+	Lorem |ipsum
+
+
+	dolor
+:type w
+	Lorem ipsum
+	|
+
+	dolor
+:type w
+	Lorem ipsum
+
+	|
+	dolor
+:type w
+	Lorem ipsum
+
+
+	|dolor
+:end
+
+:start Motion w (a whitespace-only line is not a word)
+	Lorem |ipsum
+	    
+		
+	dolor
+:type w
+	Lorem ipsum
+	    
+		
+	|dolor
+:end
+
+:start Motion [count]w (across lines and empty lines)
+	|Lorem ipsum
+
+	dolor sit
+	amet
+:type 3w
+	Lorem ipsum
+
+	|dolor sit
+	amet
+:type 2w
+	Lorem ipsum
+
+	dolor sit
+	|amet
+:end
+
+:start Motion b (from inside a word, and over empty lines)
+	Lorem ipsum
+
+	dolor si|t
+:type b
+	Lorem ipsum
+
+	dolor |sit
+:type b
+	Lorem ipsum
+
+	|dolor sit
+:type b
+	Lorem ipsum
+	|
+	dolor sit
+:type b
+	Lorem |ipsum
+
+	dolor sit
+:end
+
+:start Motion b (over punctuation and whitespace-only lines)
+	Lorem.,;ipsum
+	   
+	|dolor
+:type b
+	Lorem.,;|ipsum
+	   
+	dolor
+:type b
+	Lorem|.,;ipsum
+	   
+	dolor
+:type b
+	|Lorem.,;ipsum
+	   
+	dolor
+:end
+
+:start Motion e (on single-character words)
+	Lore|m a b ipsum
+:type e
+	Lorem |a b ipsum
+:type e
+	Lorem a |b ipsum
+:type e
+	Lorem a b ipsu|m
+:end
+
+:start Motion e (skips empty lines; punctuation runs are words)
+	Lor|em
+
+	.,;ipsum
+:type e
+	Lore|m
+
+	.,;ipsum
+:type e
+	Lorem
+
+	.,|;ipsum
+:type e
+	Lorem
+
+	.,;ipsu|m
+:end
+
+:start Command de (at the end of a line deletes into the next line)
+	Lorem ipsu|m
+	dolor sit
+:type de
+	Lorem ipsu| sit
+:end
+
+:start Command db (at the start of a line stops at the end of the previous line)
+	Lorem ipsum
+	|dolor
+:type db
+	Lorem| 
+	dolor
+:end
+
+:start Command [count]dw (across a line break)
+	Lorem |ipsum
+	dolor sit amet
+:type d2w
+	Lorem |sit amet
+:end

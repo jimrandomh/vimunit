@@ -1,13 +1,14 @@
 # This file is part of vim-unit: Unit tests for vim imitators
 
 :start Command i (insert)
+:set autoindent
 	Lorem |sit amet
-:type i\<esc>
+:type i\<Esc>
 	Lorem| sit amet
-:type i ipsum\ndolor \<esc>
+:type i ipsum\<CR>dolor \<Esc>
 	Lorem ipsum
 	dolor| sit amet
-:type i\n\<esc>
+:type i\<CR>\<Esc>
 	Lorem ipsum
 	dolor
 	|sit amet
@@ -15,28 +16,28 @@
 
 :start Insert mode backspace
 	Lorem |dolor
-:type ixx\<bs>\<bs>ipsum \<esc>
+:type ixx\<BS>\<BS>ipsum \<Esc>
 	Lorem ipsum| dolor
-:type i\<bs>
+:type i\<BS>\<Esc>
 	Lorem ips|u dolor
 :end
 
 :start Command a (append)
 	|L ipsum
 	sit amet
-:type aorem
+:type aorem\<Esc>
 	Lore|m ipsum
 	sit amet
-:type a\<esc>
+:type a\<Esc>
 	Lore|m ipsum
 	sit amet
-:type lllllla dolor\<esc>
+:type lllllla dolor\<Esc>
 	Lorem ipsum dolo|r
 	sit amet
-:type ja consectetur\<esc>
+:type ja consectetur\<Esc>
 	Lorem ipsum dolor
 	sit amet consectetu|r
-:type a\nadipisicing\<esc>
+:type a\<CR>adipisicing\<Esc>
 	Lorem ipsum dolor
 	sit amet consectetur
 	adipisicin|g
@@ -44,30 +45,126 @@
 
 :start Command A (append to line)
 	Lo|rem ipsum
-:type A dolor\nsit amet\<esc>
+:type A dolor\<CR>sit amet\<Esc>
 	Lorem ipsum dolor
 	sit ame|t
 :end
 
 :start Command I (prepend to line)
 	|dolor
-:type I    ipsum \<esc>
+:type I    ipsum \<Esc>
 	    ipsum| dolor
-:type ILorem \<esc>
+:type ILorem \<Esc>
 	    Lorem| ipsum dolor
 :end
 
 :start Command o (new line below)
 	Lo|rem ipsum
-:type odolor sit\<esc>
+:type odolor sit\<Esc>
 	Lorem ipsum
 	dolor si|t
 :end
 
 :start Command O (new line above)
 	Lo|rem ipsum
-:type Odolor sit\<esc>
+:type Odolor sit\<Esc>
 	dolor si|t
 	Lorem ipsum
 :end
 
+:start Commands o and O (autoindent copies the indent of the current line)
+:set autoindent tabstop=8 noexpandtab
+	    Lo|rem
+		ipsum
+:type odolor\<Esc>
+	    Lorem
+	    dolo|r
+		ipsum
+:type jOsit\<Esc>
+	    Lorem
+	    dolor
+		si|t
+		ipsum
+:end
+
+:start Command o (noautoindent)
+:set noautoindent
+	    Lo|rem
+:type odolor\<Esc>
+	    Lorem
+	dolo|r
+:end
+
+:start Autoindent (removed from a new line if nothing is typed)
+:set autoindent
+	    Lo|rem
+	ipsum
+:type o\<Esc>
+	    Lorem
+	|
+	ipsum
+:type kO\<Esc>
+	|
+	    Lorem
+
+	ipsum
+:type jA\<CR>\<Esc>
+
+	    Lorem
+	|
+
+	ipsum
+:end
+
+:start Command i (Enter with autoindent splits an indented line)
+:set autoindent tabstop=8 noexpandtab
+	    Lorem ip|sum
+:type i\<CR>\<Esc>
+	    Lorem ip
+	   | sum
+:end
+
+:start Command I (on an indented line; Esc leaves the cursor on the indent)
+	    Lorem ip|sum
+		dolor
+:type Ix\<Esc>
+	    |xLorem ipsum
+		dolor
+:type jIy\<Esc>
+	    xLorem ipsum
+		|ydolor
+:type kI\<Esc>
+	   | xLorem ipsum
+		ydolor
+:end
+
+:start Command I (on a whitespace-only line)
+	Lorem
+	|   
+:type Ix\<Esc>
+	Lorem
+	   |x
+:end
+
+:start Commands a and A (on an empty line)
+	Lorem
+	|
+
+	ipsum
+:type ax\<Esc>
+	Lorem
+	|x
+
+	ipsum
+:type jAy\<Esc>
+	Lorem
+	x
+	|y
+	ipsum
+:end
+
+:start Command A (Esc leaves the cursor on the last character)
+	Lo|rem ipsum
+:type A\<Esc>
+	Lorem ipsu|m
+:end

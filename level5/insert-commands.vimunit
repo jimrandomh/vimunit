@@ -1,0 +1,332 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Insert-mode commands: CTRL-W, CTRL-U, CTRL-H, <Del>, CTRL-A, CTRL-@,
+# CTRL-R, CTRL-T, CTRL-D, CTRL-E, CTRL-Y, CTRL-V, CTRL-K and CTRL-O.
+
+:start Insert CTRL-W (delete the word and the whitespace before the cursor)
+	foo bar  ba|z
+:type A\<C-W>X\<Esc>
+	foo bar  |X
+:type A\<C-W>\<C-W>Y\<Esc>
+	foo |Y
+:end
+
+:start Insert CTRL-W over punctuation
+	call foo->ba|r(
+:type A\<C-W>\<Esc>
+	call foo->ba|r
+:type A\<C-W>\<Esc>
+	call foo-|>
+:type A\<C-W>\<Esc>
+	call fo|o
+:type A\<C-W>\<Esc>
+	call| 
+:end
+
+:start Insert CTRL-W in the middle of a word
+	alpha be|ta
+:type i\<C-W>X\<Esc>
+	alpha |Xta
+:end
+
+:start Insert CTRL-W stops once at the start of the insert
+	alpha be|ta
+:type Agamma\<C-W>X\<Esc>
+	alpha beta|X
+:type Agamma\<C-W>\<C-W>Y\<Esc>
+	alpha |Y
+:end
+
+:start Insert CTRL-W at the start of a line (joins lines)
+	alpha
+	be|ta
+:type I\<C-W>X\<Esc>
+	alpha|Xbeta
+:end
+
+:start Insert CTRL-U (delete the entered text, then the rest of the line)
+	alpha be|ta gamma
+:type A delta\<C-U>X\<Esc>
+	alpha beta gamma|X
+:type A delta\<C-U>\<C-U>Y\<Esc>
+	|Y
+:end
+
+:start Insert CTRL-U before the end of the line
+	alpha be|ta
+:type i\<C-U>X\<Esc>
+	|Xta
+:end
+
+:start Insert CTRL-U keeps the indent with autoindent
+:set autoindent
+	    al|pha beta
+:type A\<C-U>X\<Esc>
+	    |X
+:type A\<C-U>\<C-U>Y\<Esc>
+	|Y
+:end
+
+:start Insert CTRL-U deletes the indent without autoindent
+:set noautoindent
+	    al|pha beta
+:type A\<C-U>X\<Esc>
+	|X
+:end
+
+:start Insert CTRL-U on an autoindented line
+:set autoindent tabstop=8
+	    al|pha
+:type ofoo\<C-U>X\<Esc>
+	    alpha
+	    |X
+:type ofoo\<C-U>\<C-U>Y\<Esc>
+	    alpha
+	    X
+	|Y
+:end
+
+:start Insert CTRL-H and <BS> (joining lines)
+	alpha
+	be|ta
+:type I\<BS>\<BS>X\<Esc>
+	alph|Xbeta
+:type A\<C-H>\<C-H>Y\<Esc>
+	alphXbe|Y
+:end
+
+:start Insert <Del> (joining lines at the end)
+	al|pha
+	beta
+:type i\<Del>\<Del>X\<Esc>
+	al|Xa
+	beta
+:type A\<Del>Y\<Esc>
+	alXa|Ybeta
+:end
+
+:start Insert CTRL-A (insert the previously inserted text)
+	al|pha
+:type ifoo\<Esc>
+	alfo|opha
+:type $a\<C-A>X\<Esc>
+	alfoophafoo|X
+:type 0i\<C-A>\<Esc>
+	foo|XalfoophafooX
+:end
+
+:start Insert CTRL-@ (insert the previously inserted text and stop)
+	al|pha
+:type ifoo\<Esc>
+	alfo|opha
+:type $a\<Nul>
+	alfoophafo|o
+:end
+
+:start Insert CTRL-R (insert a register)
+	alpha be|ta
+:type yiw
+	alpha |beta
+:type A \<C-R>"\<Esc>
+	alpha beta bet|a
+:type 0i\<C-R>0-\<Esc>
+	beta|-alpha beta beta
+:end
+
+:start Insert CTRL-R with a linewise register
+	al|pha
+	beta
+:type yy
+	al|pha
+	beta
+:type jA-\<C-R>"X\<Esc>
+	alpha
+	beta-alpha
+	|X
+:end
+
+:start Insert CTRL-R and CTRL-R CTRL-R with autoindent (indent is added)
+:set autoindent tabstop=8
+	    alpha
+	      be|ta
+	gamma
+:type yj
+	    alpha
+	      be|ta
+	gamma
+:type Go\<C-R>"\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	      gamma
+	|
+:type uo\<C-R>\<C-R>"\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	      gamma
+	|
+:end
+
+:start Insert CTRL-R CTRL-O with autoindent (no indent is added)
+:set autoindent
+	    alpha
+	      be|ta
+	gamma
+:type yj
+	    alpha
+	      be|ta
+	gamma
+:type Go\<C-R>\<C-O>"X\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	gamma
+	|X
+:end
+
+:start Insert CTRL-R with the . and - registers
+	alpha be|ta
+:type ifoo\<Esc>
+	alpha befo|ota
+:type x
+	alpha befo|ta
+:type A \<C-R>.\<C-R>-\<Esc>
+	alpha befota foo|o
+:end
+
+:start Insert CTRL-T and CTRL-D (change the indent)
+:set shiftwidth=4 tabstop=8 noexpandtab
+	al|pha
+:type i\<C-T>X\<Esc>
+	    al|Xpha
+:type A\<C-T>Y\<Esc>
+		alXpha|Y
+:type i\<C-D>Z\<Esc>
+	    alXpha|ZY
+:type A\<C-D>\<C-D>\<C-D>\<Esc>
+	alXphaZ|Y
+:end
+
+:start Insert CTRL-T and CTRL-D round to a multiple of shiftwidth
+:set shiftwidth=4 tabstop=8 expandtab
+	   al|pha
+	      beta
+:type a\<C-T>\<Esc>
+	    al|pha
+	      beta
+:type ji\<C-D>\<Esc>
+	    alpha
+	   | beta
+:end
+
+:start Insert 0 CTRL-D (delete all indent)
+:set shiftwidth=4 tabstop=8 noexpandtab autoindent
+		al|pha
+:type o0\<C-D>X\<Esc>
+		alpha
+	|X
+:type kA0\<C-D>Y\<Esc>
+	alpha|Y
+	X
+:end
+
+:start Insert ^ CTRL-D (delete the indent for this line only)
+:set shiftwidth=4 tabstop=8 noexpandtab autoindent
+	    al|pha
+:type o^\<C-D>label:\<CR>beta\<Esc>
+	    alpha
+	label:
+	    bet|a
+:end
+
+:start Insert CTRL-E and CTRL-Y (copy from the line below and above)
+	abcdef
+	|
+	uvw
+:type i\<C-Y>\<C-Y>\<C-E>\<C-E>\<Esc>
+	abcdef
+	ab|w
+	uvw
+:type A\<C-E>\<C-Y>\<C-Y>\<Esc>
+	abcdef
+	abwd|e
+	uvw
+:end
+
+:start Insert CTRL-V (insert a key literally)
+:set expandtab tabstop=8 shiftwidth=8 softtabstop=0
+	a|b
+:type i\<Tab>\<C-V>\<Tab>\<Esc>
+	a       |	b
+:end
+
+:start Insert CTRL-V with a decimal, octal or hex code
+	|x
+:type i\<C-V>065\<C-V>66\<C-V>o103\<C-V>x44\<C-V>X45-\<Esc>
+	ABCDE|-x
+:end
+
+:start Insert CTRL-V with a Unicode code point
+	|x
+:type i\<C-V>u00e9\<C-V>u20AC\<C-V>U0001F600\<Esc>
+	é€|😀x
+:end
+
+:start Insert CTRL-K (digraphs)
+	|x
+:type i\<C-K>e'\<C-K>a:\<C-K>ss\<C-K>Eu\<C-K>12\<Esc>
+	éäß€|½x
+:type a\<C-K>'e\<C-K>:o\<Esc>
+	éäß€½é|öx
+:end
+
+:start Insert CTRL-O (run one Normal-mode command)
+	alpha be|ta
+:type i\<C-O>0X\<Esc>
+	|Xalpha beta
+:type a\<C-O>$Y\<Esc>
+	Xalpha beta|Y
+:type A\<C-O>2bZ\<Esc>
+	|ZXalpha betaY
+:end
+
+:start Insert CTRL-O at the end of the line
+	alpha be|ta
+	gamma
+:type Afoo\<C-O>maX\<Esc>
+	alpha betafoo|X
+	gamma
+:type A\<C-O>jY\<Esc>
+	alpha betafooX
+	gamma|Y
+:end
+
+:start Insert CTRL-O with an operator
+	alpha be|ta gamma
+:type a\<C-O>dwX\<Esc>
+	alpha bet|Xgamma
+:type 0i\<C-O>D\<Esc>
+	|
+:end
+
+:start Insert CTRL-O and undo
+	al|pha
+:type ifoo\<C-O>lbar\<Esc>
+	alfoopba|rha
+:type u
+	alfoop|ha
+:type u
+	al|pha
+:end
+
+:start Insert CTRL-O and . (repeats the text typed after it)
+	al|pha beta
+:type ifoo\<C-O>lbar\<Esc>
+	alfoopba|rha beta
+:type w.
+	alfoopbarha ba|rbeta
+:end

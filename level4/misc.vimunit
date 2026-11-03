@@ -1,0 +1,254 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Commands gJ (join without spaces), gR and gr (virtual replace), gi (insert
+# where Insert mode last stopped), gI (insert in column 1), and U (undo all
+# changes on the last changed line).
+
+:start Command gJ (keeps whitespace, inserts no space)
+	|Lorem
+	    ipsum
+	dolor  
+	sit
+:type gJ
+	Lorem|    ipsum
+	dolor  
+	sit
+:type jgJ
+	Lorem    ipsum
+	dolor  |sit
+:end
+
+:start Command gJ (with a count)
+	|Lorem
+	ipsum
+	dolor
+	sit
+	amet
+:type 3gJ
+	Loremipsum|dolor
+	sit
+	amet
+:type u2gJ
+	Lorem|ipsum
+	dolor
+	sit
+	amet
+:type u1gJ
+	Lorem|ipsum
+	dolor
+	sit
+	amet
+:end
+
+:start Command gJ (empty lines, and on the last line)
+	|Lorem
+
+	ipsum
+:type gJ
+	Lore|m
+	ipsum
+:type gJ
+	Lorem|ipsum
+:type gJ
+	Lorem|ipsum
+:end
+
+:start Command . after gJ
+	|Lorem
+	  ipsum
+	dolor
+	  sit
+:type gJ
+	Lorem|  ipsum
+	dolor
+	  sit
+:type j.
+	Lorem  ipsum
+	dolor|  sit
+:end
+
+:start Command gR (typing over a tab)
+:set tabstop=8
+	|a	b
+:type gRxyz\<Esc>
+	xy|z	b
+:type 0gRabcdefghij\<Esc>
+	abcdefghi|j
+:end
+
+:start Command gR (<BS> restores the tab)
+:set tabstop=8
+	|a	b
+:type gRxyz\<BS>\<BS>\<Esc>
+	|x	b
+:end
+
+:start Command gR (typing a tab)
+:set tabstop=8 softtabstop=0 noexpandtab nosmarttab
+	|abcdefghijk
+:type gR\<Tab>X\<Esc>
+		|Xjk
+:type u0lgR\<Tab>\<Esc>
+	a|	ijk
+:end
+
+:start Command gR (<CR> replaces the rest of the line)
+	Lorem |ipsum
+	dolor sit
+	amet
+:type gRab\<CR>cd\<Esc>
+	Lorem ab
+	c|dlor sit
+	amet
+:end
+
+:start Command gR (past the end of the line)
+	Lo|rem
+	ipsum
+:type gRxyzzy\<Esc>
+	Loxyzz|y
+	ipsum
+:end
+
+:start Command gr (virtual replace one character)
+:set tabstop=8
+	a|	b
+:type grx
+	a|x	b
+:type ur-
+	a|-b
+:end
+
+:start Command gi (insert where Insert mode was last stopped)
+	Lorem |ipsum
+	dolor
+:type aX\<Esc>
+	Lorem i|Xpsum
+	dolor
+:type jgiY\<Esc>
+	Lorem iX|Ypsum
+	dolor
+:type jgiZ\<Esc>
+	Lorem iXY|Zpsum
+	dolor
+:end
+
+:start Command gi (after A, at the end of the line)
+	|Lorem
+	ipsum
+:type Afoo\<Esc>
+	Loremfo|o
+	ipsum
+:type jgibar\<Esc>
+	Loremfooba|r
+	ipsum
+:end
+
+:start Command gi (position moves with inserted lines)
+:set startofline
+	Lorem
+	ip|sum
+:type iX\<Esc>
+	Lorem
+	ip|Xsum
+:type ggyyP
+	|Lorem
+	Lorem
+	ipXsum
+:type giY\<Esc>
+	Lorem
+	Lorem
+	ipX|Ysum
+:end
+
+:start Command gi (no previous insert)
+	Lorem ip|sum
+:type giX\<Esc>
+	Lorem ip|Xsum
+:end
+
+:start Command gI (insert in column 1)
+	  Lo|rem
+	    ipsum
+:type gIX\<Esc>
+	|X  Lorem
+	    ipsum
+:type j.
+	X  Lorem
+	|X    ipsum
+:type 2gIab\<Esc>
+	X  Lorem
+	aba|bX    ipsum
+:end
+
+:start Command U (undo all changes on the last changed line)
+	Lorem |ipsum dolor
+	sit
+:type x
+	Lorem |psum dolor
+	sit
+:type wx
+	Lorem psum |olor
+	sit
+:type $x
+	Lorem psum ol|o
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:end
+
+:start Command U (is itself undone by U and u)
+	Lorem |ipsum dolor
+	sit
+:type xwx
+	Lorem psum |olor
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:type U
+	Lorem psum |olor
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:type u
+	Lorem psum |olor
+	sit
+:type u
+	Lorem |ipsum dolor
+	sit
+:end
+
+:start Command U (only the last changed line)
+	|Lorem
+	ipsum
+	dolor
+:type x
+	|orem
+	ipsum
+	dolor
+:type jxx
+	orem
+	|sum
+	dolor
+:type jU
+	orem
+	|ipsum
+	dolor
+:end
+
+:start Command U (after an insert and a deletion)
+	Lo|rem
+	ipsum
+:type Afoo\<Esc>
+	Loremfo|o
+	ipsum
+:type 0x
+	|oremfoo
+	ipsum
+:type U
+	Lore|m
+	ipsum
+:end

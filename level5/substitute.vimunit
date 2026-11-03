@@ -1,0 +1,389 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# The :s command: flags, special characters in the replacement, where the
+# cursor is left, and repeating substitutions with &, g&, :& and :~.
+
+:start Ex :s (first match only, cursor to the first non-blank)
+	  alpha beta alpha
+	gamma alpha d|elta
+:type :s/alpha/X/\<CR>
+	  alpha beta alpha
+	|gamma X delta
+:type k:s/alpha/X/\<CR>
+	  |X beta alpha
+	gamma X delta
+:end
+
+:start Ex :s with the g flag
+	alpha beta alpha
+	gam|ma alpha
+:type :%s/alpha/X/g\<CR>
+	X beta X
+	|gamma X
+:end
+
+:start Ex :%s (cursor to the last line with a match)
+	alpha one
+	beta one
+	gamma
+	  delta one
+	epsi|lon
+:type :%s/one/two/\<CR>
+	alpha two
+	beta two
+	gamma
+	  |delta two
+	epsilon
+:end
+
+:start Ex :s with no match (error, cursor unchanged)
+	alpha beta
+	gam|ma delta
+:type :s/zzz/X/\<CR>
+	alpha beta
+	gam|ma delta
+:type :%s/zzz/X/\<CR>
+	alpha beta
+	gam|ma delta
+:end
+
+:start Ex :s replacement with & and \0, and \& for a literal &
+	alpha be|ta
+:type :s/beta/[&]/\<CR>
+	|alpha [beta]
+:type :s/alpha/<\\0>/\<CR>
+	|<alpha> [beta]
+:type :s/<alpha>/\\&/\<CR>
+	|& [beta]
+:end
+
+:start Ex :s replacement with groups \1 and \2
+	alpha be|ta gamma
+:type :s/\\(\\w\\+\\) \\(\\w\\+\\)/\\2 \\1/\<CR>
+	|beta alpha gamma
+:end
+
+:start Ex :s replacement with \u, \U, \L and \E
+	alpha be|ta gamma
+	DELTA EPSILON
+:type :s/\\w\\+/\\u&/g\<CR>
+	|Alpha Beta Gamma
+	DELTA EPSILON
+:type :s/Beta \\w/\\U&\\E-x/\<CR>
+	|Alpha BETA G-xamma
+	DELTA EPSILON
+:type j:s/\\w\\+/\\L\\u&/g\<CR>
+	Alpha BETA G-xamma
+	|Delta Epsilon
+:end
+
+:start Ex :s replacement with ~ (the previous replacement)
+	alpha be|ta gamma
+:type :s/alpha/X/\<CR>
+	|X beta gamma
+:type :s/beta/~Y/\<CR>
+	|X XY gamma
+:type :s/gamma/\\~/\<CR>
+	|X XY ~
+:end
+
+:start Ex :s replacement with \r (splits the line)
+	alpha, be|ta, gamma
+	delta
+:type :s/, /\\r/g\<CR>
+	alpha
+	beta
+	|gamma
+	delta
+:type u
+	|alpha, beta, gamma
+	delta
+:end
+
+:start Ex :s with \n in the pattern (joins lines)
+	alpha,
+	be|ta,
+	gamma
+	delta
+:type :%s/,\\n/, /\<CR>
+	|alpha, beta, gamma
+	delta
+:end
+
+:start Ex :s with zero-width matches
+	ab|c
+	def
+:type :s/x*/-/g\<CR>
+	|-a-b-c
+	def
+:type j:s/$/;/\<CR>
+	-a-b-c
+	|def;
+:type :s/^/# /\<CR>
+	-a-b-c
+	|# def;
+:end
+
+:start Ex :s with another delimiter
+	a/b/|c
+:type :s#/#\\\\#g\<CR>
+	|a\b\c
+:end
+
+:start Ex :s with an empty pattern (uses the last search)
+	alpha beta
+	gam|ma beta
+:type /beta\<CR>
+	alpha beta
+	gamma |beta
+:type :s//X/\<CR>
+	alpha beta
+	|gamma X
+:type gg:s//Y/\<CR>
+	|alpha Y
+	gamma X
+:end
+
+:start Ex :s with a count
+	alpha x
+	be|ta x
+	gamma x
+	delta x
+:type :s/x/y/ 2\<CR>
+	alpha x
+	beta y
+	|gamma y
+	delta x
+:type :1,3s/x/z/ 2\<CR>
+	alpha x
+	beta y
+	gamma y
+	|delta z
+:end
+
+:start Ex :s with the i and I flags
+:set noignorecase
+	Alpha al|pha ALPHA
+:type :s/alpha/x/gi\<CR>
+	|x x x
+:end
+
+:start Ex :s with the I flag (overrides ignorecase)
+:set ignorecase nosmartcase
+	Alpha al|pha ALPHA
+:type :s/alpha/x/I\<CR>
+	|Alpha x ALPHA
+:type :s/alpha/y/\<CR>
+	|y x ALPHA
+:end
+
+:start Ex :s with gdefault (the g flag inverts)
+:set gdefault
+	alpha alpha alpha
+	be|ta beta beta
+:type :s/beta/X/\<CR>
+	alpha alpha alpha
+	|X X X
+:type k:s/alpha/Y/g\<CR>
+	|Y alpha alpha
+	X X X
+:end
+
+:start Ex :s with the c flag (answering y and n)
+	a1 a2 a|3 a4
+:type :s/a/X/gc\<CR>ynyn
+	X1 a2 X3 |a4
+:end
+
+:start Ex :s with the c flag (answering a for all the rest)
+	a1 a2 a|3
+	a4 a5
+:type :%s/a/X/gc\<CR>na
+	a1 X2 X3
+	|X4 X5
+:end
+
+:start Ex :s with the c flag (answering q and l)
+	a1 a2 a3
+	a4 a|5 a6
+:type :%s/a/X/gc\<CR>yq
+	X1 |a2 a3
+	a4 a5 a6
+:type :%s/a/Y/gc\<CR>nl
+	|X1 a2 Y3
+	a4 a5 a6
+:end
+
+:start Ex :s with the n flag (counts without changing)
+	al|pha beta
+	gamma alpha
+	delta alpha
+:type :%s/alpha/X/gn\<CR>
+	|alpha beta
+	gamma alpha
+	delta alpha
+:end
+
+:start Ex :s failing in a macro (aborts it)
+:set startofline
+	a|lpha x
+	beta x
+	gamma
+	delta x
+	epsilon
+:type qq:s/x/y/\<CR>jq
+	alpha y
+	|beta x
+	gamma
+	delta x
+	epsilon
+:type 3@q
+	alpha y
+	beta y
+	|gamma
+	delta x
+	epsilon
+:end
+
+:start Ex :s with the e flag (no error, so a macro continues)
+:set startofline
+	a|lpha x
+	beta x
+	gamma
+	delta x
+	epsilon
+:type qq:s/x/y/e\<CR>jq
+	alpha y
+	|beta x
+	gamma
+	delta x
+	epsilon
+:type 3@q
+	alpha y
+	beta y
+	gamma
+	delta y
+	|epsilon
+:end
+
+:start Ex :s with a non-greedy multi (\{-})
+	<a|> <b> <c>
+:type :s/<.\\{-}>/X/\<CR>
+	|X <b> <c>
+:type u
+	|<a> <b> <c>
+:type :s/<.*>/X/\<CR>
+	|X
+:end
+
+:start Command & (repeat :s on this line, without its flags)
+	a1 a2
+	a3 a|4
+	a5 a6
+:type :s/a/X/g\<CR>
+	a1 a2
+	|X3 X4
+	a5 a6
+:type k&
+	|X1 a2
+	X3 X4
+	a5 a6
+:type jj&
+	X1 a2
+	X3 X4
+	|X5 a6
+:end
+
+:start Ex :& and :&& (repeat :s, :&& keeps the flags)
+	a1 a2
+	a3 a|4
+	a5 a6
+:type :s/a/X/g\<CR>
+	a1 a2
+	|X3 X4
+	a5 a6
+:type k:&\<CR>
+	|X1 a2
+	X3 X4
+	a5 a6
+:type :&&\<CR>
+	|X1 X2
+	X3 X4
+	a5 a6
+:type jj:&g\<CR>
+	X1 X2
+	X3 X4
+	|X5 X6
+:end
+
+:start Ex :& with a range
+	a1 a2
+	b|1 b2
+	a3 a4
+	a5 a6
+:type :s/b/X/\<CR>
+	a1 a2
+	|X1 b2
+	a3 a4
+	a5 a6
+:type :%&&\<CR>
+	a1 a2
+	|X1 X2
+	a3 a4
+	a5 a6
+:type :%s/a/Y/\<CR>
+	Y1 a2
+	X1 X2
+	Y3 a4
+	|Y5 a6
+:type :3,4&&\<CR>
+	Y1 a2
+	X1 X2
+	Y3 Y4
+	|Y5 Y6
+:end
+
+:start Command g& (all lines, last search pattern, same flags)
+	a1 b1 a2 b2
+	a3 b|3 a4 b4
+:type :s/a/X/g\<CR>
+	a1 b1 a2 b2
+	|X3 b3 X4 b4
+:type u/b\<CR>
+	a1 b1 a2 b2
+	a3 |b3 a4 b4
+:type g&
+	a1 X1 a2 X2
+	|a3 X3 a4 X4
+:end
+
+:start Command & after a search (uses the substitute pattern)
+	a1 b1 a2 b2
+	a3 b|3 a4 b4
+:type :s/a/X/\<CR>
+	a1 b1 a2 b2
+	|X3 b3 a4 b4
+:type /b\<CR>
+	a1 b1 a2 b2
+	X3 |b3 a4 b4
+:type &
+	a1 b1 a2 b2
+	|X3 b3 X4 b4
+:end
+
+:start Ex :~ (last search pattern with the last replacement)
+	a1 b1 a2 b2
+	a3 b|3 a4 b4
+:type :s/a/X/\<CR>
+	a1 b1 a2 b2
+	|X3 b3 a4 b4
+:type /b\<CR>
+	a1 b1 a2 b2
+	X3 |b3 a4 b4
+:type :~\<CR>
+	a1 b1 a2 b2
+	|X3 X3 a4 b4
+:type :~g\<CR>
+	a1 b1 a2 b2
+	|X3 X3 a4 X4
+:end

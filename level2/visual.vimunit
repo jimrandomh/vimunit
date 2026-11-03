@@ -37,7 +37,7 @@
 	sit amet
 	consectetur
 	adipisicing
-:type vhh\<esc>
+:type vhh\<Esc>
 	Lore|m or
 	sit amet
 	consectetur
@@ -51,6 +51,7 @@
 :end
 
 :start Line visual mode yanking (V with Y)
+:set startofline
 	Lorem |ipsum
 	dolor sit
 	amet
@@ -70,3 +71,135 @@
 	amet
 :end
 
+:start Visual mode (v$ includes the line break)
+	Lorem |ipsum
+	dolor
+:type v$d
+	Lorem |dolor
+:end
+
+:start Visual mode (v$y yanks the line break)
+	Lorem |ipsum
+	dolor
+:type v$y
+	Lorem |ipsum
+	dolor
+:type jP
+	Lorem ipsum
+	dolo|ipsum
+	r
+:end
+
+:start Visual mode (v on an empty line, then d deletes the line)
+	Lorem
+	|
+	ipsum
+:type vd
+	Lorem
+	|ipsum
+:end
+
+:start Visual mode (o swaps the ends of the selection)
+	Lorem ip|sum dolor
+:type vllohhd
+	Lorem | dolor
+:end
+
+:start Visual mode (vw includes the first character of the next word)
+	Lorem |ipsum dolor
+:type vwd
+	Lorem |olor
+:end
+
+:start Visual mode (y moves the cursor to the start of the selection)
+	Lorem ip|sum dolor
+:type vlly
+	Lorem ip|sum dolor
+:type vhhhy
+	Lorem| ipsum dolor
+:end
+
+:start Visual mode (charwise yank across lines, then p)
+	Lorem |ipsum
+	dolor sit
+	amet
+:type vjy
+	Lorem |ipsum
+	dolor sit
+	amet
+:type jj$p
+	Lorem ipsum
+	dolor sit
+	amet|ipsum
+	dolor s
+:end
+
+:start Visual mode (c changes the selection)
+	Lorem |ipsum dolor
+:type vllcXY\<Esc>
+	Lorem X|Yum dolor
+:end
+
+:start Visual mode (p replaces the selection, and the register gets the old text)
+	|Lorem ipsum dolor
+:type vey
+	|Lorem ipsum dolor
+:type wvep
+	Lorem Lore|m dolor
+:type wvep
+	Lorem Lorem ipsu|m
+:end
+
+:start Linewise Visual mode (where y leaves the cursor, selecting down and up)
+	Lorem
+	ip|sum
+	dolor
+	sit
+:type Vjy
+	Lorem
+	|ipsum
+	dolor
+	sit
+:type jllVky
+	Lorem
+	ip|sum
+	dolor
+	sit
+:end
+
+:start Linewise Visual mode (c keeps the indent with autoindent)
+:set autoindent tabstop=8 noexpandtab
+	Lorem
+	  ip|sum
+	  dolor
+	sit
+:type Vjcamet\<Esc>
+	Lorem
+	  ame|t
+	sit
+:end
+
+:start Visual mode (switching between v and V)
+:set startofline
+	Lorem ipsum
+	dolor |sit
+	amet consectetur
+	adipisicing elit
+:type vjVd
+	Lorem ipsum
+	|adipisicing elit
+:type Vllvd
+	Lorem ipsum
+	|pisicing elit
+:end
+
+:start Visual mode (v in v, and V in V, exit Visual mode)
+	Lorem |ipsum
+	dolor sit
+:type vllvx
+	Lorem ip|um
+	dolor sit
+:type VjVx
+	Lorem ipum
+	dolor s|i
+:end

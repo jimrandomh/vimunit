@@ -1,0 +1,267 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Line wrapping and motions by screen line: gj, gk, g0, g^, g$, gm, gM. The
+# tests use a 20-column window, so the long lines wrap onto several screen
+# lines.
+
+:start Motion gj, gk, g<Down> and g<Up> (within a wrapped line)
+:window 20x6
+:set wrap
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+:type gj
+	the quick brown fox jump|s over one lazy dog and runs away
+	short line
+:type gj
+	the quick brown fox jumps over one lazy dog |and runs away
+	short line
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	shor|t line
+:type gk
+	the quick brown fox jumps over one lazy dog |and runs away
+	short line
+:type 2gk
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+:type g\<Down>
+	the quick brown fox jump|s over one lazy dog and runs away
+	short line
+:type g\<Up>
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+:end
+
+:start Motion gj (keeps the screen column across a short line)
+:window 20x6
+:set wrap
+	the quick brow|n fox jumps over one lazy dog and runs away
+	ab
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 2gj
+	the quick brown fox jumps over one lazy dog and runs a|way
+	ab
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	a|b
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	ab
+	sit amet conse|ctetur adipiscing elit sed do eiusmod
+:type gk
+	the quick brown fox jumps over one lazy dog and runs away
+	a|b
+	sit amet consectetur adipiscing elit sed do eiusmod
+:end
+
+:start Motion gj and gk (counts, crossing buffer lines)
+:window 20x6
+:set wrap
+	the qu|ick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 3gj
+	the quick brown fox jumps over one lazy dog and runs away
+	short |line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 2gj
+	the quick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipi|scing elit sed do eiusmod
+:type 3gk
+	the quick brown fox jumps over one lazy dog an|d runs away
+	short line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 100gj
+	the quick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipiscing elit sed do ei|usmod
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipiscing elit sed do ei|usmod
+:type 100gk
+	the qu|ick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:end
+
+:start Motion gj (with an operator, exclusive and charwise)
+:window 20x6
+:set wrap
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+:type dgj
+	the |s over one lazy dog and runs away
+	short line
+:type u
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+:type jdgk
+	the quick brown fox jumps over one lazy dog |t line
+:end
+
+:start Motion gj (nowrap, like j and linewise)
+:window 20x6
+:set nowrap
+	the |quick brown fox jumps over one lazy dog and runs away
+	short line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	shor|t line
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type gj
+	the quick brown fox jumps over one lazy dog and runs away
+	short line
+	sit |amet consectetur adipiscing elit sed do eiusmod
+:type gg0dgj
+	|sit amet consectetur adipiscing elit sed do eiusmod
+:end
+
+:start Motion g0 and g^ (start of the screen line)
+:window 20x6
+:set wrap
+	alpha bravo charlie   delta ec|ho foxtrot golf hotel
+:type g0
+	alpha bravo charlie |  delta echo foxtrot golf hotel
+:type $g0
+	alpha bravo charlie   delta echo foxtrot| golf hotel
+:type 25|g^
+	alpha bravo charlie   |delta echo foxtrot golf hotel
+:type 3|g^
+	|alpha bravo charlie   delta echo foxtrot golf hotel
+:end
+
+:start Motion g$ (end of the screen line)
+:window 20x6
+:set wrap
+	alpha |bravo charlie   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type g$
+	alpha bravo charlie|   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 0g\<End>
+	alpha bravo charli|e   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 0g$
+	alpha bravo charlie|   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type g$
+	alpha bravo charlie|   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type 2g$
+	alpha bravo charlie   delta echo foxtro|t golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:end
+
+:start Motion g$ (curswant is the screen column, not end of line)
+:window 20x6
+:set wrap
+	alpha |bravo charlie   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmod
+:type g$j
+	alpha bravo charlie   delta echo foxtrot golf hotel
+	sit amet consectetu|r adipiscing elit sed do eiusmod
+:type k$j
+	alpha bravo charlie   delta echo foxtrot golf hotel
+	sit amet consectetur adipiscing elit sed do eiusmo|d
+:end
+
+:start Motion g0 and g$ (with operators)
+:window 20x6
+:set wrap
+	alpha bravo charlie   delta ec|ho foxtrot golf hotel
+:type dg$
+	alpha bravo charlie   delta ec| golf hotel
+:type u
+	alpha bravo charlie   delta ec|ho foxtrot golf hotel
+:type dg0
+	alpha bravo charlie |ho foxtrot golf hotel
+:end
+
+:start Motion gm (half a screen width into the screen line)
+:window 20x6
+:set wrap
+	|alpha bravo charlie   delta echo foxtrot golf hotel
+	ab
+:type gm
+	alpha brav|o charlie   delta echo foxtrot golf hotel
+	ab
+:type 25|gm
+	alpha bravo charlie   delta ec|ho foxtrot golf hotel
+	ab
+:type 45|gm
+	alpha bravo charlie   delta echo foxtrot golf hote|l
+	ab
+:type jgm
+	alpha bravo charlie   delta echo foxtrot golf hotel
+	a|b
+:end
+
+:start Motion gM (half way through the text of the line)
+:window 20x6
+:set wrap
+	|alpha bravo charlie   delta echo foxtrot golf hotel
+	ab
+:type gM
+	alpha bravo charlie   del|ta echo foxtrot golf hotel
+	ab
+:type 10gM
+	alpha| bravo charlie   delta echo foxtrot golf hotel
+	ab
+:type 100gM
+	alpha bravo charlie   delta echo foxtrot golf hote|l
+	ab
+:type jgM
+	alpha bravo charlie   delta echo foxtrot golf hotel
+	a|b
+:end
+
+:start Motion g0, g$ and gm (nowrap, scrolled horizontally)
+:window 20x6
+:set nowrap sidescroll=1 sidescrolloff=0
+	the quick brown fox| jumps over one lazy dog and runs away
+:type 8l
+	the quick brown fox jumps o|ver one lazy dog and runs away
+:type g0
+	the quic|k brown fox jumps over one lazy dog and runs away
+:type g$
+	the quick brown fox jumps o|ver one lazy dog and runs away
+:type gm
+	the quick brown fo|x jumps over one lazy dog and runs away
+:type 0g$
+	the quick brown fox| jumps over one lazy dog and runs away
+:end
+
+:start Motion g^ (nowrap, scrolled horizontally)
+:window 20x6
+:set nowrap sidescroll=1 sidescrolloff=0
+	the quick      brow|n fox jumps over one lazy dog and runs away
+:type 9l
+	the quick      brown fox jum|ps over one lazy dog and runs away
+:type g^
+	the quick      |brown fox jumps over one lazy dog and runs away
+:type g0
+	the quick|      brown fox jumps over one lazy dog and runs away
+:type 0g^
+	|the quick      brown fox jumps over one lazy dog and runs away
+:end
+
+:start Motion gj and g$ (with linebreak)
+:window 20x6
+:set wrap linebreak
+	lo|rem ipsum dolor sit amet consectetur adipiscing elit sed do
+:type g$
+	lorem ipsum dolor| sit amet consectetur adipiscing elit sed do
+:type gj
+	lorem ipsum dolor sit amet| consectetur adipiscing elit sed do
+:type g0
+	lorem ipsum dolor |sit amet consectetur adipiscing elit sed do
+:type gj
+	lorem ipsum dolor sit amet |consectetur adipiscing elit sed do
+:type g$
+	lorem ipsum dolor sit amet consectetur| adipiscing elit sed do
+:end

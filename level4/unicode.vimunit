@@ -1,0 +1,208 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Blockwise Visual mode over double-width and combining characters, and text
+# objects, search offsets and CTRL-A with non-ASCII text.
+#
+# A blockwise selection covers a range of screen columns, so a double-width
+# character can be partly inside a block. Commands that operate on the block
+# then split it, replacing the part outside the block with spaces.
+
+:start Visual block d (block ends on a double-width character)
+	ab|cdef
+	日本語テ
+:type \<C-V>jd
+	ab|ef
+	日語テ
+:end
+
+:start Visual block d (block edges split double-width characters)
+	a|bcdef
+	日本語テ
+	abcdef
+:type \<C-V>jjld
+	a|def
+	  語テ
+	adef
+:end
+
+# The "é" is "e" followed by U+0301 COMBINING ACUTE ACCENT.
+:start Visual block d (combining marks take no column)
+	é|abc
+	xyzw
+:type \<C-V>jld
+	é|c
+	xw
+:type u0\<C-V>jd
+	|abc
+	yzw
+:end
+
+:start Visual block I (block starts inside a double-width character)
+	a|bcd
+	日本語
+	abcd
+:type \<C-V>jjI#\<Esc>
+	a|#bcd
+	 #日本語
+	a#bcd
+:end
+
+:start Visual block A (block ends inside a double-width character)
+	a|bcd
+	日本語
+	abcd
+:type \<C-V>jjA#\<Esc>
+	a|b#cd
+	日#本語
+	ab#cd
+:end
+
+:start Visual block $A (lines of different widths)
+	|ab
+	日本語
+	é😀
+:type \<C-V>jj$A;\<Esc>
+	|ab;
+	日本語;
+	é😀;
+:end
+
+# Replacing with a narrow character puts one in every column of the block.
+# A double-width replacement fills two columns, so in the second step the
+# 3-column block gets one 字 and a space.
+:start Visual block r (double-width characters)
+	|abcd
+	日本語
+	abc
+:type \<C-V>jlr*
+	|****
+	****語
+	abc
+:type u0\<C-V>jjllr字
+	|字 d
+	字  語
+	字 
+:end
+
+:start Visual block y and p (double-width characters)
+	|日本
+	テキ
+	abcd
+	efgh
+:type \<C-V>jly
+	|日本
+	テキ
+	abcd
+	efgh
+:type jjlp
+	日本
+	テキ
+	ab|日本cd
+	efテキgh
+:type u0\<C-V>jly
+	日本
+	テキ
+	|abcd
+	efgh
+:type gg0p
+	日|ab本
+	テefキ
+	abcd
+	efgh
+:end
+
+:start Visual block p (put column inside a double-width character)
+	|xy
+	zw
+	abc
+	日本
+:type \<C-V>jly
+	|xy
+	zw
+	abc
+	日本
+:type jjp
+	xy
+	zw
+	a|xybc
+	 zw日本
+:end
+
+# After the first step, の and です are adjacent hiragana, so they form one
+# word.
+:start Text object iw and aw (CJK classes)
+	日本語のテ|キストです
+:type diw
+	日本語の|です
+:type daw
+	日本|語
+:end
+
+:start Text object aw (ideographic space is white space)
+	|日本　語 abc
+:type daw
+	|語 abc
+:end
+
+:start Text object iw and aw (emoji)
+	ok 👍|👍 done x😀y
+:type daw
+	ok |done x😀y
+:type $hdiw
+	ok done x|y
+:end
+
+:start Text object is (CJK full stop doesn't end a sentence)
+	First. これは文です。次の|文です。 Next one. Last.
+:type dis
+	First. | Last.
+:end
+
+:start Text object i" (non-ASCII content, curly quotes)
+	x = "日本|語" + "café"
+	“日本” "x"
+:type di"
+	x = "|" + "café"
+	“日本” "x"
+:type $ci"ü\<Esc>
+	x = "" + "|ü"
+	“日本” "x"
+:type j0di"
+	x = "" + "ü"
+	“日本” "|"
+:end
+
+:start Search offsets (counted in characters)
+	|abc 日本語テキスト 😀😀x
+:type /テキスト/e-1\<CR>
+	abc 日本語テキ|スト 😀😀x
+:type 0/日本/e+1\<CR>
+	abc 日本|語テキスト 😀😀x
+:type 0/x/s-2\<CR>
+	abc 日本語テキスト |😀😀x
+:type 0d/テ/e\<CR>
+	|キスト 😀😀x
+:end
+
+:start CTRL-A (number after non-ASCII text)
+:set nrformats=bin,hex
+	|価格: 99円
+	値段１２３ 7
+	x日本12語
+:type \<C-A>
+	価格: 10|0円
+	値段１２３ 7
+	x日本12語
+:type j0\<C-A>
+	価格: 100円
+	値段１２３ |8
+	x日本12語
+:type j0l\<C-A>
+	価格: 100円
+	値段１２３ 8
+	x日本1|3語
+:type 10\<C-X>
+	価格: 100円
+	値段１２３ 8
+	x日本|3語
+:end

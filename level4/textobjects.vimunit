@@ -1,0 +1,205 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Word, sentence and paragraph text objects (iw, aw, iW, aW, is, as, ip, ap),
+# with operators and in Visual mode.
+
+:start Text object iw (inner word)
+	Lorem ip|sum   dolor
+:type diw
+	Lorem |   dolor
+:type diw
+	Lorem|dolor
+:end
+
+:start Text object aw (includes trailing white space)
+	Lorem ip|sum   dolor sit
+:type daw
+	Lorem |dolor sit
+:end
+
+:start Text object aw (last word on the line takes leading white space)
+	Lorem ipsum   dol|or
+	sit
+:type daw
+	Lorem ipsu|m
+	sit
+:end
+
+:start Text object aw (on white space, takes the next word)
+	Lorem ipsum|   dolor sit
+:type daw
+	Lorem ipsum| sit
+:end
+
+:start Text object aw (does not delete indent)
+	    Lo|rem
+	ipsum
+:type cawX\<Esc>
+	    |X
+	ipsum
+:end
+
+:start Text object iw (punctuation is a separate word)
+	foo.b|ar(baz)
+:type diw
+	foo.|(baz)
+:type 0fodiw
+	|.(baz)
+:type ldiw
+	|baz)
+:end
+
+:start Text object iW and aW (WORD includes punctuation)
+	Lorem foo.b|ar(baz) dolor
+:type diW
+	Lorem | dolor
+:type udaW
+	Lorem |dolor
+:end
+
+:start Text objects iw and aw with count
+	Lo|rem ipsum dolor sit
+:type d3iw
+	| dolor sit
+:type ud2aw
+	|dolor sit
+:end
+
+:start Text object aw with count (across the end of a line)
+	Lorem ip|sum
+	dolor sit
+:type d2aw
+	Lorem |sit
+:end
+
+:start Commands ciw and caw
+	Lorem ip|sum dolor
+:type ciwX\<Esc>
+	Lorem |X dolor
+:type ucawX\<Esc>
+	Lorem |Xdolor
+:end
+
+:start Command yiw (cursor moves to the start of the word)
+	Lorem ip|sum dolor
+:type yiwP
+	Lorem ipsu|mipsum dolor
+:end
+
+:start Text object iw in Visual mode (repeating extends; linewise becomes characterwise)
+	Lo|rem ipsum dolor sit
+:type viwiwiwd
+	| dolor sit
+:type uViwd
+	| ipsum dolor sit
+:end
+
+:start Text object aw in Visual mode (repeating and count)
+	Lo|rem ipsum dolor sit amet
+:type vawawd
+	|dolor sit amet
+:type v2awd
+	|amet
+:end
+
+:start Text object iw in Visual mode (selected backwards)
+	Lorem ipsum dol|or sit
+:type vhiwd
+	Lorem ipsum |r sit
+:end
+
+:start Text objects is and as (sentences)
+	Lorem ipsum.  Dolor s|it amet.  Consectetur.
+:type dis
+	Lorem ipsum.  |  Consectetur.
+:type udas
+	Lorem ipsum.  |Consectetur.
+:type u$das
+	Lorem ipsum.  Dolor sit amet|.
+:end
+
+:start Text object ip (inner paragraph)
+	Lorem
+	ip|sum
+
+
+	dolor
+:type dip
+	|
+
+	dolor
+:type dip
+	|dolor
+:end
+
+:start Text object ap (paragraph and following blank lines)
+:set startofline
+	Lorem
+	ip|sum
+
+
+	dolor
+	sit
+:type dap
+	|dolor
+	sit
+:end
+
+:start Text object ap (last paragraph takes preceding blank lines)
+:set startofline
+	Lorem
+	ipsum
+
+
+	dolor
+	s|it
+:type dap
+	Lorem
+	|ipsum
+:end
+
+:start Text object ip (white-space-only line is a boundary)
+# The third line of the buffer is three spaces.
+:set startofline
+	Lorem
+	ip|sum
+	   
+	dolor
+:type dip
+	  | 
+	dolor
+:type dip
+	|dolor
+:end
+
+:start Text object ap with count
+:set startofline
+	Lorem
+
+	ip|sum
+
+	dolor
+
+	sit
+:type d2ap
+	Lorem
+
+	|sit
+:end
+
+:start Text object ip in Visual mode (repeating extends the selection)
+	Lo|rem
+
+	ipsum
+
+	dolor
+	sit
+:type vipipd
+	|ipsum
+
+	dolor
+	sit
+:type uvapapd
+	|dolor
+	sit
+:end

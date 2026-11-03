@@ -1,0 +1,14 @@
+diff --git a/codex-rs/tui/src/bottom_pane/chat_composer.rs b/codex-rs/tui/src/bottom_pane/chat_composer.rs
+index bcc24561d8..a3f6501726 100644
+--- a/codex-rs/tui/src/bottom_pane/chat_composer.rs
++++ b/codex-rs/tui/src/bottom_pane/chat_composer.rs
+@@ -415,6 +415,9 @@ mod status_surface;
+ mod vim_history;
+ mod vim_register;
+ mod vim_search;
++// vim-unit keystroke-compatibility adapter (an ignored test); see vimunit_adapter.rs.
++#[cfg(test)]
++mod vimunit_adapter;
+ mod warning_notice;
+ 
+ use self::attachment_state::AttachmentState;

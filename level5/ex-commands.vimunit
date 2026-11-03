@@ -1,0 +1,407 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Line-oriented Ex commands: :d, :m, :t, :co, :j, :>, :<, :y, :pu and
+# :normal, and where each of them leaves the cursor.
+
+:start Ex :d (deletes lines, cursor to the next line's first non-blank)
+:set startofline
+	alpha
+	beta
+	gam|ma
+	    delta
+	epsilon
+:type :3d\<CR>
+	alpha
+	beta
+	    |delta
+	epsilon
+:type u
+	alpha
+	beta
+	|gamma
+	    delta
+	epsilon
+:type :2,3d\<CR>
+	alpha
+	    |delta
+	epsilon
+:end
+
+:start Ex :d (last lines of the buffer, cursor to the new last line)
+	alpha
+	  beta
+	gamma
+	del|ta
+:type :3,4d\<CR>
+	alpha
+	  |beta
+:type :d\<CR>
+	|alpha
+:end
+
+:start Ex :d with a count (from the end of the range)
+:set startofline
+	alpha
+	be|ta
+	gamma
+	delta
+	epsilon
+:type :d 2\<CR>
+	alpha
+	|delta
+	epsilon
+:type u
+	alpha
+	|beta
+	gamma
+	delta
+	epsilon
+:type :1,2d 2\<CR>
+	alpha
+	|delta
+	epsilon
+:end
+
+:start Ex :d with a count larger than the rest of the buffer
+	alpha
+	be|ta
+	gamma
+:type :d 10\<CR>
+	|alpha
+:end
+
+:start Ex :d into a register, and the unnamed register
+	alpha
+	be|ta
+	gamma
+:type :d a\<CR>
+	alpha
+	|gamma
+:type "ap
+	alpha
+	gamma
+	|beta
+:type :1d\<CR>p
+	gamma
+	|alpha
+	beta
+:end
+
+:start Ex :m (move lines, cursor to the last moved line)
+:set startofline
+	alpha
+	beta
+	gamma
+	delta
+	epsil|on
+:type :1m$\<CR>
+	beta
+	gamma
+	delta
+	epsilon
+	|alpha
+:type :2,3m0\<CR>
+	gamma
+	|delta
+	beta
+	epsilon
+	alpha
+:type :m-2\<CR>
+	|delta
+	gamma
+	beta
+	epsilon
+	alpha
+:end
+
+:start Ex :m (move the current line down one, then up one)
+:set startofline
+	alpha
+	  be|ta
+	gamma
+:type :m+1\<CR>
+	alpha
+	gamma
+	  |beta
+:type :m-2\<CR>
+	alpha
+	  |beta
+	gamma
+:end
+
+:start Ex :m and :t with nostartofline (cursor keeps its column, but not after :d)
+:set nostartofline
+	alpha
+	  be|ta
+	gamma
+	delta
+:type :m+1\<CR>
+	alpha
+	gamma
+	  be|ta
+	delta
+:type :t0\<CR>
+	  be|ta
+	alpha
+	gamma
+	  beta
+	delta
+:type :3d\<CR>
+	  beta
+	alpha
+	  |beta
+	delta
+:end
+
+:start Ex :m into its own range (error), and after its own end (no-op)
+:set startofline
+	alpha
+	beta
+	gam|ma
+	delta
+:type :1,3m2\<CR>
+	alpha
+	beta
+	gam|ma
+	delta
+:type :2,3m3\<CR>
+	alpha
+	beta
+	|gamma
+	delta
+:end
+
+:start Ex :t and :co (copy lines, cursor to the last copy)
+:set startofline
+	alpha
+	be|ta
+	  gamma
+:type :t.\<CR>
+	alpha
+	beta
+	|beta
+	  gamma
+:type :1,2co$\<CR>
+	alpha
+	beta
+	beta
+	  gamma
+	alpha
+	|beta
+:type :4t0\<CR>
+	  |gamma
+	alpha
+	beta
+	beta
+	  gamma
+	alpha
+	beta
+:end
+
+:start Ex :j (join, cursor to the first non-blank)
+	  alpha
+	be|ta
+	gamma
+	delta
+:type :1j\<CR>
+	  |alpha beta
+	gamma
+	delta
+:type u
+	  |alpha
+	beta
+	gamma
+	delta
+:type :1,3j\<CR>
+	  |alpha beta gamma
+	delta
+:end
+
+:start Ex :j with a count, and :j! (without spaces)
+	alpha
+	  be|ta
+	  gamma
+	delta
+	epsilon
+:type :j 3\<CR>
+	alpha
+	  |beta gamma delta
+	epsilon
+:type u
+	alpha
+	  be|ta
+	  gamma
+	delta
+	epsilon
+:type :j!\<CR>
+	alpha
+	  |beta  gamma
+	delta
+	epsilon
+:end
+
+:start Ex :> and :< (shift lines, cursor to the last line)
+:set shiftwidth=2 tabstop=8 noexpandtab
+	alpha
+	be|ta
+	gamma
+:type :>\<CR>
+	alpha
+	  |beta
+	gamma
+:type :1,3>>\<CR>
+	    alpha
+	      beta
+	    |gamma
+:type :1<\<CR>
+	  |alpha
+	      beta
+	    gamma
+:type :> 2\<CR>
+	    alpha
+		|beta
+	    gamma
+:end
+
+:start Ex :< with more shift than indent
+:set shiftwidth=4 tabstop=8 noexpandtab
+	  alpha
+	    be|ta
+:type :1,2<<\<CR>
+	alpha
+	|beta
+:end
+
+:start Ex :y (yank lines without moving the cursor)
+	alpha
+	be|ta
+	gamma
+:type :1y\<CR>
+	alpha
+	be|ta
+	gamma
+:type p
+	alpha
+	beta
+	|alpha
+	gamma
+:type :y a 2\<CR>
+	alpha
+	beta
+	|alpha
+	gamma
+:type G"aP
+	alpha
+	beta
+	alpha
+	|alpha
+	gamma
+	gamma
+:end
+
+:start Ex :pu (put a charwise register as lines)
+	  alpha
+	be|ta
+:type yiwk:pu\<CR>
+	  alpha
+	|beta
+	beta
+:type :pu!\<CR>
+	  alpha
+	|beta
+	beta
+	beta
+:type :0pu\<CR>
+	|beta
+	  alpha
+	beta
+	beta
+	beta
+:type :$pu\<CR>
+	beta
+	  alpha
+	beta
+	beta
+	beta
+	|beta
+:end
+
+:start Ex :pu with a register, and a linewise register
+	alpha
+	  be|ta
+	gamma
+:type "ayy:1pu a\<CR>
+	alpha
+	  |beta
+	  beta
+	gamma
+:type :$pu! a\<CR>
+	alpha
+	  beta
+	  beta
+	  |beta
+	gamma
+:end
+
+:start Ex :normal (runs keys on each line of a range)
+	alpha one
+	be|ta two
+	gamma three
+	delta four
+:type :%normal Ax\<CR>
+	alpha onex
+	beta twox
+	gamma threex
+	delta four|x
+:type :2,3normal 0dw\<CR>
+	alpha onex
+	twox
+	|threex
+	delta fourx
+:end
+
+:start Ex :normal with an unfinished command (ends Insert mode)
+	alpha
+	be|ta
+	gamma
+:type :normal ifoo\<CR>
+	alpha
+	befo|ota
+	gamma
+:type :normal d\<CR>
+	alpha
+	befo|ota
+	gamma
+:type x
+	alpha
+	befo|ta
+	gamma
+:end
+
+:start Ex command undone as one change
+	alpha
+	be|ta
+	gamma
+	delta
+:type :%normal Ax\<CR>
+	alphax
+	betax
+	gammax
+	delta|x
+:type u
+	alph|a
+	beta
+	gamma
+	delta
+:type :1,3j\<CR>:1m$\<CR>
+	delta
+	|alpha beta gamma
+:type u
+	|alpha beta gamma
+	delta
+:type u
+	alph|a
+	beta
+	gamma
+	delta
+:end

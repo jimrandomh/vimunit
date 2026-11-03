@@ -36,27 +36,27 @@
 
 :start Command repetition (i,I,o,O,a,A)
 	|ipsum
-:type A dolor\<esc>0.
+:type A dolor\<Esc>0.
 	ipsum dolor dolo|r
-:type ILorem \<esc>.
+:type ILorem \<Esc>.
 	Lorem| Lorem ipsum dolor dolor
-:type osit amet\<esc>.
+:type osit amet\<Esc>.
 	Lorem Lorem ipsum dolor dolor
 	sit amet
 	sit ame|t
-:type Oadipisicing\<esc>.
+:type Oadipisicing\<Esc>.
 	Lorem Lorem ipsum dolor dolor
 	sit amet
 	adipisicin|g
 	adipisicing
 	sit amet
-:type a consecetur\<esc>j.
+:type a consecetur\<Esc>j.
 	Lorem Lorem ipsum dolor dolor
 	sit amet
 	adipisicing consecetur
 	adipisicing consecetu|r
 	sit amet
-:type 9hiet \<esc>l.
+:type 9hiet \<Esc>l.
 	Lorem Lorem ipsum dolor dolor
 	sit amet
 	adipisicing consecetur
@@ -66,9 +66,121 @@
 
 :start Command repetition (insert with backspace)
 	Lorem |dolor
-:type ixx\<bs>\<bs>ipsum \<esc>
+:type ixx\<BS>\<BS>ipsum \<Esc>
 	Lorem ipsum| dolor
 :type l.
 	Lorem ipsum ipsum| dolor
 :end
 
+:start Command . (a count replaces the original count of dd)
+:set startofline
+	|Lorem
+	ipsum
+	dolor
+	sit
+	amet
+	consectetur
+	adipisicing
+	elit
+:type 2dd
+	|dolor
+	sit
+	amet
+	consectetur
+	adipisicing
+	elit
+:type 3.
+	|consectetur
+	adipisicing
+	elit
+:type .
+	|
+:end
+
+:start Command . (a count replaces both counts of [count]d[count]w)
+	|Lorem ipsum dolor sit amet consectetur adipisicing elit sed do
+:type 2d2w
+	|amet consectetur adipisicing elit sed do
+:type .
+	|sed do
+:type 1.
+	|do
+:end
+
+:start Command . (after p and [count]p)
+	Lo|rem
+:type yl
+	Lo|rem
+:type p.
+	Lorr|rem
+:type 3p
+	Lorrrrr|rem
+:type .
+	Lorrrrrrrr|rem
+:end
+
+:start Command . (after o with autoindent, on a line with a different indent)
+:set autoindent tabstop=8 noexpandtab
+	    Lo|rem
+	ipsum
+:type odolor\<Esc>
+	    Lorem
+	    dolo|r
+	ipsum
+:type j.
+	    Lorem
+	    dolor
+	ipsum
+	dolo|r
+:end
+
+:start Command . (yanks and motions are not repeated)
+	|Lorem ipsum dolor
+:type x
+	|orem ipsum dolor
+:type wyw
+	orem |ipsum dolor
+:type .
+	orem |psum dolor
+:end
+
+:start Command . (after u, repeats the undone change)
+	|Lorem ipsum dolor
+:type dw
+	|ipsum dolor
+:type u
+	|Lorem ipsum dolor
+:type w.
+	Lorem |dolor
+:end
+
+:start Command . (after inserting a line break)
+	Lorem |ipsum dolor
+:type i\<CR>\<Esc>
+	Lorem 
+	|ipsum dolor
+:type w.
+	Lorem 
+	ipsum 
+	|dolor
+:end
+
+:start Command . (after dw, de and db)
+	|Lorem ipsum dolor sit amet consectetur
+:type dw.
+	|dolor sit amet consectetur
+:type wde.
+	dolor | consectetur
+:type $db.
+	|r
+:end
+
+:start Command . (an empty insert replaces the last change)
+	|Lorem ipsum
+:type x
+	|orem ipsum
+:type wi\<Esc>
+	orem| ipsum
+:type .
+	ore|m ipsum
+:end

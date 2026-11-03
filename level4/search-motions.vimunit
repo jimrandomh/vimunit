@@ -1,0 +1,290 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Searches as motions after an operator (d/foo, c?bar, y/foo/e, dn), and
+# search offsets (/foo/e, /foo/s-1, /foo/+1, //;//).
+
+:start Command d/ (exclusive) and d/foo/e (inclusive)
+	|Lorem ipsum foo dolor foo
+:type d/foo\<CR>
+	|foo dolor foo
+:type u
+	|Lorem ipsum foo dolor foo
+:type d/foo/e\<CR>
+	| dolor foo
+:type u
+	|Lorem ipsum foo dolor foo
+:type wd/foo/e\<CR>
+	Lorem | dolor foo
+:end
+
+:start Command d/ (match on a later line, charwise)
+	Lorem i|psum
+	dolor
+	sit foo amet
+:type d/foo\<CR>
+	Lorem i|foo amet
+:type u
+	Lorem i|psum
+	dolor
+	sit foo amet
+:type 0d/foo\<CR>
+	|foo amet
+:end
+
+:start Command d/ (match at the start of a later line)
+	|Lorem
+	ipsum
+	foo dolor
+:type d/foo\<CR>
+	|foo dolor
+:type u
+	|Lorem
+	ipsum
+	foo dolor
+:type ld/foo\<CR>
+	|L
+	foo dolor
+:end
+
+:start Command c/ (match on a later line)
+	Lorem i|psum
+	dolor foo sit
+:type c/foo\<CR>X\<Esc>
+	Lorem i|Xfoo sit
+:type u
+	Lorem i|psum
+	dolor foo sit
+:type c/foo/e\<CR>Y\<Esc>
+	Lorem i|Y sit
+:end
+
+:start Command c? (backward, exclusive) and c?bar?e (backward, inclusive)
+	bar Lorem ipsum bar do|lor
+:type c?bar\<CR>X\<Esc>
+	bar Lorem ipsum |Xlor
+:type u
+	bar Lorem ipsum |bar dolor
+:type $c?bar?e\<CR>Y\<Esc>
+	bar Lorem ipsum ba|Y
+:end
+
+:start Command y/ and y? (cursor after yanking)
+	Lorem |ipsum foo dolor foo sit
+:type y/foo/e\<CR>
+	Lorem |ipsum foo dolor foo sit
+:type P
+	Lorem ipsum fo|oipsum foo dolor foo sit
+:type u$y?foo\<CR>
+	Lorem ipsum foo dolor |foo sit
+:type P
+	Lorem ipsum foo dolor foo s|ifoo sit
+:end
+
+:start Command d{count}/ and {count}d/
+	|a foo b foo c foo d foo
+:type d2/foo\<CR>
+	|foo c foo d foo
+:type u
+	|a foo b foo c foo d foo
+:type 3d/foo\<CR>
+	|foo d foo
+:end
+
+:start Command d/ (pattern not found deletes nothing)
+	Lo|rem ipsum
+:type d/xyz\<CR>
+	Lo|rem ipsum
+:type d/xyz\<CR>x
+	Lo|em ipsum
+:end
+
+:start Command dn and dN
+	|foo Lorem foo ipsum foo
+:type /foo\<CR>
+	foo Lorem |foo ipsum foo
+:type dn
+	foo Lorem |foo
+:type dN
+	|foo
+:end
+
+:start Command . after d/ (repeats the same pattern, not the latest search)
+	|Lorem foo ipsum foo dolor foo sit
+:type d/foo\<CR>
+	|foo ipsum foo dolor foo sit
+:type w.
+	foo |foo dolor foo sit
+:type /dolor\<CR>.
+	foo foo |foo sit
+:type n
+	|foo foo foo sit
+:end
+
+:start Command d/ with a line offset (linewise)
+:set startofline
+	Lorem
+	ip|sum
+	dolor foo
+	sit
+	amet
+:type d/foo/+1\<CR>
+	Lorem
+	|amet
+:type u
+	Lorem
+	ip|sum
+	dolor foo
+	sit
+	amet
+:type d/foo/-\<CR>
+	Lorem
+	|dolor foo
+	sit
+	amet
+:end
+
+:start Search offset e (end of match), with n and N
+	|Lorem foo ipsum foo dolor foo
+:type /foo/e\<CR>
+	Lorem fo|o ipsum foo dolor foo
+:type n
+	Lorem foo ipsum fo|o dolor foo
+:type N
+	Lorem fo|o ipsum foo dolor foo
+:type 2n
+	Lorem foo ipsum foo dolor fo|o
+:end
+
+:start Search offset e (from inside a match)
+	Lorem f|oo ipsum foo
+:type /foo/e\<CR>
+	Lorem fo|o ipsum foo
+:type /foo/e\<CR>
+	Lorem foo ipsum fo|o
+:end
+
+:start Search offset e+1 and e-1
+	|Lorem foobar ipsum
+:type /foo/e+1\<CR>
+	Lorem foo|bar ipsum
+:type 0/foo/e-1\<CR>
+	Lorem f|oobar ipsum
+:type 0/foo/e+5\<CR>
+	Lorem foobar |ipsum
+:end
+
+:start Search offset e+1 (past the end of the line)
+	|Lorem foo
+	ipsum
+:type /foo/e+1\<CR>
+	Lorem foo
+	|ipsum
+:end
+
+:start Search offset s and b
+	|Lorem foo ipsum
+:type /foo/s-1\<CR>
+	Lorem| foo ipsum
+:type 0/foo/b+2\<CR>
+	Lorem fo|o ipsum
+:type 0/foo/s\<CR>
+	Lorem |foo ipsum
+:end
+
+:start Search offset s-1 (before the start of the line)
+	|Lorem
+	foo ipsum
+:type /foo/s-1\<CR>
+	Lore|m
+	foo ipsum
+:end
+
+:start Search offset s-1 (n skips the match the cursor is in front of)
+	|Lorem foo ipsum foo dolor foo
+:type /foo/s-1\<CR>
+	Lorem| foo ipsum foo dolor foo
+:type n
+	Lorem foo ipsum| foo dolor foo
+:type n
+	Lorem foo ipsum foo dolor| foo
+:type N
+	Lorem foo ipsum| foo dolor foo
+:end
+
+:start Search offset +1 and - (line offsets go to column 1)
+	|Lorem
+	foo
+	  ipsum
+	dolor
+:type /foo/+1\<CR>
+	Lorem
+	foo
+	|  ipsum
+	dolor
+:type gg/foo/-\<CR>
+	|Lorem
+	foo
+	  ipsum
+	dolor
+:type gg/foo/+\<CR>
+	Lorem
+	foo
+	|  ipsum
+	dolor
+:type gg/foo/+2\<CR>
+	Lorem
+	foo
+	  ipsum
+	|dolor
+:end
+
+:start Search offset ?foo?e (backward)
+	Lorem foo ipsum foo dol|or
+:type ?foo?e\<CR>
+	Lorem foo ipsum fo|o dolor
+:type n
+	Lorem fo|o ipsum foo dolor
+:type N
+	Lorem foo ipsum fo|o dolor
+:end
+
+:start Search offset (/ with no pattern keeps the offset, // clears it)
+	|Lorem foo ipsum foo dolor foo sit foo
+:type /foo/e\<CR>
+	Lorem fo|o ipsum foo dolor foo sit foo
+:type /\<CR>
+	Lorem foo ipsum fo|o dolor foo sit foo
+:type //\<CR>
+	Lorem foo ipsum foo dolor |foo sit foo
+:type n
+	Lorem foo ipsum foo dolor foo sit |foo
+:end
+
+:start Search offset (// with a new offset)
+	|Lorem foo ipsum foo
+:type /foo\<CR>
+	Lorem |foo ipsum foo
+:type //e\<CR>
+	Lorem fo|o ipsum foo
+:type //s+1\<CR>
+	Lorem foo ipsum f|oo
+:end
+
+:start Search offset ; (another search after the match)
+:set startofline
+	|a bar b foo c bar d foo e bar f bar
+:type /foo/;/bar\<CR>
+	a bar b foo c |bar d foo e bar f bar
+:type n
+	a bar b foo c bar d foo e |bar f bar
+:type gg/foo/e;/bar/e\<CR>
+	a bar b foo c ba|r d foo e bar f bar
+:type gg//;//\<CR>
+	a bar b foo c |bar d foo e bar f bar
+:end
+
+:start Command d/foo/;/bar
+	|Lorem bar foo ipsum bar dolor
+:type d/foo/;/bar\<CR>
+	|bar dolor
+:end

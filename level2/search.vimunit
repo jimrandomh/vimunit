@@ -35,3 +35,143 @@
 	ipsum ipsum sit amet |ipsum
 :end
 
+:start Search ? (backward; n continues backward, N goes forward)
+:set wrapscan
+	Lorem ipsum dolor
+	ipsum sit |ipsum amet
+:type ?ipsum\<CR>
+	Lorem ipsum dolor
+	|ipsum sit ipsum amet
+:type n
+	Lorem |ipsum dolor
+	ipsum sit ipsum amet
+:type n
+	Lorem ipsum dolor
+	ipsum sit |ipsum amet
+:type N
+	Lorem |ipsum dolor
+	ipsum sit ipsum amet
+:type N
+	Lorem ipsum dolor
+	|ipsum sit ipsum amet
+:end
+
+:start Search / (the match at the cursor is skipped)
+:set wrapscan
+	Lorem |ipsum dolor ipsum
+:type /ipsum\<CR>
+	Lorem ipsum dolor |ipsum
+:type /ipsum\<CR>
+	Lorem |ipsum dolor ipsum
+:end
+
+:start Search ? (starting inside a match goes to its start)
+	Lorem ipsum dolor ip|sum amet
+:type ?ipsum\<CR>
+	Lorem ipsum dolor |ipsum amet
+:type ?ipsum\<CR>
+	Lorem |ipsum dolor ipsum amet
+:end
+
+:start Search n (overlapping matches: the search resumes after the match at the cursor)
+:set wrapscan
+	|Lorem lalala ipsum lala
+:type /lala\<CR>
+	Lorem |lalala ipsum lala
+:type n
+	Lorem lalala ipsum |lala
+:type n
+	Lorem |lalala ipsum lala
+:end
+
+:start Search / (fails at the end with nowrapscan)
+:set nowrapscan
+	Lorem ipsum
+	dolor |sit amet
+:type /ipsum\<CR>
+	Lorem ipsum
+	dolor |sit amet
+:type /amet\<CR>
+	Lorem ipsum
+	dolor sit |amet
+:type n
+	Lorem ipsum
+	dolor sit |amet
+:end
+
+:start Search / (a pattern that isn't found still becomes the last pattern)
+	|Lorem ipsum dolor ipsum
+:type /ipsum\<CR>
+	Lorem |ipsum dolor ipsum
+:type /consectetur\<CR>
+	Lorem |ipsum dolor ipsum
+:type n
+	Lorem |ipsum dolor ipsum
+:end
+
+:start Search ? (empty pattern repeats the last pattern backward)
+:set wrapscan
+	|Lorem ipsum dolor ipsum sit ipsum
+:type /ipsum\<CR>n
+	Lorem ipsum dolor |ipsum sit ipsum
+:type ?\<CR>
+	Lorem |ipsum dolor ipsum sit ipsum
+:type n
+	Lorem ipsum dolor ipsum sit |ipsum
+:type /\<CR>
+	Lorem |ipsum dolor ipsum sit ipsum
+:end
+
+:start Search / (case-sensitive by default)
+:set noignorecase nosmartcase wrapscan
+	|Lorem LOREM lorem ipsum
+:type /lorem\<CR>
+	Lorem LOREM |lorem ipsum
+:type /LOREM\<CR>
+	Lorem |LOREM lorem ipsum
+:end
+
+:start Search / (ignorecase and smartcase)
+:set ignorecase smartcase wrapscan
+	|Lorem LOREM lorem ipsum
+:type /lorem\<CR>
+	Lorem |LOREM lorem ipsum
+:type n
+	Lorem LOREM |lorem ipsum
+:type /Lorem\<CR>
+	|Lorem LOREM lorem ipsum
+:end
+
+:start Search n (the only match is the one at the cursor)
+:set wrapscan
+	Lorem
+	|ipsum dolor
+:type /ipsum\<CR>
+	Lorem
+	|ipsum dolor
+:type n
+	Lorem
+	|ipsum dolor
+:type N
+	Lorem
+	|ipsum dolor
+:end
+
+:start Search / (with a count, wrapping around)
+:set wrapscan
+	|Lorem ipsum dolor ipsum sit ipsum amet
+:type 2/ipsum\<CR>
+	Lorem ipsum dolor |ipsum sit ipsum amet
+:type 3/ipsum\<CR>
+	Lorem ipsum dolor |ipsum sit ipsum amet
+:end
+
+:start Search / (Esc cancels the search)
+	|Lorem ipsum dolor ipsum sit
+:type /ipsum\<CR>
+	Lorem |ipsum dolor ipsum sit
+:type /dolor\<Esc>
+	Lorem |ipsum dolor ipsum sit
+:type n
+	Lorem ipsum dolor |ipsum sit
+:end

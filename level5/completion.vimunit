@@ -1,0 +1,159 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Insert-mode completion of words from the buffer with CTRL-N and CTRL-P
+# (with 'complete' set to the current buffer only).
+
+:start Completion CTRL-N (nearest match after the cursor first)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-N>\<Esc>
+	apple apricot
+	apri|l
+	april
+:end
+
+:start Completion CTRL-P (nearest match before the cursor first)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-P>\<Esc>
+	apple apricot
+	aprico|t
+	april
+:end
+
+:start Completion CTRL-N repeated (wraps around, then the original text)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-N>\<C-N>\<Esc>
+	apple apricot
+	appl|e
+	april
+:type ccap\<C-N>\<C-N>\<C-N>\<Esc>
+	apple apricot
+	aprico|t
+	april
+:type ccap\<C-N>\<C-N>\<C-N>\<C-N>\<Esc>
+	apple apricot
+	a|p
+	april
+:end
+
+:start Completion CTRL-P repeated (wraps around, then the original text)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-P>\<C-P>\<Esc>
+	apple apricot
+	appl|e
+	april
+:type ccap\<C-P>\<C-P>\<C-P>\<C-P>\<Esc>
+	apple apricot
+	a|p
+	april
+:end
+
+:start Completion CTRL-E (cancel, back to the typed text)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-N>\<C-E>X\<Esc>
+	apple apricot
+	ap|X
+	april
+:end
+
+:start Completion with no match
+:set noignorecase
+	apple apricot
+	|
+:type izz\<C-N>X\<Esc>
+	apple apricot
+	zz|X
+:end
+
+:start Completion lists each word once
+:set noignorecase
+	foo foobar foo
+	foobaz foo
+	|
+:type ifo\<C-N>\<C-N>\<C-N>\<Esc>
+	foo foobar foo
+	foobaz foo
+	fooba|z
+:type ccfo\<C-N>\<C-N>\<C-N>\<C-N>\<Esc>
+	foo foobar foo
+	foobaz foo
+	f|o
+:end
+
+:start Completion in the middle of a line, then typing on
+:set noignorecase
+	alpha beta gamma
+	betamax g|o
+:type ibe\<C-N>-\<Esc>
+	alpha beta gamma
+	betamax gbe|-o
+:end
+
+:start Completion of a keyword after punctuation
+:set noignorecase
+	self.counter = 0
+	|
+:type iself.co\<C-N>\<Esc>
+	self.counter = 0
+	self.counte|r
+:end
+
+:start Completion and . (repeats the completed word)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-P> \<Esc>
+	apple apricot
+	apricot| 
+	april
+:type .
+	apple apricot
+	apricotapricot|  
+	april
+:end
+
+:start Completion with ignorecase (the match replaces the typed case)
+:set ignorecase noinfercase
+	Apple apricot
+	|
+:type iAPR\<C-N>\<Esc>
+	Apple apricot
+	aprico|t
+:end
+
+:start Completion CTRL-Y (accepts the selected match)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-N>\<C-Y>X\<Esc>
+	apple apricot
+	april|X
+	april
+:end
+
+:start Completion CTRL-P twice, then CTRL-N (moves back through the matches)
+:set noignorecase
+	apple apricot
+	|
+	april
+:type iap\<C-P>\<C-P>\<C-N>\<Esc>
+	apple apricot
+	aprico|t
+	april
+:end

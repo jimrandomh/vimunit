@@ -1,0 +1,228 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Shifting lines with > and <.
+
+:start Operator > (empty lines are not indented)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	Lo|rem
+	
+	  
+	ipsum
+:type >3j
+	    |Lorem
+
+	      
+	    ipsum
+:type .
+		|Lorem
+
+		  
+		ipsum
+:end
+
+:start Operator > (cursor moves to the first non-blank)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	Lorem ip|sum
+	dolor
+:type >>
+	    |Lorem ipsum
+	dolor
+:type j$<<
+	    Lorem ipsum
+	|dolor
+:type k$<<
+	|Lorem ipsum
+	dolor
+:end
+
+:start Operator < (removes at most shiftwidth of indent)
+:set shiftwidth=4 tabstop=8 noexpandtab noshiftround startofline
+	      Lo|rem
+	  ipsum
+	dolor
+:type <<
+	  |Lorem
+	  ipsum
+	dolor
+:type <<
+	|Lorem
+	  ipsum
+	dolor
+:type j<2j
+	Lorem
+	|ipsum
+	dolor
+:end
+
+:start Operator > (indent of spaces becomes a tab)
+:set shiftwidth=4 tabstop=8 noexpandtab noshiftround startofline
+	|Lorem
+:type >>
+	    |Lorem
+:type >>
+		|Lorem
+:type >>
+		    |Lorem
+:type <<
+		|Lorem
+:end
+
+:start Operator > (count larger than the number of lines)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	Lorem
+	ip|sum
+	dolor
+:type 5>>
+	Lorem
+	    |ipsum
+	    dolor
+:type j>5j
+	Lorem
+	    ipsum
+	    |dolor
+:type kk>5j
+	    |Lorem
+		ipsum
+		dolor
+:end
+
+:start Operator > (repeat with .)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	|Lorem
+	ipsum
+	dolor
+:type 2>>
+	    |Lorem
+	    ipsum
+	dolor
+:type .
+		|Lorem
+		ipsum
+	dolor
+:type j.
+		Lorem
+		    |ipsum
+	    dolor
+:type 3.
+		Lorem
+			|ipsum
+		dolor
+:end
+
+:start Operator > (with the w motion, on the last word of a line)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	Lorem ip|sum
+	    dolor sit
+:type >w
+	    |Lorem ipsum
+	    dolor sit
+:type $>e
+		|Lorem ipsum
+		dolor sit
+:end
+
+:start Operator > (with the k and % motions)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	int main() {
+	return 0;
+	|}
+:type >k
+	int main() {
+	    |return 0;
+	    }
+:type k0f{>%
+	    |int main() {
+		return 0;
+		}
+:end
+
+# The tests above indent with tabs and spaces mixed (shiftwidth=4, tabstop=8),
+# as Vim does by default. These variants indent with spaces only, which every
+# editor can emulate.
+
+:start Operator > (expandtab: empty lines are not indented)
+:set shiftwidth=4 expandtab startofline
+	|alpha
+
+	bravo
+	charlie
+:type >3j
+	    |alpha
+
+	    bravo
+	    charlie
+:type .
+	        |alpha
+
+	        bravo
+	        charlie
+:end
+
+:start Operator > (expandtab: cursor moves to the first non-blank)
+:set shiftwidth=4 expandtab startofline
+	alp|ha
+	      bravo
+:type >>
+	    |alpha
+	      bravo
+:type j$<<
+	    alpha
+	  |bravo
+:end
+
+:start Operator < (expandtab: removes at most shiftwidth of indent)
+:set shiftwidth=4 expandtab startofline
+	      |alpha
+	  bravo
+	charlie
+:type <<
+	  |alpha
+	  bravo
+	charlie
+:type <<
+	|alpha
+	  bravo
+	charlie
+:type <2j
+	|alpha
+	bravo
+	charlie
+:end
+
+:start Operator > (expandtab: count larger than the number of lines)
+:set shiftwidth=4 expandtab startofline
+	alpha
+	|bravo
+	charlie
+:type 5>>
+	alpha
+	    |bravo
+	    charlie
+:type gg>5j
+	    |alpha
+	        bravo
+	        charlie
+:end
+
+:start Operator > (expandtab: repeat with .)
+:set shiftwidth=4 expandtab startofline
+	|alpha
+	bravo
+	charlie
+:type 2>>
+	    |alpha
+	    bravo
+	charlie
+:type .
+	        |alpha
+	        bravo
+	charlie
+:type j.
+	        alpha
+	            |bravo
+	    charlie
+:type 3.
+	        alpha
+	                |bravo
+	        charlie
+:end

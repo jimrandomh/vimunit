@@ -1,0 +1,167 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Unicode and line wrapping: double-width characters at the end of a screen
+# line, screen-line motions over them, and formatting text with double-width
+# and multibyte characters.
+#
+# When a double-width character doesn't fit in the last column of a screen
+# line, it moves to the next screen line, and the column it leaves empty is
+# shown as ">".
+
+:start Motion gj, gk, g$ and g0 (double-width character that doesn't fit)
+:window 12x6
+:set wrap
+	|abcde日本語テキスト
+	abcdefghijklmnop
+:type gj
+	abcde日本語|テキスト
+	abcdefghijklmnop
+:type g$
+	abcde日本語テキス|ト
+	abcdefghijklmnop
+:type gk
+	abcde|日本語テキスト
+	abcdefghijklmnop
+:type lgj
+	abcde日本語テキス|ト
+	abcdefghijklmnop
+:type $g0
+	abcde日本語|テキスト
+	abcdefghijklmnop
+:end
+
+:start Motion k and | (column skipped before a wrapped double-width character)
+:window 12x6
+:set wrap
+	abcde日本語テキスト
+	abcdefghijklm|nop
+:type k
+	abcde日本語|テキスト
+	abcdefghijklmnop
+:type j
+	abcde日本語テキスト
+	abcdefghijklm|nop
+:type k0
+	|abcde日本語テキスト
+	abcdefghijklmnop
+:type 14|
+	abcde日本語|テキスト
+	abcdefghijklmnop
+:type h12|
+	abcde日本語|テキスト
+	abcdefghijklmnop
+:end
+
+:start Motion gj and gk (screen column inside a double-width character)
+:window 12x6
+:set wrap
+	ab|cdefghijklx日本語テキスト
+	ab
+:type gj
+	abcdefghijklx|日本語テキスト
+	ab
+:type gk
+	ab|cdefghijklx日本語テキスト
+	ab
+:type l
+	abc|defghijklx日本語テキスト
+	ab
+:type gj
+	abcdefghijklx日|本語テキスト
+	ab
+:type 0fl
+	abcdefghijk|lx日本語テキスト
+	ab
+:type gj
+	abcdefghijklx日本語テ|キスト
+	ab
+:type gj
+	abcdefghijklx日本語テキス|ト
+	ab
+:type gk
+	abcdefghijklx日本語テ|キスト
+	ab
+:end
+
+:start Motion gj, gk and g$ (emoji that doesn't fit)
+:window 12x6
+:set wrap
+	|abcdefghijk😀xyz
+:type gj
+	abcdefghijk|😀xyz
+:type g$
+	abcdefghijk😀xy|z
+:type gk
+	abcd|efghijk😀xyz
+:type 0fkgj
+	abcdefghijk😀xy|z
+:end
+
+:start Motion gm and gM (double-width characters)
+:window 20x6
+:set wrap
+	|abcdef日本語テ
+:type gM
+	abcdef|日本語テ
+:type gm
+	abcdef日本|語テ
+:end
+
+:start Command gq (double-width characters count two columns)
+:set textwidth=10 formatoptions=tcq
+	|日本 語語 テスト 漢字漢字
+:type gqq
+	日本 語語
+	テスト
+	|漢字漢字
+:end
+
+:start Command gq (accented letters count one column)
+:set textwidth=10 formatoptions=tcq
+	|éé éé éé éé éé
+:type gqq
+	éé éé éé
+	|éé éé
+:end
+
+:start Command gq (formatoptions m, break at a multibyte character)
+:set textwidth=10 formatoptions=tcqm
+	|日本語のテキストです
+	abc
+:type gqq
+	日本語のテ
+	|キストです
+	abc
+:end
+
+:start Command gq (joining CJK lines, formatoptions m)
+:set textwidth=10 formatoptions=tcqm
+	|日本語の
+	テキストです
+:type gqj
+	日本語の
+	テキストで
+	|す
+:end
+
+:start Command gq (joining CJK lines, formatoptions mM)
+:set textwidth=10 formatoptions=tcqmM
+	|日本語の
+	テキストです
+:type gqj
+	日本語のテ
+	|キストです
+:end
+
+:start Automatic wrapping with textwidth (multibyte text)
+:set textwidth=10 formatoptions=tcqm
+	|
+:type i日本語のテキストです\<Esc>
+	日本語のテ
+	キストで|す
+:type oéé éé éé éé\<Esc>
+	日本語のテ
+	キストです
+	éé éé éé
+	é|é
+:end

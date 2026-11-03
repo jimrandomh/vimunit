@@ -1,0 +1,129 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Filtering lines through an external program with ! and !!. The only program
+# used is sort, on lowercase ASCII words, so the results don't depend on the
+# system's locale.
+
+:start Filter !ip (sort a paragraph)
+	pear
+	ap|ple
+	plum
+	fig
+
+	kiwi
+	date
+:type !ipsort\<CR>
+	|apple
+	fig
+	pear
+	plum
+
+	kiwi
+	date
+:type ugg
+	|pear
+	apple
+	plum
+	fig
+
+	kiwi
+	date
+:end
+
+:start Filter !! (with and without a count)
+	pear
+	ap|ple
+	plum
+	fig
+	kiwi
+:type !!sort\<CR>
+	pear
+	|apple
+	plum
+	fig
+	kiwi
+:type 3!!sort\<CR>
+	pear
+	|apple
+	fig
+	plum
+	kiwi
+:end
+
+:start Filter !G (to the end of the buffer)
+	pear
+	apple
+	pl|um
+	fig
+	kiwi
+	date
+:type !Gsort\<CR>
+	pear
+	apple
+	|date
+	fig
+	kiwi
+	plum
+:end
+
+:start Filter !ap (includes the trailing blank line)
+	pear
+	ap|ple
+	fig
+
+	kiwi
+	date
+:type !apsort\<CR>
+	|
+	apple
+	fig
+	pear
+	kiwi
+	date
+:end
+
+:start Filter repeated with .
+	pear
+	ap|ple
+	fig
+
+	plum
+	kiwi
+	date
+:type !ipsort\<CR>
+	|apple
+	fig
+	pear
+
+	plum
+	kiwi
+	date
+:type }j.
+	apple
+	fig
+	pear
+
+	|date
+	kiwi
+	plum
+:type ugg
+	|apple
+	fig
+	pear
+
+	plum
+	kiwi
+	date
+:end
+
+:start Filter in Visual mode (v! filters whole lines)
+	apple
+	pe|ar
+	fig
+	kiwi
+:type vjl!sort\<CR>
+	apple
+	|fig
+	pear
+	kiwi
+:end

@@ -1,0 +1,128 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Joining lines with J.
+
+:start Command J (count of 1 or 2 joins two lines)
+:set nojoinspaces
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type 1J
+	Lorem| ipsum
+	dolor
+	sit
+:type u2J
+	Lorem| ipsum
+	dolor
+	sit
+:end
+
+:start Command J (count larger than the number of lines)
+:set nojoinspaces
+	Lorem
+	|ipsum
+	dolor
+	sit
+:type 10J
+	Lorem
+	ipsum dolor| sit
+:type J
+	Lorem
+	ipsum dolor| sit
+:end
+
+:start Command J (removes leading tabs and spaces)
+:set nojoinspaces
+	|Lorem
+	 	 ipsum
+:type J
+	Lorem| ipsum
+:end
+
+:start Command J (with an empty line)
+:set nojoinspaces
+	Lo|rem
+	
+	ipsum
+	
+:type J
+	Lore|m
+	ipsum
+
+:type J
+	Lorem| ipsum
+
+:type J
+	Lorem ipsu|m
+:end
+
+:start Command J (on an empty line)
+:set nojoinspaces
+	|
+	  Lorem
+	ipsum
+:type J
+	|Lorem
+	ipsum
+:end
+
+:start Command J (next line starts with a closing paren)
+:set nojoinspaces
+	|foo(bar,
+	    baz
+	    )
+:type 3J
+	foo(bar, baz|)
+:end
+
+:start Command J (line ends with a tab)
+:set nojoinspaces
+	|Lorem	
+	ipsum
+:type J
+	Lorem	|ipsum
+:end
+
+:start Command J (with joinspaces)
+:set joinspaces
+	|Lorem.
+	Ipsum?
+	Dolor!
+	Sit,
+	amet
+:type 5J
+	Lorem.  Ipsum?  Dolor!  Sit,| amet
+:end
+
+:start Command J (without joinspaces)
+:set nojoinspaces
+	|Lorem.
+	Ipsum?
+	Dolor!
+	Sit,
+	amet
+:type 5J
+	Lorem. Ipsum? Dolor! Sit,| amet
+:end
+
+:start Command J (repeat with . keeps the count)
+:set nojoinspaces
+	|Lorem
+	ipsum
+	dolor
+	sit
+	amet
+	consectetur
+:type 3J
+	Lorem ipsum| dolor
+	sit
+	amet
+	consectetur
+:type j0.
+	Lorem ipsum dolor
+	sit amet| consectetur
+:type u.
+	Lorem ipsum dolor
+	sit amet| consectetur
+:end

@@ -1,0 +1,445 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Go to definition. The :definition directives stand in for a language server
+# or tags file: CTRL-], g CTRL-] and :tag jump to a definition, and CTRL-T and
+# CTRL-O jump back. Vim's gd and gD are textual searches; these tests use code
+# where the textual answer is the real declaration, and give the definitions
+# as metadata too, so that editors that implement gd with a language server
+# can pass them.
+
+:start Definition CTRL-] and CTRL-T (jump and return)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = he|lper(3);
+	    return total;
+	}
+:type \<C-]>
+	int scale = 2;
+
+	int |helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type \<C-T>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = he|lper(3);
+	    return total;
+	}
+:end
+
+:start Definition CTRL-T (nested jumps, with a count)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = |helper(3);
+	    return total;
+	}
+:type \<C-]>
+	int scale = 2;
+
+	int |helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type /scale\<CR>\<C-]>
+	int |scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type \<C-T>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * |scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type \<C-]>
+	int |scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type 2\<C-T>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = |helper(3);
+	    return total;
+	}
+:end
+
+# CTRL-I is the same key as <Tab>.
+:start Definition CTRL-O and CTRL-I (after a tag jump)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return t|otal;
+	}
+:type \<C-]>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int |total = helper(3);
+	    return total;
+	}
+:type \<C-O>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return t|otal;
+	}
+:type \<Tab>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int |total = helper(3);
+	    return total;
+	}
+:end
+
+:start Definition :tag (jump by name)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    |return total;
+	}
+:type :tag helper\<CR>
+	int scale = 2;
+
+	int |helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type \<C-T>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    |return total;
+	}
+:end
+
+:start Definition g CTRL-] (a single definition jumps directly)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = |helper(3);
+	    return total;
+	}
+:type g\<C-]>
+	int scale = 2;
+
+	int |helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:end
+
+:start Definition CTRL-] (no definition, fails)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    i|nt total = helper(3);
+	    return total;
+	}
+:type \<C-]>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    i|nt total = helper(3);
+	    return total;
+	}
+:end
+
+:start Definition gd (local variable)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return to|tal;
+	}
+:type gd
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int |total = helper(3);
+	    return total;
+	}
+:type \<C-O>
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return to|tal;
+	}
+:end
+
+:start Definition gd (function parameter)
+:definition scale 1:5
+:definition helper 3:5
+:definition n 3:16
+:definition main 8:5
+:definition total 10:9
+	int scale = 2;
+
+	int helper(int n)
+	{
+	    return |n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:type gd
+	int scale = 2;
+
+	int helper(int |n)
+	{
+	    return n * scale;
+	}
+
+	int main(void)
+	{
+	    int total = helper(3);
+	    return total;
+	}
+:end
+
+:start Definition gd (skips a match in a comment)
+:definition scale 1:5
+:definition main 3:5
+:definition total 6:9
+	int scale = 2;
+
+	int main(void)
+	{
+	    // the total is scaled
+	    int total = 3 * scale;
+	    return |total;
+	}
+:type gd
+	int scale = 2;
+
+	int main(void)
+	{
+	    // the total is scaled
+	    int |total = 3 * scale;
+	    return total;
+	}
+:end
+
+:start Definition gD (global declaration)
+:definition scale 1:5
+:definition main 3:5
+:definition total 6:9
+	int scale = 2;
+
+	int main(void)
+	{
+	    // the total is scaled
+	    int total = 3 * s|cale;
+	    return total;
+	}
+:type gD
+	int |scale = 2;
+
+	int main(void)
+	{
+	    // the total is scaled
+	    int total = 3 * scale;
+	    return total;
+	}
+:type \<C-O>
+	int scale = 2;
+
+	int main(void)
+	{
+	    // the total is scaled
+	    int total = 3 * s|cale;
+	    return total;
+	}
+:end

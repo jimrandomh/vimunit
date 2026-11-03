@@ -1,0 +1,482 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# The jump list (CTRL-O, CTRL-I) and the change list (g;, g,).
+
+:start Command CTRL-O and CTRL-I (after G)
+:set startofline
+	Lo|rem
+	ipsum
+	dolor
+	sit
+:type G
+	Lorem
+	ipsum
+	dolor
+	|sit
+:type \<C-O>
+	Lo|rem
+	ipsum
+	dolor
+	sit
+:type \<Tab>
+	Lorem
+	ipsum
+	dolor
+	|sit
+:type \<Tab>
+	Lorem
+	ipsum
+	dolor
+	|sit
+:type \<C-O>\<C-O>
+	Lo|rem
+	ipsum
+	dolor
+	sit
+:end
+
+:start Command CTRL-O (j, w, f and $ are not jumps)
+	|Lorem ipsum
+	dolor sit
+	amet consectetur
+:type jjwfe
+	Lorem ipsum
+	dolor sit
+	amet cons|ectetur
+:type \<C-O>
+	Lorem ipsum
+	dolor sit
+	amet cons|ectetur
+:type $\<C-O>
+	Lorem ipsum
+	dolor sit
+	amet consectetu|r
+:end
+
+:start Command CTRL-O (after /, n and {)
+	|Lorem
+	ipsum foo
+	dolor
+
+	sit foo
+	amet
+:type /foo\<CR>
+	Lorem
+	ipsum |foo
+	dolor
+
+	sit foo
+	amet
+:type n
+	Lorem
+	ipsum foo
+	dolor
+
+	sit |foo
+	amet
+:type j{
+	Lorem
+	ipsum foo
+	dolor
+	|
+	sit foo
+	amet
+:type \<C-O>
+	Lorem
+	ipsum foo
+	dolor
+
+	sit foo
+	ame|t
+:type \<C-O>
+	Lorem
+	ipsum |foo
+	dolor
+
+	sit foo
+	amet
+:type \<C-O>
+	|Lorem
+	ipsum foo
+	dolor
+
+	sit foo
+	amet
+:type \<C-O>
+	|Lorem
+	ipsum foo
+	dolor
+
+	sit foo
+	amet
+:end
+
+:start Command CTRL-O (after %, ) and })
+	|f(a,
+	  b);
+	Lorem ipsum. Dolor
+	sit.
+
+	amet
+:type f(%
+	f(a,
+	  b|);
+	Lorem ipsum. Dolor
+	sit.
+
+	amet
+:type j)
+	f(a,
+	  b);
+	Lorem ipsum. |Dolor
+	sit.
+
+	amet
+:type j}
+	f(a,
+	  b);
+	Lorem ipsum. Dolor
+	sit.
+	|
+	amet
+:type \<C-O>
+	f(a,
+	  b);
+	Lorem ipsum. Dolor
+	sit|.
+
+	amet
+:type \<C-O>
+	f(a,
+	  b);
+	Lor|em ipsum. Dolor
+	sit.
+
+	amet
+:type \<C-O>
+	f|(a,
+	  b);
+	Lorem ipsum. Dolor
+	sit.
+
+	amet
+:type \<Tab>
+	f(a,
+	  b);
+	Lor|em ipsum. Dolor
+	sit.
+
+	amet
+:end
+
+:start Command CTRL-O and CTRL-I (with counts, and <Tab>)
+:set startofline
+	|one
+	two
+	three
+	four
+	five
+:type 2G3G4G5G
+	one
+	two
+	three
+	four
+	|five
+:type 3\<C-O>
+	one
+	|two
+	three
+	four
+	five
+:type \<Tab>
+	one
+	two
+	|three
+	four
+	five
+:type 2\<Tab>
+	one
+	two
+	three
+	four
+	|five
+:type 9\<C-O>
+	one
+	two
+	three
+	four
+	|five
+:end
+
+:start Command CTRL-O (a line is only remembered once)
+:set startofline jumpoptions=
+	|Lorem
+	ipsum
+	dolor
+:type G
+	Lorem
+	ipsum
+	|dolor
+:type gg
+	|Lorem
+	ipsum
+	dolor
+:type G
+	Lorem
+	ipsum
+	|dolor
+:type \<C-O>
+	|Lorem
+	ipsum
+	dolor
+:type \<C-O>
+	|Lorem
+	ipsum
+	dolor
+:end
+
+:start Command CTRL-O (a new jump from the middle of the list)
+:set startofline jumpoptions=
+	|one
+	two
+	three
+	four
+	five
+:type 2G3G4G
+	one
+	two
+	three
+	|four
+	five
+:type \<C-O>\<C-O>
+	one
+	|two
+	three
+	four
+	five
+:type 5G
+	one
+	two
+	three
+	four
+	|five
+:type \<C-O>
+	one
+	|two
+	three
+	four
+	five
+:type \<C-O>
+	one
+	two
+	three
+	|four
+	five
+:type \<C-O>
+	one
+	two
+	|three
+	four
+	five
+:type \<C-O>
+	|one
+	two
+	three
+	four
+	five
+:end
+
+:start Command CTRL-O (positions move with inserted lines)
+:set startofline
+	Lorem
+	ipsum
+	dol|or
+:type gg
+	|Lorem
+	ipsum
+	dolor
+:type Onew\<Esc>
+	ne|w
+	Lorem
+	ipsum
+	dolor
+:type \<C-O>
+	new
+	Lorem
+	ipsum
+	dol|or
+:end
+
+:start Command g; and g, (change list)
+:set startofline
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type x
+	|orem
+	ipsum
+	dolor
+	sit
+:type jjx
+	orem
+	ipsum
+	|olor
+	sit
+:type jA!\<Esc>
+	orem
+	ipsum
+	olor
+	sit|!
+:type gg
+	|orem
+	ipsum
+	olor
+	sit!
+:type g;
+	orem
+	ipsum
+	olor
+	sit|!
+:type g;
+	orem
+	ipsum
+	|olor
+	sit!
+:type g;
+	|orem
+	ipsum
+	olor
+	sit!
+:type g;
+	|orem
+	ipsum
+	olor
+	sit!
+:type g,
+	orem
+	ipsum
+	|olor
+	sit!
+:type g,
+	orem
+	ipsum
+	olor
+	sit|!
+:type g,
+	orem
+	ipsum
+	olor
+	sit|!
+:end
+
+:start Command g; and g, (with counts)
+	|one
+	two
+	three
+	four
+:type xjxjxjx
+	ne
+	wo
+	hree
+	|our
+:type gg3g;
+	ne
+	|wo
+	hree
+	our
+:type 2g,
+	ne
+	wo
+	hree
+	|our
+:type 9g;
+	|ne
+	wo
+	hree
+	our
+:type 9g,
+	ne
+	wo
+	hree
+	|our
+:end
+
+:start Command g; (at the position of the latest change)
+	Lorem i|psum
+	dolor sit
+:type x
+	Lorem i|sum
+	dolor sit
+:type jx
+	Lorem isum
+	dolor s|t
+:type g;
+	Lorem isum
+	dolor s|t
+:type g;
+	Lorem i|sum
+	dolor st
+:end
+
+:start Command g; (nearby changes on one line are remembered once)
+	|Lorem ipsum dolor
+	sit amet
+:type x
+	|orem ipsum dolor
+	sit amet
+:type wx
+	orem |psum dolor
+	sit amet
+:type jx
+	orem psum dolor
+	sit a|et
+:type 0g;
+	orem psum dolor
+	sit a|et
+:type g;
+	orem |psum dolor
+	sit aet
+:type g;
+	orem |psum dolor
+	sit aet
+:end
+
+:start Command g; (position of an insert)
+	Lorem |ipsum
+	dolor
+:type iX\<Esc>
+	Lorem |Xipsum
+	dolor
+:type jg;
+	Lorem |Xipsum
+	dolor
+:type jA!\<Esc>0
+	Lorem Xipsum
+	|dolor!
+:type g;
+	Lorem Xipsum
+	dolor|!
+:end
+
+:start Command g; (no changes)
+	Lo|rem
+	ipsum
+:type g;
+	Lo|rem
+	ipsum
+:type jg,
+	Lorem
+	ip|sum
+:end
+
+:start Command g; (position of an insert of several characters)
+	Lorem |ipsum
+	dolor
+:type ifoo\<Esc>
+	Lorem fo|oipsum
+	dolor
+:type jg;
+	Lorem fo|oipsum
+	dolor
+:end

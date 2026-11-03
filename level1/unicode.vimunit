@@ -1,0 +1,176 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Non-ASCII text with the level 1 commands: accented Latin letters, Cyrillic
+# and double-width CJK characters with h, l, j, k, x, X, 0, ^, $, y, p, P and
+# the Insert-mode commands. Each character counts as one, however many bytes
+# (or screen columns) it takes.
+
+:start Motion l and h (accented letters)
+	|café naïve
+:type 3l
+	caf|é naïve
+:type l
+	café| naïve
+:type 3l
+	café na|ïve
+:type 2h
+	café |naïve
+:type 100l
+	café naïv|e
+:end
+
+:start Motion l and h (double-width CJK characters)
+	|a日b本語cd
+:type l
+	a|日b本語cd
+:type l
+	a日|b本語cd
+:type 2l
+	a日b本|語cd
+:type 100l
+	a日b本語c|d
+:type 3h
+	a日b|本語cd
+:end
+
+:start Motion j and k (column counts characters, not bytes)
+	ñandú piña|ta
+	abcdefghijklmnop
+	çà
+:type j
+	ñandú piñata
+	abcdefghij|klmnop
+	çà
+:type k
+	ñandú piña|ta
+	abcdefghijklmnop
+	çà
+:type 2j
+	ñandú piñata
+	abcdefghijklmnop
+	ç|à
+:type 2k
+	ñandú piña|ta
+	abcdefghijklmnop
+	çà
+:end
+
+:start Motion 0, ^ and $ (line ending in a double-width character)
+	  |abc日本
+	日本語テキスト
+	xy
+:type $
+	  abc日|本
+	日本語テキスト
+	xy
+:type j
+	  abc日本
+	日本語テキス|ト
+	xy
+:type j
+	  abc日本
+	日本語テキスト
+	x|y
+:type 0
+	  abc日本
+	日本語テキスト
+	|xy
+:type k
+	  abc日本
+	|日本語テキスト
+	xy
+:type k^
+	  |abc日本
+	日本語テキスト
+	xy
+:end
+
+# The first line starts with U+3000 IDEOGRAPHIC SPACE, the second with two
+# U+00A0 NO-BREAK SPACEs. Neither is a blank for ^, which only skips spaces and
+# tabs.
+:start Motion ^ (ideographic and no-break spaces are not blanks)
+	　日本|語
+	  naïve
+	  ñandú
+:type ^
+	|　日本語
+	  naïve
+	  ñandú
+:type j$^
+	　日本語
+	|  naïve
+	  ñandú
+:type j$^
+	　日本語
+	  naïve
+	  |ñandú
+:end
+
+:start Command x (accented letter, at end of line)
+	Ca|fé
+:type l
+	Caf|é
+:type x
+	Ca|f
+:type x
+	C|a
+:end
+
+:start Command [count]x (counts characters, not bytes or columns)
+	|aé日bcd
+	日本語テキスト
+:type 3x
+	|bcd
+	日本語テキスト
+:type jl2x
+	bcd
+	日|テキスト
+:type 100x
+	bcd
+	|日
+:end
+
+:start Command X (Cyrillic)
+	Привет мир|!
+:type X
+	Привет ми|!
+:type 3X
+	Привет|!
+:type 100X
+	|!
+:end
+
+:start Command xp (swap multibyte characters)
+	ab|ñc 日本
+:type xp
+	abc|ñ 日本
+:type $hxp
+	abcñ 本|日
+:end
+
+:start Command y and p (multibyte text)
+	|aé日 xyz
+:type y3l
+	|aé日 xyz
+:type $p
+	aé日 xyzaé|日
+:type 0P
+	aé|日aé日 xyzaé日
+:type 2p
+	aé日aé日aé|日aé日 xyzaé日
+:end
+
+:start Insert commands (around multibyte characters)
+	|日本
+:type a-\<Esc>
+	日|-本
+:type i語\<Esc>
+	日|語-本
+:type A!\<Esc>
+	日語-本|!
+:type I¿\<Esc>
+	|¿日語-本!
+:type oÜber\<Esc>
+	¿日語-本!
+	Übe|r
+:end

@@ -1,0 +1,680 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Folding with fold markers ('foldmethod' marker; with 'foldlevel' 0, every
+# fold starts out closed). The fold state isn't compared directly, so the
+# tests observe it through motions and operators: j and k move over a closed
+# fold, and line operators act on all of its lines.
+
+:start Fold j and k (move over a closed fold)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha
+	bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:type j
+	alpha
+	|bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:type j
+	alpha
+	bravo {{{
+	charlie
+	delta
+	}}}
+	|echo
+:type k
+	alpha
+	|bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:type k
+	|alpha
+	bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:end
+
+:start Fold dd and dj (on a closed fold, delete all of its lines)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha {{{
+	bravo
+	}}}
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+:type dd
+	|charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+:type dj
+	|foxtrot
+:end
+
+:start Fold x (on a closed fold, deletes all of its lines)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	b|ravo {{{
+	charlie
+	}}}
+	delta
+:type x
+	alpha
+	|delta
+:end
+
+:start Fold yy and p (on a closed fold)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha
+	bravo {{{
+	charlie
+	}}}
+	delta
+:type jyyGp
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	delta
+	|bravo {{{
+	charlie
+	}}}
+:type ggyyjp
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	|alpha
+	delta
+	bravo {{{
+	charlie
+	}}}
+:end
+
+:start Fold >> (on a closed fold, shifts all of its lines)
+:set foldmethod=marker foldlevel=0 shiftwidth=2 expandtab startofline
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta
+:type >>
+	alpha
+	  |bravo {{{
+	  charlie
+	  }}}
+	delta
+:end
+
+:start Fold o and O (on a closed fold, open a line outside it)
+:set foldmethod=marker foldlevel=0 autoindent
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta
+:type oX\<Esc>
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	|X
+	delta
+:type kOY\<Esc>
+	alpha
+	|Y
+	bravo {{{
+	charlie
+	}}}
+	X
+	delta
+:end
+
+:start Fold V (on a closed fold, selects all of its lines)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta
+:type Vd
+	alpha
+	|delta
+:end
+
+:start Fold zo, zc and za (open, close and toggle)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta
+:type zoj
+	alpha
+	bravo {{{
+	|charlie
+	}}}
+	delta
+:type zc
+	alpha
+	bravo {{{
+	|charlie
+	}}}
+	delta
+:type j
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	|delta
+:type kzaj
+	alpha
+	bravo {{{
+	|charlie
+	}}}
+	delta
+:type zaj
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	|delta
+:end
+
+:start Fold zR and zM (open and close all folds)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha {{{
+	bravo
+	}}}
+	charlie {{{
+	delta
+	}}}
+	echo
+:type zRjjj
+	alpha {{{
+	bravo
+	}}}
+	|charlie {{{
+	delta
+	}}}
+	echo
+:type zMk
+	|alpha {{{
+	bravo
+	}}}
+	charlie {{{
+	delta
+	}}}
+	echo
+:end
+
+:start Fold zv (open folds to show the cursor line)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha {{{
+	bravo
+	charlie
+	}}}
+	delta {{{
+	echo
+	foxtrot
+	}}}
+	|golf
+:type 3Gdd
+	|delta {{{
+	echo
+	foxtrot
+	}}}
+	golf
+:type 3Gzvdd
+	delta {{{
+	echo
+	|}}}
+	golf
+:end
+
+:start Fold zj and zk (to the next and previous fold)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha
+	bravo {{{
+	charlie
+	}}}
+	delta
+	echo {{{
+	foxtrot
+	}}}
+	golf
+:type zRzj
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta
+	echo {{{
+	foxtrot
+	}}}
+	golf
+:type zj
+	alpha
+	bravo {{{
+	charlie
+	}}}
+	delta
+	|echo {{{
+	foxtrot
+	}}}
+	golf
+:type zk
+	alpha
+	bravo {{{
+	charlie
+	|}}}
+	delta
+	echo {{{
+	foxtrot
+	}}}
+	golf
+:type zk
+	alpha
+	bravo {{{
+	charlie
+	|}}}
+	delta
+	echo {{{
+	foxtrot
+	}}}
+	golf
+:end
+
+:start Fold [z and ]z (start and end of the open fold)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	fox|trot
+	}}}
+	golf
+:type zv[z
+	alpha
+	|bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type ]z
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	|}}}
+	golf
+:type 5Gzv[z
+	alpha
+	bravo {{{
+	charlie
+	|delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type ]z
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	|}}}
+	foxtrot
+	}}}
+	golf
+:end
+
+:start Fold nested folds (zo opens one level, zO all)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	|bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type zoj
+	alpha
+	bravo {{{
+	|charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type j
+	alpha
+	bravo {{{
+	charlie
+	|delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type j
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	|foxtrot
+	}}}
+	golf
+:type zMzOggjjjj
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	|echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:end
+
+:start Fold nested folds (zc on a closed fold closes the enclosing fold)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	|golf
+:type zRkkkk
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	|echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type zc
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	|echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type zc
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	|echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type j
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	|golf
+:end
+
+:start Fold dd (on a closed fold that contains a closed fold)
+:set foldmethod=marker foldlevel=0 startofline
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	|golf
+:type kzojjdd
+	alpha
+	bravo {{{
+	charlie
+	|foxtrot
+	}}}
+	golf
+:type zMdd
+	alpha
+	|golf
+:end
+
+:start Fold numbered markers ({{{1 and {{{2)
+:set foldmethod=marker foldlevel=0 startofline
+	|intro
+	part one {{{1
+	alpha
+	section {{{2
+	bravo
+	part two {{{1
+	charlie
+:type j
+	intro
+	|part one {{{1
+	alpha
+	section {{{2
+	bravo
+	part two {{{1
+	charlie
+:type j
+	intro
+	part one {{{1
+	alpha
+	section {{{2
+	bravo
+	|part two {{{1
+	charlie
+:type kdd
+	intro
+	|part two {{{1
+	charlie
+:end
+
+:start Fold foldlevel=1 (only deeper folds start closed)
+:set foldmethod=marker foldlevel=1 startofline
+	|alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type jjj
+	alpha
+	bravo {{{
+	charlie
+	|delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type j
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	|foxtrot
+	}}}
+	golf
+:type j
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	|}}}
+	golf
+:end
+
+:start Fold zm and zr (change foldlevel)
+:set foldmethod=marker foldlevel=0 startofline
+	|alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:type zrjjjj
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	}}}
+	|foxtrot
+	}}}
+	golf
+:type ggzrjjjjj
+	alpha
+	bravo {{{
+	charlie
+	delta {{{
+	echo
+	|}}}
+	foxtrot
+	}}}
+	golf
+:type zmk
+	alpha
+	bravo {{{
+	|charlie
+	delta {{{
+	echo
+	}}}
+	foxtrot
+	}}}
+	golf
+:end
+
+:start Fold l and search (foldopen opens the fold)
+:set foldmethod=marker foldlevel=0 foldopen=block,hor,mark,percent,quickfix,search,tag,undo startofline
+	alpha
+	|bravo {{{
+	charlie
+	}}}
+	delta {{{
+	echo
+	foxtrot
+	}}}
+	golf
+:type ljdd
+	alpha
+	bravo {{{
+	|}}}
+	delta {{{
+	echo
+	foxtrot
+	}}}
+	golf
+:type gg/foxtrot\<CR>dd
+	alpha
+	bravo {{{
+	}}}
+	delta {{{
+	echo
+	|}}}
+	golf
+:end
+
+:start Fold search (empty foldopen leaves the fold closed)
+:set foldmethod=marker foldlevel=0 foldopen= startofline
+	|alpha
+	bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:type /delta\<CR>dd
+	alpha
+	|echo
+:end
+
+:start Fold zf (insert fold markers) and zd (delete them)
+:set foldmethod=marker foldlevel=0 startofline
+	|# alpha
+	# bravo
+	# charlie
+	# delta
+	echo
+	foxtrot
+:type zfj
+	|# alpha{{{
+	# bravo}}}
+	# charlie
+	# delta
+	echo
+	foxtrot
+:type jdd
+	# alpha{{{
+	# bravo}}}
+	|# delta
+	echo
+	foxtrot
+:type ggzd
+	|# alpha
+	# bravo
+	# delta
+	echo
+	foxtrot
+:type Vjjzf
+	|# alpha{{{
+	# bravo
+	# delta}}}
+	echo
+	foxtrot
+:type jdd
+	# alpha{{{
+	# bravo
+	# delta}}}
+	|foxtrot
+:end

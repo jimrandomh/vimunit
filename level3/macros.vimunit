@@ -21,6 +21,7 @@
 :end
 
 :start Macros abort on bell
+:set startofline
 	|Lorem ipsum
 	dolor
 	sit
@@ -38,3 +39,149 @@
 	amet
 :end
 
+:start Macro (count larger than it can be applied, stops at the failure)
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type qaI- \<Esc>jq
+	- Lorem
+	i|psum
+	dolor
+	sit
+:type 100@a
+	- Lorem
+	- ipsum
+	- dolor
+	-| sit
+:type u
+	- Lorem
+	|ipsum
+	dolor
+	sit
+:end
+
+:start Macro (recorded keys can be put from the register)
+	|Lorem ipsum
+	dolor
+:type qaxlq
+	o|rem ipsum
+	dolor
+:type j"ap
+	orem ipsum
+	dox|llor
+:end
+
+:start Macro (executing text yanked into a register)
+	|xjx
+	Lorem
+	ipsum
+:type "ay$
+	|xjx
+	Lorem
+	ipsum
+:type j@a
+	xjx
+	orem
+	|psum
+:end
+
+:start Macro (appending to a macro with qA)
+	|Lorem ipsum
+	dolor sit
+	amet
+:type qaxq
+	|orem ipsum
+	dolor sit
+	amet
+:type qAjq
+	orem ipsum
+	|dolor sit
+	amet
+:type @a
+	orem ipsum
+	olor sit
+	|amet
+:type 2@@
+	orem ipsum
+	olor sit
+	|met
+:end
+
+:start Macro (recursive, ends when a command fails)
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type qaqqaA;\<Esc>j@aq
+	Lorem;
+	ipsu|m
+	dolor
+	sit
+:type @a
+	Lorem;
+	ipsum;
+	dolor;
+	sit|;
+:end
+
+:start Macro (with a search that eventually fails)
+:set wrapscan
+	|Lorem x ipsum x
+	x dolor
+	sit x amet
+:type qa/x\<CR>rYq
+	Lorem |Y ipsum x
+	x dolor
+	sit x amet
+:type 100@a
+	Lorem Y ipsum Y
+	Y dolor
+	sit |Y amet
+:end
+
+:start Macro (failing command in a count aborts all remaining repetitions)
+	|a-b
+	c-d
+	ef
+	g-h
+:type qa0f-rXjq
+	aXb
+	c|-d
+	ef
+	g-h
+:type 10@a
+	aXb
+	cXd
+	|ef
+	g-h
+:end
+
+:start Macro (one u undoes everything the macro changed)
+	|Lorem ipsum dolor
+	sit amet consectetur
+:type qaxwxwxq
+	orem psum |olor
+	sit amet consectetur
+:type j0@a
+	orem psum olor
+	it met |onsectetur
+:type u
+	orem psum olor
+	|sit amet consectetur
+:type u
+	orem psum |dolor
+	sit amet consectetur
+:end
+
+:start Macro (@@ with a count)
+	|abcdefgh
+:type qaxq
+	|bcdefgh
+:type @a
+	|cdefgh
+:type 3@@
+	|fgh
+:type .
+	|gh
+:end

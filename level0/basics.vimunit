@@ -50,7 +50,108 @@
 
 :start Insert mode
 	Hello|!
-:type i, World\<esc>lll
+:type i, World\<Esc>lll
 	Hello, World|!
 :end
 
+:start Motions j and k (remember the column across shorter and empty lines)
+	Lorem ips|um
+	dolor
+
+	sit amet consectetur
+:type j
+	Lorem ipsum
+	dolo|r
+
+	sit amet consectetur
+:type j
+	Lorem ipsum
+	dolor
+	|
+	sit amet consectetur
+:type j
+	Lorem ipsum
+	dolor
+
+	sit amet |consectetur
+:type k
+	Lorem ipsum
+	dolor
+	|
+	sit amet consectetur
+:type kk
+	Lorem ips|um
+	dolor
+
+	sit amet consectetur
+:end
+
+:start Motion j (the column is counted in screen cells across a tab)
+:set tabstop=8
+	Lorem ipsum |dolor
+		sit amet
+:type j
+	Lorem ipsum dolor
+		sit |amet
+:type k
+	Lorem ipsum |dolor
+		sit amet
+:end
+
+:start Motion j (onto a tab, then on to the remembered column)
+:set tabstop=8
+	Lor|em
+		ipsum
+	dolor
+:type j
+	Lorem
+	|	ipsum
+	dolor
+:type j
+	Lorem
+		ipsum
+	dol|or
+:type kk
+	Lor|em
+		ipsum
+	dolor
+:end
+
+:start Motion k (at the first line fails; later keys still run)
+	Lo|rem
+	ipsum
+:type kl
+	Lor|em
+	ipsum
+:end
+
+:start Command dd (on the last line)
+:set startofline
+	Lorem
+	  ipsum
+	do|lor
+:type dd
+	Lorem
+	  |ipsum
+:type dd
+	|Lorem
+:end
+
+:start Command dd (on the only line)
+	Lorem |ipsum
+:type dd
+	|
+:type dd
+	|
+:end
+
+:start Insert mode (Esc moves the cursor left, but not past the start of the line)
+	Lorem
+	|ipsum
+:type iab\<Esc>
+	Lorem
+	a|bipsum
+:type hi\<Esc>
+	Lorem
+	|abipsum
+:end

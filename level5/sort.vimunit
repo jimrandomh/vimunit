@@ -1,0 +1,134 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# The :sort command and its flags.
+
+:start Ex :sort (byte order: uppercase before lowercase)
+	delta
+	Echo
+	al|pha
+	
+	Bravo
+	charlie
+:type :sort\<CR>
+	|
+	Bravo
+	Echo
+	alpha
+	charlie
+	delta
+:end
+
+:start Ex :sort! (reverse)
+	delta
+	Echo
+	al|pha
+	Bravo
+:type :sort!\<CR>
+	|delta
+	alpha
+	Echo
+	Bravo
+:end
+
+:start Ex :sort i (ignore case)
+	delta
+	Echo
+	al|pha
+	Bravo
+	charlie
+:type :sort i\<CR>
+	|alpha
+	Bravo
+	charlie
+	delta
+	Echo
+:end
+
+:start Ex :sort with a range
+	zulu
+	delta
+	ch|arlie
+	alpha
+	bravo
+:type :2,4sort\<CR>
+	zulu
+	|alpha
+	charlie
+	delta
+	bravo
+:end
+
+:start Ex :sort n (numeric, lines without numbers first)
+	item 10
+	item 9
+	none
+	item -3
+	ite|m 100
+	also none
+	item 9a
+:type :sort n\<CR>
+	|none
+	also none
+	item -3
+	item 9
+	item 9a
+	item 10
+	item 100
+:end
+
+:start Ex :sort n (stable for equal numbers)
+	b 2
+	c 1
+	a| 2
+	d 1
+:type :sort n\<CR>
+	|c 1
+	d 1
+	b 2
+	a 2
+:end
+
+:start Ex :sort u (remove duplicates)
+	beta
+	alpha
+	be|ta
+	Alpha
+	alpha
+:type :sort u\<CR>
+	|Alpha
+	alpha
+	beta
+:type u
+	beta
+	alpha
+	be|ta
+	Alpha
+	alpha
+:type :sort ui\<CR>
+	|alpha
+	beta
+:end
+
+:start Ex :sort /pat/ (sort by what follows the match)
+	3: charlie
+	1: bravo
+	2: al|pha
+:type :sort /\\d: /\<CR>
+	|2: alpha
+	1: bravo
+	3: charlie
+:end
+
+:start Ex :sort /pat/ r (sort by the match)
+	charlie 3
+	alpha 21
+	bra|vo 102
+:type :sort /\\d\\+/ r\<CR>
+	|bravo 102
+	alpha 21
+	charlie 3
+:type :sort n /\\d\\+/ r\<CR>
+	|charlie 3
+	alpha 21
+	bravo 102
+:end

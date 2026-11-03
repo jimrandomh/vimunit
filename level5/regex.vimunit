@@ -1,0 +1,248 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Regular expressions in searches (and some in :s): word boundaries, multis,
+# alternation, groups and backreferences, \zs and \ze, character classes,
+# anchors, \v, case sensitivity, and matching across lines.
+
+:start Regex \< and \> (word boundaries)
+	|this is island is
+:type /\\<is\\>\<CR>
+	this |is island is
+:type n
+	this is island |is
+:type /is\\>\<CR>
+	th|is is island is
+:type /\\<is\<CR>
+	this |is island is
+:type n
+	this is |island is
+:end
+
+:start Regex multis *, \+ and \=
+	|ac abc abbc
+:type /ab*c\<CR>
+	ac |abc abbc
+:type n
+	ac abc |abbc
+:type n
+	|ac abc abbc
+:type gg0/ab\\+c\<CR>
+	ac |abc abbc
+:type gg0/ab\\=c\<CR>
+	ac |abc abbc
+:type n
+	|ac abc abbc
+:end
+
+:start Regex multi \{n,m}
+	|a aa aaa aaaa
+:type /a\\{3}\<CR>
+	a aa |aaa aaaa
+:type n
+	a aa aaa |aaaa
+:type :s/a\\{2,3}/X/g\<CR>
+	|a X X Xa
+:end
+
+:start Regex alternation \|
+	|alpha beta gamma delta
+:type /delta\\|beta\<CR>
+	alpha |beta gamma delta
+:type n
+	alpha beta gamma |delta
+:type n
+	alpha |beta gamma delta
+:end
+
+:start Regex groups \(\) and backreference \1
+	|abcde ccabab xyzzy
+:type /\\(\\a\\)\\1\<CR>
+	abcde |ccabab xyzzy
+:type n
+	abcde ccabab xy|zzy
+:type :s/\\(ab\\)\\+/X/g\<CR>
+	|Xcde ccX xyzzy
+:end
+
+:start Regex \zs and \ze (setting the start and end of the match)
+	|foobar foobaz barfoo
+:type /foo\\zsba\<CR>
+	foo|bar foobaz barfoo
+:type n
+	foobar foo|baz barfoo
+:type /foo\\zebaz\<CR>
+	foobar |foobaz barfoo
+:type :s/foo\\zsbar/X/\<CR>
+	|fooX foobaz barfoo
+:end
+
+:start Regex character classes \d, \w, \s, \a, \u, \l
+	|one, Two;  33 x_y
+:type /\\d\<CR>
+	one, Two;  |33 x_y
+:type 0/\\s\\s\<CR>
+	one, Two;|  33 x_y
+:type 0/\\u\\l\<CR>
+	one, |Two;  33 x_y
+:type 0/\\w\\+;\<CR>
+	one, |Two;  33 x_y
+:type :s/\\s\\+/ /g\<CR>
+	|one, Two; 33 x_y
+:end
+
+:start Regex bracket expressions [], [^], ranges and [:upper:]
+	|xyz a1 b2 Cd e-f
+:type /[0-9]\<CR>
+	xyz a|1 b2 Cd e-f
+:type 0/[^a-z ]\<CR>
+	xyz a|1 b2 Cd e-f
+:type 0/[[:upper:]]\<CR>
+	xyz a1 b2 |Cd e-f
+:type 0/[-]\<CR>
+	xyz a1 b2 Cd e|-f
+:end
+
+:start Regex unmatched [ is literal
+	|a[b a b
+:type $/a[b\<CR>
+	|a[b a b
+:end
+
+:start Regex . matches any character, \. a literal dot
+	|abc a.c
+:type /a.c\<CR>
+	abc |a.c
+:type n
+	|abc a.c
+:type /a\\.c\<CR>
+	abc |a.c
+:type n
+	abc |a.c
+:end
+
+:start Regex ^ and $ anchors, and literal ^ and $ elsewhere
+	|xa a$b
+	a^b ax
+:type /^a\<CR>
+	xa a$b
+	|a^b ax
+:type /x$\<CR>
+	xa a$b
+	a^b a|x
+:type /a$b\<CR>
+	xa |a$b
+	a^b ax
+:type /a^b\<CR>
+	xa a$b
+	|a^b ax
+:end
+
+:start Regex \v (very magic)
+	|foo1 bar22 baz
+:type /\\v(bar|baz)\\d+\<CR>
+	foo1 |bar22 baz
+:type n
+	foo1 |bar22 baz
+:type :s/\\v(\\w+) (\\w+)/\\2 \\1/\<CR>
+	|bar22 foo1 baz
+:end
+
+:start Regex \c and \C (ignore or match case)
+:set noignorecase
+	|foo Foo FOO
+:type /\\cFOO\<CR>
+	foo |Foo FOO
+:type n
+	foo Foo |FOO
+:type n
+	|foo Foo FOO
+:end
+
+:start Regex \C with ignorecase
+:set ignorecase nosmartcase
+	|foo Foo FOO
+:type /Foo\<CR>
+	foo |Foo FOO
+:type n
+	foo Foo |FOO
+:type 0/\\CFOO\<CR>
+	foo Foo |FOO
+:type n
+	foo Foo |FOO
+:end
+
+:start Regex smartcase (uppercase in the pattern matches case)
+:set ignorecase smartcase
+	|foo Foo FOO foo
+:type /foo\<CR>
+	foo |Foo FOO foo
+:type n
+	foo Foo |FOO foo
+:type /Foo\<CR>
+	foo |Foo FOO foo
+:type n
+	foo |Foo FOO foo
+:end
+
+:start Regex smartcase is not used by *
+:set ignorecase smartcase
+	|Foo foo FOO
+:type *
+	Foo |foo FOO
+:type n
+	Foo foo |FOO
+:end
+
+:start Regex \n matches a line break
+	alpha |end
+	begin beta end
+	begin gamma
+:type /end\\nbegin\<CR>
+	alpha end
+	begin beta |end
+	begin gamma
+:type n
+	alpha |end
+	begin beta end
+	begin gamma
+:end
+
+:start Regex \_. matches a line break, . does not
+	|start one
+	two end
+:type /one.*two\<CR>
+	|start one
+	two end
+:type /one\\_.*two\<CR>
+	start |one
+	two end
+:type 0/e\\_.tw\<CR>
+	start on|e
+	two end
+:end
+
+:start Regex \_s (whitespace or line break)
+	|alpha
+	  beta alpha  beta
+:type /alpha\\_s\\+beta\<CR>
+	alpha
+	  beta |alpha  beta
+:type n
+	|alpha
+	  beta alpha  beta
+:type n
+	alpha
+	  beta |alpha  beta
+:end
+
+:start Regex / and ? need escaping in their own search
+	|x a/b a?b
+:type /a\\/b\<CR>
+	x |a/b a?b
+:type ?a\\?b\<CR>
+	x a/b |a?b
+:type ?a/b\<CR>
+	x |a/b a?b
+:type /a?b\<CR>
+	x a/b |a?b
+:end

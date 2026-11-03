@@ -1,0 +1,343 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Combining characters (a base character followed by combining marks counts as
+# one character), double-width characters and screen columns, case mapping of
+# non-ASCII letters, character motions with multibyte targets, and the other
+# level 3 commands with non-ASCII text.
+#
+# Combining characters are written decomposed: e.g. "é" in a test with
+# combining characters is "e" followed by U+0301 COMBINING ACUTE ACCENT, unless
+# the test says it is precomposed (U+00E9).
+
+:start Motion l and h (combining characters)
+	|résumé ö̲k
+:type l
+	r|ésumé ö̲k
+:type 4l
+	résum|é ö̲k
+:type l
+	résumé| ö̲k
+:type l
+	résumé |ö̲k
+:type l
+	résumé ö̲|k
+:type 2h
+	résumé| ö̲k
+:end
+
+:start Command x (deletes a character with its combining marks)
+	caf|é ö̲k
+:type x
+	caf| ö̲k
+:type lx
+	caf |k
+:type u
+	caf |ö̲k
+:end
+
+:start Command x (with delcombine, deletes one combining mark at a time)
+:set delcombine
+	caf|é ạ́z é
+:type x
+	caf|e ạ́z é
+:type x
+	caf| ạ́z é
+:type lx
+	caf |ạz é
+:type x
+	caf |az é
+:type x
+	caf |z é
+:type $x
+	caf z| 
+:end
+
+:start Command r (replaces a character with its combining marks)
+	|été ö̲
+:type r!
+	|!té ö̲
+:type $r?
+	!té |?
+:type 0l2rx
+	!x|x ?
+:end
+
+:start Command ~ (keeps combining marks)
+	|écolè ï
+:type ~
+	É|colè ï
+:type $~
+	Écolè |Ï
+:type 0g~$
+	|éCOLÈ ï
+:end
+
+:start Command s (combining characters)
+	café|s réél
+:type hsE\<Esc>
+	caf|Es réél
+:type w2sx\<Esc>
+	cafEs |xél
+:end
+
+:start Motion | and j (combining marks take no screen column)
+	éééx|yz
+	abcdefg
+:type j
+	éééxyz
+	abcd|efg
+:type k
+	éééx|yz
+	abcdefg
+:type 2|
+	é|ééxyz
+	abcdefg
+:type 5|
+	éééx|yz
+	abcdefg
+:end
+
+# The first "café" is decomposed, the second precomposed. The second search is
+# for "e" followed by U+0301, the third for precomposed U+00E9.
+:start Search / (base letter doesn't match it with a combining mark)
+	|café café cafe
+:type /e\<CR>
+	café café caf|e
+:type /é\<CR>
+	caf|é café cafe
+:type /é\<CR>
+	café caf|é cafe
+:end
+
+# The first "é" is decomposed, the second precomposed. Unlike /, f finds a
+# base letter even when it has a combining mark.
+:start Motion f (base letter target and combining marks)
+	|xéyéze
+:type fe
+	x|éyéze
+:type ;
+	xéyéz|e
+:type 0fé
+	xéy|éze
+:end
+
+:start Motion f, t, ; and , (CJK targets)
+	|日本語、テキスト、日本語。
+:type f、
+	日本語|、テキスト、日本語。
+:type ;
+	日本語、テキスト|、日本語。
+:type ;
+	日本語、テキスト|、日本語。
+:type ,
+	日本語|、テキスト、日本語。
+:type t。
+	日本語、テキスト、日本|語。
+:type F本
+	日本語、テキスト、日|本語。
+:type dT、
+	日本語、テキスト、|本語。
+:end
+
+:start Motion f, t, F and ; (emoji and other non-BMP targets)
+	|a😀b🎉c😀d𝐀e
+:type f😀
+	a|😀b🎉c😀d𝐀e
+:type ;
+	a😀b🎉c|😀d𝐀e
+:type t𝐀
+	a😀b🎉c😀|d𝐀e
+:type F🎉
+	a😀b|🎉c😀d𝐀e
+:type ;
+	a😀b|🎉c😀d𝐀e
+:type df𝐀
+	a😀b|e
+:end
+
+:start Command r (narrow replaced with wide, and wide with narrow)
+	|abcd
+:type r日
+	|日bcd
+:type l2r語
+	日語|語d
+:type 0rx
+	|x語語d
+:type lr-
+	x|-語d
+:type 9r*
+	x|-語d
+:end
+
+:start Replace mode R (wide and narrow characters)
+	|abcd 日本語
+:type R日本\<Esc>
+	日|本cd 日本語
+:type 5lRxy\<Esc>
+	日本cd 日x|y
+:type 0Rαβγ\<BS>\<BS>\<Esc>
+	|α本cd 日xy
+:end
+
+# Since Vim 9.1.0101, ~, g~ and gU turn ß into ẞ (U+1E9E LATIN CAPITAL LETTER
+# SHARP S), not "SS".
+:start Command ~ (accented letters, ß and ÿ)
+	|éàüßÿ ñ
+:type 5~
+	ÉÀÜẞŸ| ñ
+:type $~
+	ÉÀÜẞŸ |Ñ
+:type 05~
+	éàüßÿ| Ñ
+:end
+
+# Lowercasing Σ always gives σ, never the final form ς.
+:start Operator gU and gu (Greek and Cyrillic, no final sigma)
+	|αβγ привет
+	ΟΔΟΣ ΜΟΥ
+:type gU$
+	|ΑΒΓ ПРИВЕТ
+	ΟΔΟΣ ΜΟΥ
+:type jgu$
+	ΑΒΓ ПРИВЕТ
+	|οδοσ μου
+:end
+
+:start Operator gU and gu (sharp s)
+	|straße
+	STRAẞE
+:type gU$
+	|STRAẞE
+	STRAẞE
+:type jgu$
+	STRAẞE
+	|straße
+:end
+
+# İ lowercases to a plain i (not i with a combining dot), and ı uppercases to I.
+:start Operator gu and gU (Turkish dotted and dotless i)
+	|İstanbul ılık
+:type gu$
+	|istanbul ılık
+:type gU$
+	|ISTANBUL ILIK
+:end
+
+:start Operator g~ (mixed scripts)
+	|Ωmega Ñandú Ärger
+	Привет мир
+:type g~~
+	|ωMEGA ñANDÚ äRGER
+	Привет мир
+:type jg~w
+	ωMEGA ñANDÚ äRGER
+	|пРИВЕТ мир
+:end
+
+:start Operator g? (only ASCII letters are rotated)
+	|Ça va, élève
+:type g??
+	|Çn in, éyèir
+:end
+
+:start Command * and # (accented word)
+:set noignorecase
+	|café cafés café Café
+:type *
+	café cafés |café Café
+:type *
+	|café cafés café Café
+:type #
+	café cafés |café Café
+:end
+
+:start Command * (CJK word boundaries come from character classes)
+	|テスト、テストテスト 本テスト。
+:type *
+	テスト、テストテスト 本|テスト。
+:type n
+	|テスト、テストテスト 本テスト。
+:end
+
+:start Motion j and k (screen column with double-width characters)
+	abc|defgh
+	日本語テキスト
+	abcdefghij
+:type j
+	abcdefgh
+	日|本語テキスト
+	abcdefghij
+:type j
+	abcdefgh
+	日本語テキスト
+	abc|defghij
+:type k
+	abcdefgh
+	日|本語テキスト
+	abcdefghij
+:type l
+	abcdefgh
+	日本|語テキスト
+	abcdefghij
+:type k
+	abcd|efgh
+	日本語テキスト
+	abcdefghij
+:type 0jj7l
+	abcdefgh
+	日本語テキスト
+	abcdefg|hij
+:type k
+	abcdefgh
+	日本語|テキスト
+	abcdefghij
+:type j
+	abcdefgh
+	日本語テキスト
+	abcdefg|hij
+:end
+
+:start Motion | (screen columns with double-width characters)
+	|日本語abc😀x
+:type 4|
+	日|本語abc😀x
+:type 5|
+	日本|語abc😀x
+:type 7|
+	日本語|abc😀x
+:type 11|
+	日本語abc|😀x
+:type 12|
+	日本語abc😀|x
+:type |
+	|日本語abc😀x
+:end
+
+:start Command J (CJK lines)
+:set formatoptions=tcq
+	|日本語の
+	テキスト
+	abc
+:type J
+	日本語の| テキスト
+	abc
+:type J
+	日本語の テキスト| abc
+:end
+
+:start Command J (formatoptions M, no space next to a multibyte character)
+:set formatoptions=tcqM
+	|日本語の
+	テキスト
+	abc
+	漢字
+:type J
+	日本語の|テキスト
+	abc
+	漢字
+:type J
+	日本語のテキスト|abc
+	漢字
+:type J
+	日本語のテキストabc|漢字
+:end

@@ -2,7 +2,6 @@
 
 :start Backspacing in insert mode doesn't displace the put-buffer
 	Lorem| dolor
-:type yyi ipx\<bs>sum\<esc>
+:type yyi ipx\<BS>sum\<Esc>
 	Lorem ipsu|m dolor
 :end
-

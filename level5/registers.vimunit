@@ -1,0 +1,277 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Special registers: the yank register "0, the numbered delete registers "1
+# to "9 and how they shift, the small delete register "-, the black hole
+# register "_, the last inserted text ". and the last search pattern "/.
+
+:start Register "0 keeps the last yank after a delete
+:set startofline
+	al|pha
+	beta
+	gamma
+:type yyjdd
+	alpha
+	|gamma
+:type "0p
+	alpha
+	gamma
+	|alpha
+:type p
+	alpha
+	gamma
+	alpha
+	|beta
+:end
+
+:start Register "0 is not set by a yank into a named register
+:set startofline
+	al|pha
+	beta
+	gamma
+:type yyj"ayy
+	alpha
+	be|ta
+	gamma
+:type G"0p
+	alpha
+	beta
+	gamma
+	|alpha
+:type p
+	alpha
+	beta
+	gamma
+	alpha
+	|beta
+:end
+
+:start Registers "1 to "3 shift with each line delete
+:set startofline
+	al|pha
+	beta
+	gamma
+	delta
+:type dddddd
+	|delta
+:type "1p
+	delta
+	|gamma
+:type "2p
+	delta
+	gamma
+	|beta
+:type "3p
+	delta
+	gamma
+	beta
+	|alpha
+:end
+
+:start Register "1 with . (put the next numbered register)
+:set startofline
+	al|pha
+	beta
+	gamma
+	delta
+:type dddddd
+	|delta
+:type "1p
+	delta
+	|gamma
+:type u.
+	delta
+	|beta
+:type u.
+	delta
+	|alpha
+:end
+
+:start Register "- gets a small delete, "1 is not shifted
+:set startofline
+	alpha beta
+	gam|ma delta epsilon
+:type kdd
+	|gamma delta epsilon
+:type wdw
+	gamma |epsilon
+:type "1p
+	gamma epsilon
+	|alpha beta
+:type k0"-P
+	delta| gamma epsilon
+	alpha beta
+:end
+
+:start Register "1 gets a charwise delete across lines, "- does not
+:set startofline
+	alpha |beta
+	gamma delta
+:type x
+	alpha |eta
+	gamma delta
+:type vjd
+	alpha |elta
+:type "1P
+	alpha |eta
+	gamma delta
+:type "-p
+	alpha e|bta
+	gamma delta
+:end
+
+:start Register "1 gets a small delete with d% (and so does "-)
+:set startofline
+	one two
+	x (a |b) y
+:type kdd
+	|x (a b) y
+:type f(d%
+	x | y
+:type "1P
+	x (a b|) y
+:type $"-p
+	x (a b) y(a b|)
+:type "2p
+	x (a b) y(a b)
+	|one two
+:end
+
+:start Register "1 gets a small delete with d/ (and so does "-)
+:set startofline
+	one two
+	al|pha beta gamma
+:type kdd
+	|alpha beta gamma
+:type d/gam\<CR>
+	|gamma
+:type "1P
+	alpha beta| gamma
+:type "2p
+	alpha beta gamma
+	|one two
+:end
+
+:start Register "- gets small changes, "1 gets whole-line changes
+:set startofline
+	alpha beta
+	gam|ma delta
+:type cwX\<Esc>
+	alpha beta
+	gam|X delta
+:type kccY\<Esc>
+	|Y
+	gamX delta
+:type j$"-p
+	Y
+	gamX deltam|a
+:type "1p
+	Y
+	gamX deltama
+	|alpha beta
+:end
+
+:start Register "1 also gets a line delete into a named register
+:set startofline
+	alpha
+	be|ta
+	gamma
+:type "add
+	alpha
+	|gamma
+:type "1p
+	alpha
+	gamma
+	|beta
+:type "ap
+	alpha
+	gamma
+	beta
+	|beta
+:end
+
+:start Register "- is not set by a small delete into a named register
+:set startofline
+	|xalpha beta gamma
+:type x
+	|alpha beta gamma
+:type w"bdw
+	alpha |gamma
+:type "-P
+	alpha |xgamma
+:type "bp
+	alpha xbeta| gamma
+:end
+
+:start Register "_ (black hole) leaves the other registers alone
+:set startofline
+	alpha
+	be|ta
+	gamma
+	delta
+:type dd
+	alpha
+	|gamma
+	delta
+:type "_dd
+	alpha
+	|delta
+:type p
+	alpha
+	delta
+	|beta
+:type "1p
+	alpha
+	delta
+	beta
+	|beta
+:type "_dwP
+	alpha
+	delta
+	beta
+	|beta
+
+:end
+
+:start Register . (last inserted text)
+	al|pha
+:type afoo\<Esc>
+	alpfo|oha
+:type $".p
+	alpfoohafo|o
+:type 0".P
+	fo|oalpfoohafoo
+:end
+
+:start Register . replays backspaces in the inserted text
+	al|pha
+:type ifox\<BS>\<BS>ig\<Esc>
+	alfi|gpha
+:type $".p
+	alfigphafi|g
+:end
+
+:start Register . replays backspaces over text before the insert
+	alpha be|ta
+:type a\<BS>\<BS>X\<Esc>
+	alpha b|Xa
+:type 0".p
+	|Xlpha bXa
+:end
+
+:start Register / (last search pattern)
+:set startofline
+	al|pha beta
+	gamma
+:type /be\<CR>
+	alpha |beta
+	gamma
+:type j"/p
+	alpha beta
+	gammab|e
+:type gg*
+	|alpha beta
+	gammabe
+:type j"/P
+	alpha beta
+	\<alpha\|>gammabe
+:end

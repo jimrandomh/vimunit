@@ -1,0 +1,99 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Quote text objects: i" a" i' a' i` a`, with operators and in Visual mode.
+
+:start Text object i" and a" (cursor inside)
+	x = "Lorem ip|sum", y
+:type di"
+	x = "|", y
+:type uda"
+	x =|, y
+:end
+
+:start Text objects a" and 2i" (trailing white space)
+	foo("Lo|rem"   , bar)
+:type da"
+	foo(|, bar)
+:type ud2i"
+	foo(|   , bar)
+:end
+
+:start Text object a" (no trailing white space: includes leading white space)
+	foo(x,  "Lo|rem")
+:type da"
+	foo(x,|)
+:end
+
+:start Text object i" (cursor before the first quote searches forward)
+	f|oo("Lorem", "ipsum")
+:type di"
+	foo("|", "ipsum")
+:end
+
+:start Text object i" (cursor on a quote)
+	"Lorem" "ipsum|" "dolor"
+:type di"
+	"Lorem" "|" "dolor"
+:type $di"
+	"Lorem" "" "|"
+:type 0di"
+	"|" "" ""
+:end
+
+:start Text object i" (cursor between two strings)
+	"Lorem" i|psum "dolor"
+:type di"
+	"Lorem"|"dolor"
+:end
+
+:start Text object i" (escaped quotes)
+	x = "Lo\"r|em\"", y
+:type di"
+	x = "|", y
+:end
+
+:start Text object i" (empty string)
+	x = "|", y
+:type di"
+	x = "|", y
+:type ci"Lorem\<Esc>
+	x = "Lore|m", y
+:end
+
+:start Text object i" (fails with the cursor after the last quote)
+	x = "Lorem", ips|um
+:type di"
+	x = "Lorem", ips|um
+:end
+
+:start Text object i" (does not span lines)
+	x = "Lorem
+	ip|sum" dolor
+:type di"
+	x = "Lorem
+	ip|sum" dolor
+:end
+
+:start Text objects i', a', i`, a`
+	say 'Lo|rem' `ipsum` now
+:type di'
+	say '|' `ipsum` now
+:type uda'
+	say |`ipsum` now
+:type di`
+	say `|` now
+:type uda`
+	say |now
+:end
+
+:start Text object a" in Visual mode (repeating includes another string)
+	"Lorem" "ip|sum" "dolor" sit
+:type va"a"d
+	"Lorem" |sit
+:end
+
+:start Text object i" in Visual mode (repeating includes the quotes)
+	x = "Lorem ip|sum";
+:type vi"i"d
+	x = |;
+:end

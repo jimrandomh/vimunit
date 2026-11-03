@@ -1,0 +1,119 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Visual mode with a count: [count]v, [count]V and [count]CTRL-V select an
+# area the size of the last Visual operation (times the count), at the cursor.
+
+# The reference harness can't reset the size of the last Visual operation
+# between tests, so this test must stay first in the file.
+:start Visual 3v (no previous Visual operation)
+	alpha |bravo charlie
+	delta
+:type 3vd
+	alpha |vo charlie
+	delta
+:type w1vd
+	alpha vo |rlie
+	delta
+:end
+
+:start Visual 1v and 2v (size of the last charwise operation)
+	alpha |bravo charlie delta echo foxtrot
+:type vlld
+	alpha |vo charlie delta echo foxtrot
+:type w1vd
+	alpha vo |rlie delta echo foxtrot
+:type w2vd
+	alpha vo rlie |echo foxtrot
+:end
+
+:start Visual 1v and 2V (size of the last linewise operation)
+:set startofline
+	alpha
+	|bravo
+	charlie
+	delta
+	echo
+	foxtrot
+	golf
+	hotel
+	india
+	juliet
+:type Vjd
+	alpha
+	|delta
+	echo
+	foxtrot
+	golf
+	hotel
+	india
+	juliet
+:type 1vd
+	alpha
+	|foxtrot
+	golf
+	hotel
+	india
+	juliet
+:type 2Vd
+	alpha
+	|juliet
+:end
+
+:start Visual 1v (size of the last blockwise operation)
+	alpha |bravo
+	charlie delta
+	echo foxtrot
+	golf hotel
+	india juliet
+:type \<C-V>jld
+	alpha |avo
+	charlidelta
+	echo foxtrot
+	golf hotel
+	india juliet
+:type jw1vd
+	alpha avo
+	charlidelta
+	|ho foxtrot
+	lf hotel
+	india juliet
+:end
+
+:start Visual 1v (size of the last multi-line charwise operation)
+	alpha |bravo charlie
+	delta echo foxtrot
+	golf hotel india
+	juliet kilo lima
+:type vjhy
+	alpha |bravo charlie
+	delta echo foxtrot
+	golf hotel india
+	juliet kilo lima
+:type jj1vd
+	alpha bravo charlie
+	delta echo foxtrot
+	golf h| kilo lima
+:end
+
+:start Visual 1v (after an operation on v$)
+	alpha |bravo
+	charlie delta
+	echo foxtrot
+:type v$y
+	alpha |bravo
+	charlie delta
+	echo foxtrot
+:type j1vd
+	alpha bravo
+	charli|echo foxtrot
+:end
+
+:start Visual 1v (Visual mode ended without an operator is not remembered)
+	alpha |bravo charlie delta
+:type vld
+	alpha |avo charlie delta
+:type vllll\<Esc>
+	alpha avo |charlie delta
+:type 1vd
+	alpha avo |arlie delta
+:end

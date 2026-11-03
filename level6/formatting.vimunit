@@ -1,0 +1,195 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Formatting text: the gq and gw operators, and automatic wrapping while
+# typing, with 'textwidth', 'wrapmargin' and 'formatoptions'.
+
+:start Command gqq (break a long line at textwidth)
+:set textwidth=20 formatoptions=tcq
+	the qu|ick brown fox jumps over the lazy dog
+:type gqq
+	the quick brown fox
+	jumps over the lazy
+	|dog
+:type u
+	the qu|ick brown fox jumps over the lazy dog
+:end
+
+:start Command gqap (join and reflow a paragraph)
+:set textwidth=20 formatoptions=tcq nojoinspaces
+	alpha bravo
+	charlie de|lta echo foxtrot golf
+	hotel
+
+	india juliet
+:type gqap
+	alpha bravo charlie
+	delta echo foxtrot
+	golf hotel
+	|
+	india juliet
+:end
+
+:start Command gwap (cursor stays with its text)
+:set textwidth=20 formatoptions=tcq nojoinspaces
+	alpha bravo
+	charlie delta echo fox|trot golf
+	hotel
+
+	india juliet
+:type gwap
+	alpha bravo charlie
+	delta echo fox|trot
+	golf hotel
+
+	india juliet
+:type u
+	alpha bravo
+	charlie delta echo fox|trot golf
+	hotel
+
+	india juliet
+:end
+
+:start Command gww (format the current line, cursor stays)
+:set textwidth=20 formatoptions=tcq
+	the quick brown fox jumps over the la|zy dog
+:type gww
+	the quick brown fox
+	jumps over the la|zy
+	dog
+:end
+
+:start Command gq (with a count, and in Visual mode)
+:set textwidth=20 formatoptions=tcq nojoinspaces
+	o|ne two
+	three
+	four five
+	six
+	seven
+	eight
+:type 3gqq
+	one two three four
+	|five
+	six
+	seven
+	eight
+:type jVjgq
+	one two three four
+	five
+	|six seven
+	eight
+:end
+
+:start Command gqq (line already short enough)
+:set tabstop=8 textwidth=20 formatoptions=tcq
+	    sh|ort line
+	next
+:type gqq
+	    |short line
+	next
+:end
+
+:start Command gqq (a word longer than textwidth is not broken)
+:set textwidth=10 formatoptions=tcq
+	sh|ort extraordinarily long words
+:type gqq
+	short
+	extraordinarily
+	|long words
+:end
+
+:start Command gqap (keeps the indent of the first line)
+:set tabstop=8 textwidth=20 formatoptions=tcq autoindent nojoinspaces
+	    alpha bravo charlie
+	delta echo foxtro|t golf hotel
+:type gqap
+	    alpha bravo
+	    charlie delta
+	    echo foxtrot
+	    |golf hotel
+:end
+
+:start Command gqq (textwidth 0 uses the window width)
+:window 30x6
+:set textwidth=0 wrapmargin=0 formatoptions=tcq
+	the qu|ick brown fox jumps over the lazy dog and runs far away
+:type gqq
+	the quick brown fox jumps
+	over the lazy dog and runs
+	|far away
+:end
+
+:start Command gqap (nojoinspaces after a period)
+:set textwidth=40 formatoptions=tcq nojoinspaces
+	First sen|tence.
+	Second one!
+	Third?
+:type gqap
+	|First sentence. Second one! Third?
+:end
+
+:start Command gqap (joinspaces after a period)
+:set textwidth=40 formatoptions=tcq joinspaces
+	First sen|tence.
+	Second one!
+	Third?
+:type gqap
+	|First sentence.  Second one!  Third?
+:end
+
+:start Auto-wrap while typing (textwidth)
+:set textwidth=20 formatoptions=tcq
+	the quick brown fo|x
+:type A jumps over\<Esc>
+	the quick brown fox
+	jumps ove|r
+:type A the lazy dog runs\<Esc>
+	the quick brown fox
+	jumps over the lazy
+	dog run|s
+:end
+
+:start Auto-wrap while typing (with autoindent)
+:set tabstop=8 textwidth=20 formatoptions=tcq autoindent
+	    alpha bra|vo
+:type A charlie delta echo\<Esc>
+	    alpha bravo
+	    charlie delta
+	    ech|o
+:end
+
+:start Auto-wrap while typing (formatoptions without t)
+:set textwidth=20 formatoptions=cq
+	the quick brown fo|x
+:type A jumps over\<Esc>
+	the quick brown fox jumps ove|r
+:end
+
+:start Auto-wrap while typing (formatoptions l, line was already long)
+:set textwidth=20 formatoptions=tcql
+	the quick brown fox jumps ov|er
+	short
+:type A the lazy\<Esc>
+	the quick brown fox jumps over the laz|y
+	short
+:type jA one two three four five\<Esc>
+	the quick brown fox jumps over the lazy
+	short one two three
+	four fiv|e
+:end
+
+:start Auto-wrap while typing (wrapmargin)
+:window 30x6
+:set textwidth=0 wrapmargin=10 formatoptions=tcq
+	the quick brown fo|x
+:type A jumps over the lazy\<Esc>
+	the quick brown fox
+	jumps over the laz|y
+:end
+
+:start Auto-wrap while typing (inserting in the middle of a line)
+:set textwidth=20 formatoptions=tcq
+	the quick fox jumps o|ver
+:type 0wwibrown \<Esc>
+	the quick brown| fox jumps over
+:end

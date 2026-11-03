@@ -1,0 +1,129 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Indentation options: expandtab, softtabstop, smarttab, shiftround,
+# autoindent, smartindent, copyindent and preserveindent.
+
+:start Indent >> (noexpandtab, spaces become a tab)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	|alpha
+:type >>
+	    |alpha
+:type >>
+		|alpha
+:type >>
+		    |alpha
+:type <<
+		|alpha
+:end
+
+:start Indent expandtab (>> and <Tab> insert spaces)
+:set shiftwidth=4 tabstop=8 softtabstop=0 expandtab nosmarttab startofline
+	|alpha
+:type >>
+	    |alpha
+:type A\<Tab>X\<Esc>
+	    alpha       |X
+:end
+
+:start Indent softtabstop (<Tab> and <BS> in Insert mode)
+:set shiftwidth=4 tabstop=8 softtabstop=4 noexpandtab nosmarttab
+	|alpha
+:type I\<Tab>\<Esc>
+	   | alpha
+:type I\<Tab>\<Esc>
+	|	alpha
+:type I\<BS>\<Esc>
+	   | alpha
+:type A\<Tab>X\<Esc>
+	    alpha   |X
+:end
+
+:start Indent softtabstop (with expandtab)
+:set shiftwidth=4 tabstop=8 softtabstop=4 expandtab nosmarttab
+	|alpha
+:type I\<Tab>\<Tab>\<Tab>\<Esc>
+	           | alpha
+:type I\<BS>\<Esc>
+	       | alpha
+:end
+
+:start Indent smarttab (<Tab> at the start of a line inserts shiftwidth)
+:set shiftwidth=4 tabstop=8 softtabstop=0 noexpandtab smarttab
+	|alpha
+:type I\<Tab>\<Esc>
+	   | alpha
+:type I\<Tab>\<Esc>
+	|	alpha
+:type A\<Tab>X\<Esc>
+		alpha	|X
+:type I\<BS>\<Esc>
+	   | alpha	X
+:end
+
+:start Indent shiftround (>> and << round to a multiple of shiftwidth)
+:set shiftwidth=4 expandtab shiftround startofline
+	   |alpha
+	      bravo
+:type >>
+	    |alpha
+	      bravo
+:type j<<
+	    alpha
+	    |bravo
+:end
+
+:start Indent autoindent (indent removed from a line left empty)
+:set autoindent shiftwidth=4 tabstop=8 expandtab
+	    al|pha
+	bravo
+:type o\<Esc>
+	    alpha
+	|
+	bravo
+:type kA\<CR>\<CR>x\<Esc>
+	    alpha
+
+	    |x
+
+	bravo
+:end
+
+:start Indent smartindent (after { and before })
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+	|if (x) {
+:type A\<CR>y = 1;\<CR>}\<Esc>
+	if (x) {
+	    y = 1;
+	|}
+:end
+
+:start Indent smartindent (# goes to the first column)
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+	|if (x) {
+:type o#if y\<Esc>
+	if (x) {
+	#if |y
+:end
+
+:start Indent copyindent (new line copies the indent characters)
+:set autoindent copyindent expandtab shiftwidth=4 tabstop=8
+		  |alpha
+:type ox\<Esc>
+		  alpha
+		  |x
+:end
+
+:start Indent autoindent (without copyindent, expandtab converts the indent)
+:set autoindent nocopyindent expandtab shiftwidth=4 tabstop=8
+		  |alpha
+:type ox\<Esc>
+		  alpha
+	          |x
+:end
+
+:start Indent preserveindent (>> keeps the existing indent characters)
+:set preserveindent expandtab shiftwidth=4 tabstop=8 startofline
+		|alpha
+:type >>
+		    |alpha
+:end

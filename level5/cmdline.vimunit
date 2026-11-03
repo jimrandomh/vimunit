@@ -1,0 +1,215 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Editing on the command line: inserting the word under the cursor and
+# registers, deleting with CTRL-U, CTRL-W and <BS>, moving the cursor, and
+# recalling earlier commands from the history.
+
+:start Cmdline CTRL-R CTRL-W (word under the cursor)
+	alpha be|ta gamma
+	beta delta
+:type :%s/\<C-R>\<C-W>/X/g\<CR>
+	alpha X gamma
+	|X delta
+:end
+
+:start Cmdline CTRL-R CTRL-A (WORD under the cursor)
+	x foo-b|ar.baz y
+	foo-bar.baz
+:type :%s/\<C-R>\<C-A>/X/\<CR>
+	x X y
+	|X
+:end
+
+:start Cmdline CTRL-R {register}
+	alpha be|ta gamma
+	beta delta
+:type yiw
+	alpha |beta gamma
+	beta delta
+:type :%s/\<C-R>"/X/\<CR>
+	alpha X gamma
+	|X delta
+:type w"ayiwgg:s/alpha/\<C-R>a/\<CR>
+	|delta X gamma
+	X delta
+:end
+
+:start Cmdline CTRL-R / (last search pattern)
+	alpha be|ta gamma
+:type /gam\<CR>
+	alpha beta |gamma
+:type :s/\<C-R>//X/\<CR>
+	|alpha beta Xma
+:end
+
+:start Cmdline CTRL-U (delete to the start)
+	alpha be|ta
+:type :alpha\<C-U>s/beta/X/\<CR>
+	|alpha X
+:type :abcs/X/Y/\<Left>\<Left>\<Left>\<Left>\<Left>\<Left>\<C-U>\<CR>
+	|alpha Y
+:end
+
+:start Cmdline CTRL-W (delete the word before the cursor)
+	alpha be|ta
+:type :s/beta/foo bar\<C-W>X/\<CR>
+	|alpha foo X
+:type :s/foo/x.y\<C-W>\<C-W>Z/\<CR>
+	|alpha xZ X
+:end
+
+:start Cmdline <BS> and CTRL-H
+	alpha be|ta
+:type :s/betaa\<BS>/X/\<CR>
+	|alpha X
+:type :s/X/Y/z\<C-H>\<CR>
+	|alpha Y
+:end
+
+:start Cmdline <BS> on an empty command line (leaves it)
+	alpha be|ta
+:type :\<BS>x
+	alpha be|a
+:type :s\<BS>\<BS>x
+	alpha b|e
+:end
+
+:start Cmdline <Esc> (abandons the command)
+	alpha be|ta
+:type :s/beta/X/\<Esc>
+	alpha be|ta
+:type :s/beta/X/\<Esc>x
+	alpha be|a
+:end
+
+:start Cmdline <Left>, <Right> and <Del>
+	alpha be|ta
+:type :s/a/X/\<Left>\<Left>Y\<CR>
+	|YXlpha beta
+:type :s/q/X/\<Left>\<Left>\<Left>\<Left>\<Del>b\<Right>\<Right>W\<CR>
+	|YXlpha XWeta
+:end
+
+:start Cmdline <Home>, <End>, CTRL-B and CTRL-E
+	alpha be|ta
+:type :/alpha/X/\<Home>s\<End>g\<CR>
+	|X beta
+:type :/X/Y\<C-B>s\<C-E>/\<CR>
+	|Y beta
+:end
+
+:start Cmdline <S-Left> and <S-Right> (move by WORD)
+	alpha be|ta
+:type :s/beta/X Y/\<S-Left>Z\<CR>
+	|alpha X ZY
+:type :s/X/1 2/\<C-B>\<S-Right>Q\<CR>
+	|alpha 1Q 2 ZY
+:end
+
+:start Cmdline <Up> (recall the previous command)
+	alpha x
+	be|ta x
+	gamma x
+:type :s/x/y/\<CR>
+	alpha x
+	|beta y
+	gamma x
+:type j:\<Up>\<CR>
+	alpha x
+	beta y
+	|gamma y
+:type gg:\<Up>\<Up>\<CR>
+	|alpha y
+	beta y
+	gamma y
+:end
+
+:start Cmdline <Up> with a prefix (recall a matching command)
+	alpha x
+	be|ta x
+	gamma x
+	delta x
+:type :s/x/y/\<CR>
+	alpha x
+	|beta y
+	gamma x
+	delta x
+:type :3\<CR>
+	alpha x
+	beta y
+	|gamma x
+	delta x
+:type :s\<Up>\<CR>
+	alpha x
+	beta y
+	|gamma y
+	delta x
+:type gg:\<Up>\<Up>\<CR>
+	alpha x
+	beta y
+	|gamma y
+	delta x
+:end
+
+:start Cmdline <Up> and <Down>
+	al|pha x
+	beta x
+	gamma x
+	delta x
+:type :s/x/1/\<CR>
+	|alpha 1
+	beta x
+	gamma x
+	delta x
+:type j:s/x/2/\<CR>
+	alpha 1
+	|beta 2
+	gamma x
+	delta x
+:type j:\<Up>\<Up>\<CR>
+	alpha 1
+	beta 2
+	|gamma 1
+	delta x
+:type j:\<Up>\<Up>\<Down>\<CR>
+	alpha 1
+	beta 2
+	gamma 1
+	|delta 1
+:end
+
+:start Search history <Up>
+	alpha beta gamma
+	al|pha beta gamma
+:type /gamma\<CR>
+	alpha beta gamma
+	alpha beta |gamma
+:type /beta\<CR>
+	alpha |beta gamma
+	alpha beta gamma
+:type 0/\<Up>\<Up>\<CR>
+	alpha beta |gamma
+	alpha beta gamma
+:end
+
+:start Command @: (repeat the last command line)
+	alpha x x
+	be|ta x x
+	gamma x x
+:type :s/x/y/\<CR>
+	alpha x x
+	|beta y x
+	gamma x x
+:type j@:
+	alpha x x
+	beta y x
+	|gamma y x
+:type @:
+	alpha x x
+	beta y x
+	|gamma y y
+:type k2@:
+	alpha x x
+	|beta y y
+	gamma y y
+:end

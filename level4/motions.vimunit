@@ -1,0 +1,1057 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Motions G, gg, {count}%, g_, sentences ( and ), paragraphs { and },
+# sections [[, ]], [], ][, and the unmatched-bracket motions [(, [{, ]), ]}.
+
+:start Motion G and gg (first non-blank, with counts)
+:set startofline
+	Lo|rem ipsum
+	  dolor sit
+	    amet
+	consectetur
+:type G
+	Lorem ipsum
+	  dolor sit
+	    amet
+	|consectetur
+:type gg
+	|Lorem ipsum
+	  dolor sit
+	    amet
+	consectetur
+:type 3G
+	Lorem ipsum
+	  dolor sit
+	    |amet
+	consectetur
+:type 2gg
+	Lorem ipsum
+	  |dolor sit
+	    amet
+	consectetur
+:type 100G
+	Lorem ipsum
+	  dolor sit
+	    amet
+	|consectetur
+:type 100gg
+	Lorem ipsum
+	  dolor sit
+	    amet
+	|consectetur
+:end
+
+:start Motion G and gg (nostartofline keeps the column)
+:set nostartofline
+	Lorem ip|sum
+	dolor
+	sit amet consectetur
+:type G
+	Lorem ipsum
+	dolor
+	sit amet| consectetur
+:type gg
+	Lorem ip|sum
+	dolor
+	sit amet consectetur
+:type 2G
+	Lorem ipsum
+	dolo|r
+	sit amet consectetur
+:type G
+	Lorem ipsum
+	dolor
+	sit amet| consectetur
+:end
+
+:start Command dG (linewise, from the middle of a line)
+:set startofline
+	Lorem
+	ip|sum dolor
+	  sit
+	amet
+:type dG
+	|Lorem
+:type u
+	Lorem
+	ip|sum dolor
+	  sit
+	amet
+:type dgg
+	  |sit
+	amet
+:end
+
+:start Command d{count}G (linewise, backwards)
+:set startofline
+	Lorem
+	ipsum
+	dolor
+	si|t
+	amet
+:type d2G
+	Lorem
+	|amet
+:type u
+	Lorem
+	|ipsum
+	dolor
+	sit
+	amet
+:type jy1GP
+	|Lorem
+	ipsum
+	dolor
+	Lorem
+	ipsum
+	dolor
+	sit
+	amet
+:end
+
+:start Motion {count}% (percentage of the buffer)
+:set startofline
+	|one
+	two
+	three
+	four
+	five
+	six
+	seven
+	eight
+	nine
+	ten
+:type 50%
+	one
+	two
+	three
+	four
+	|five
+	six
+	seven
+	eight
+	nine
+	ten
+:type 25%
+	one
+	two
+	|three
+	four
+	five
+	six
+	seven
+	eight
+	nine
+	ten
+:type 33%
+	one
+	two
+	three
+	|four
+	five
+	six
+	seven
+	eight
+	nine
+	ten
+:type 100%
+	one
+	two
+	three
+	four
+	five
+	six
+	seven
+	eight
+	nine
+	|ten
+:type 1%
+	|one
+	two
+	three
+	four
+	five
+	six
+	seven
+	eight
+	nine
+	ten
+:type 101%
+	|one
+	two
+	three
+	four
+	five
+	six
+	seven
+	eight
+	nine
+	ten
+:end
+
+:start Motion {count}% (rounds up on a short buffer)
+:set startofline
+	|Lorem
+	ipsum
+	dolor
+:type 50%
+	Lorem
+	|ipsum
+	dolor
+:type 33%
+	|Lorem
+	ipsum
+	dolor
+:type 34%
+	Lorem
+	|ipsum
+	dolor
+:type 67%
+	Lorem
+	ipsum
+	|dolor
+:end
+
+:start Command d{count}% (linewise)
+:set startofline
+	|Lorem
+	ipsum
+	  dolor
+	sit
+:type jld75%
+	Lorem
+	|sit
+:end
+
+:start Motion g_ (last non-blank character)
+	Lo|rem ipsum   
+	dolor sit amet
+	  
+	consectetur
+:type g_
+	Lorem ipsu|m   
+	dolor sit amet
+	  
+	consectetur
+:type 2g_
+	Lorem ipsum   
+	dolor sit ame|t
+	  
+	consectetur
+:type 0g_
+	Lorem ipsum   
+	dolor sit ame|t
+	  
+	consectetur
+:type jg_
+	Lorem ipsum   
+	dolor sit amet
+	|  
+	consectetur
+:end
+
+:start Motion g_ (does not stick to the end of line like $)
+	Lo|rem ipsum
+	dolor sit amet consectetur
+	sit
+:type g_
+	Lorem ipsu|m
+	dolor sit amet consectetur
+	sit
+:type j
+	Lorem ipsum
+	dolor sit |amet consectetur
+	sit
+:type j
+	Lorem ipsum
+	dolor sit amet consectetur
+	si|t
+:type $k
+	Lorem ipsum
+	dolor sit amet consectetu|r
+	sit
+:end
+
+:start Command dg_ (inclusive, keeps trailing whitespace)
+	Lorem i|psum dolor   
+	sit
+:type dg_
+	Lorem i|   
+	sit
+:type u
+	Lorem i|psum dolor   
+	sit
+:type d2g_
+	Lorem |i
+:end
+
+:start Motion ) (next sentence)
+	|Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do.
+:type )
+	Lorem ipsum. |Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do.
+:type )
+	Lorem ipsum. Dolor sit! |Amet consectetur? Adipiscing
+	elit.  Sed do.
+:type )
+	Lorem ipsum. Dolor sit! Amet consectetur? |Adipiscing
+	elit.  Sed do.
+:type )
+	Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  |Sed do.
+:type )
+	Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do|.
+:type )
+	Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do|.
+:end
+
+:start Motion ( (previous sentence)
+	Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed d|o.
+:type (
+	Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  |Sed do.
+:type (
+	Lorem ipsum. Dolor sit! Amet consectetur? |Adipiscing
+	elit.  Sed do.
+:type (
+	Lorem ipsum. Dolor sit! |Amet consectetur? Adipiscing
+	elit.  Sed do.
+:type 2(
+	|Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do.
+:type (
+	|Lorem ipsum. Dolor sit! Amet consectetur? Adipiscing
+	elit.  Sed do.
+:end
+
+:start Motion ) (closing quotes and brackets after the punctuation)
+	|He said "Stop." Then (he left!) Fine.' Done
+:type )
+	He said "Stop." |Then (he left!) Fine.' Done
+:type )
+	He said "Stop." Then (he left!) |Fine.' Done
+:type )
+	He said "Stop." Then (he left!) Fine.' |Done
+:end
+
+:start Motion ) (punctuation not followed by whitespace)
+	|Pi is 3.14 roughly. See e.g.this one.Not a stop. End
+:type )
+	Pi is 3.14 roughly. |See e.g.this one.Not a stop. End
+:type )
+	Pi is 3.14 roughly. See e.g.this one.Not a stop. |End
+:end
+
+:start Motion ) and ( (paragraph boundaries are sentence boundaries)
+	|Lorem ipsum
+	dolor sit
+
+	Amet consectetur.
+
+
+	Adipiscing elit.
+:type )
+	Lorem ipsum
+	dolor sit
+	|
+	Amet consectetur.
+
+
+	Adipiscing elit.
+:type )
+	Lorem ipsum
+	dolor sit
+
+	|Amet consectetur.
+
+
+	Adipiscing elit.
+:type )
+	Lorem ipsum
+	dolor sit
+
+	Amet consectetur.
+	|
+
+	Adipiscing elit.
+:type )
+	Lorem ipsum
+	dolor sit
+
+	Amet consectetur.
+
+
+	|Adipiscing elit.
+:type (
+	Lorem ipsum
+	dolor sit
+
+	Amet consectetur.
+
+	|
+	Adipiscing elit.
+:type (
+	Lorem ipsum
+	dolor sit
+
+	|Amet consectetur.
+
+
+	Adipiscing elit.
+:end
+
+:start Command d) and d( (exclusive)
+	Lorem ipsum. |Dolor sit.  Amet.
+:type d)
+	Lorem ipsum. |Amet.
+:type u
+	Lorem ipsum. |Dolor sit.  Amet.
+:type fid)
+	Lorem ipsum. Dolor s|Amet.
+:type u
+	Lorem ipsum. Dolor s|it.  Amet.
+:type $d(
+	Lorem ipsum. Dolor sit.  |.
+:end
+
+:start Motion } and { (next and previous blank line)
+	Lo|rem
+	ipsum
+
+	dolor
+	sit
+
+	amet
+:type }
+	Lorem
+	ipsum
+	|
+	dolor
+	sit
+
+	amet
+:type }
+	Lorem
+	ipsum
+
+	dolor
+	sit
+	|
+	amet
+:type }
+	Lorem
+	ipsum
+
+	dolor
+	sit
+
+	ame|t
+:type {
+	Lorem
+	ipsum
+
+	dolor
+	sit
+	|
+	amet
+:type {
+	Lorem
+	ipsum
+	|
+	dolor
+	sit
+
+	amet
+:type {
+	|Lorem
+	ipsum
+
+	dolor
+	sit
+
+	amet
+:end
+
+:start Motion } and { (consecutive blank lines)
+	|Lorem
+
+
+	ipsum
+
+	dolor
+:type }
+	Lorem
+	|
+
+	ipsum
+
+	dolor
+:type }
+	Lorem
+
+
+	ipsum
+	|
+	dolor
+:type }
+	Lorem
+
+
+	ipsum
+
+	dolo|r
+:type {
+	Lorem
+
+
+	ipsum
+	|
+	dolor
+:type {
+	Lorem
+
+	|
+	ipsum
+
+	dolor
+:type {
+	|Lorem
+
+
+	ipsum
+
+	dolor
+:end
+
+:start Motion } (whitespace-only lines are not paragraph boundaries)
+	|Lorem
+	  
+	ipsum
+		
+	dolor
+
+	sit
+:type }
+	Lorem
+	  
+	ipsum
+		
+	dolor
+	|
+	sit
+:type {
+	|Lorem
+	  
+	ipsum
+		
+	dolor
+
+	sit
+:end
+
+:start Motion } and { (count larger than the number of paragraphs fails)
+	Lo|rem
+
+	ipsum
+
+	dolor sit
+:type 4}
+	Lo|rem
+
+	ipsum
+
+	dolor sit
+:type 3}
+	Lorem
+
+	ipsum
+
+	dolor si|t
+:type 4{
+	Lorem
+
+	ipsum
+
+	dolor si|t
+:type 3{
+	|Lorem
+
+	ipsum
+
+	dolor sit
+:end
+
+:start Command d} (charwise from the middle of a line)
+	Lorem i|psum
+	dolor sit
+
+	amet
+:type d}
+	Lorem |i
+
+	amet
+:type u
+	Lorem i|psum
+	dolor sit
+
+	amet
+:type y}P
+	Lorem i|psum
+	dolor sitpsum
+	dolor sit
+
+	amet
+:end
+
+:start Command d} (linewise from the start of a line)
+	|Lorem ipsum
+	dolor sit
+
+	amet
+:type d}
+	|
+	amet
+:type u
+	|Lorem ipsum
+	dolor sit
+
+	amet
+:type d2}
+	|
+:end
+
+:start Command d} (linewise from the first non-blank)
+	  |Lorem ipsum
+	dolor sit
+
+	amet
+:type d}
+	|
+	amet
+:end
+
+:start Command d} (in the last paragraph, includes the last character)
+	Lorem
+
+	ipsum d|olor
+	sit amet
+:type d}
+	Lorem
+
+	ipsum |d
+:type u
+	Lorem
+
+	ipsum d|olor
+	sit amet
+:type kd{
+	|
+	ipsum dolor
+	sit amet
+:end
+
+:start Motion ]] and [[ (next and previous { in column 1)
+	|int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type ]]
+	int a;
+	void f()
+	|{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type ]]
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	|{
+	  i();
+	}
+	int b;
+:type ]]
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	|int b;
+:type [[
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	|{
+	  i();
+	}
+	int b;
+:type [[
+	int a;
+	void f()
+	|{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type [[
+	|int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type 2]]
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	|{
+	  i();
+	}
+	int b;
+:end
+
+:start Motion ][ and [] (next and previous } in column 1)
+	|int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type ][
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	|}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type ][
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	|}
+	int b;
+:type ][
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	|int b;
+:type []
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	|}
+	int b;
+:type []
+	int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	|}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:type []
+	|int a;
+	void f()
+	{
+	  if (a) {
+	    g();
+	  }
+	}
+	void h()
+	{
+	  i();
+	}
+	int b;
+:end
+
+:start Command d]] (stops below a } in column 1)
+:set startofline
+	vo|id f()
+	{
+	  g();
+	}
+	int a;
+	void h()
+	{
+	}
+:type 0d]]
+	|{
+	  g();
+	}
+	int a;
+	void h()
+	{
+	}
+:type u
+	|void f()
+	{
+	  g();
+	}
+	int a;
+	void h()
+	{
+	}
+:type jj]]
+	void f()
+	{
+	  g();
+	}
+	int a;
+	void h()
+	|{
+	}
+:type 3Gd]]
+	void f()
+	{
+	|int a;
+	void h()
+	{
+	}
+:end
+
+:start Motion [( and ]) (unmatched parentheses, skipping pairs)
+	f(a, (b, c), d, (e), g|h)
+:type [(
+	f|(a, (b, c), d, (e), gh)
+:type ])
+	f(a, (b, c), d, (e), gh|)
+:type [(
+	f|(a, (b, c), d, (e), gh)
+:type ])
+	f(a, (b, c), d, (e), gh|)
+:type 0fe[(
+	f(a, (b, c), d, |(e), gh)
+:type ])
+	f(a, (b, c), d, (e|), gh)
+:end
+
+:start Motion [( and ]) (from a parenthesis, and with a count)
+	f(a, g(b, h(c|)))
+:type ])
+	f(a, g(b, h(c)|))
+:type ])
+	f(a, g(b, h(c))|)
+:type [(
+	f|(a, g(b, h(c)))
+:type [(
+	f|(a, g(b, h(c)))
+:type fc2[(
+	f(a, g|(b, h(c)))
+:type fc5[(
+	f|(a, g(b, h(c)))
+:type fc2])
+	f(a, g(b, h(c)|))
+:end
+
+:start Motion [( and ]) (no unmatched parenthesis)
+	f(a), |b(c), d(e)
+:type [(
+	f(a), |b(c), d(e)
+:type ])
+	f(a), |b(c), d(e)
+:type fc[(
+	f(a), b|(c), d(e)
+:end
+
+:start Motion [{ and ]} (enclosing braces)
+:set startofline
+	void f() {
+	  if (a) {
+	    g();
+	  } else {
+	    h(|);
+	  }
+	  i();
+	}
+:type [{
+	void f() {
+	  if (a) {
+	    g();
+	  } else |{
+	    h();
+	  }
+	  i();
+	}
+:type [{
+	void f() |{
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	}
+:type [{
+	void f() |{
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	}
+:type ]}
+	void f() {
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	|}
+:type ]}
+	void f() {
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	|}
+:type gg]}
+	|void f() {
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	}
+:type 3G2]}
+	void f() {
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	|}
+:type 3G5[{
+	void f() |{
+	  if (a) {
+	    g();
+	  } else {
+	    h();
+	  }
+	  i();
+	}
+:end
+
+:start Command d]) and d[( (exclusive)
+	foo(bar, ba|z)
+:type d])
+	foo(bar, ba|)
+:type u
+	foo(bar, ba|z)
+:type d[(
+	foo|z)
+:end
+
+:start Command c[{ and d]} across lines
+	if (x) {
+	  foo();
+	  b|ar();
+	}
+:type d]}
+	if (x) {
+	  foo();
+	  |b
+	}
+:type u
+	if (x) {
+	  foo();
+	  b|ar();
+	}
+:type c[{X\<Esc>
+	if (x) |Xar();
+	}
+:end

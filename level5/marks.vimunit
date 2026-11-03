@@ -1,0 +1,281 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Special marks: `[ and `] (start and end of the last change or yank), `< and
+# `> (the last Visual selection), `. (the last change), `^ (where Insert mode
+# was left), and `` and '' (the position before the latest jump).
+
+:start Marks `[ and `] after a yank
+	alpha |beta gamma delta
+:type y2e
+	alpha |beta gamma delta
+:type `]
+	alpha beta gamm|a delta
+:type 0`[
+	alpha |beta gamma delta
+:type yw`]
+	alpha beta| gamma delta
+:end
+
+:start Marks '[ and '] after a linewise yank
+:set startofline
+	alpha
+	  be|ta
+	gamma
+	  delta
+:type y2j
+	alpha
+	  be|ta
+	gamma
+	  delta
+:type `]
+	alpha
+	  beta
+	gamma
+	  delt|a
+:type ']
+	alpha
+	  beta
+	gamma
+	  |delta
+:type '[
+	alpha
+	  |beta
+	gamma
+	  delta
+:end
+
+:start Marks `[ and `] after a charwise put
+	|alpha beta
+:type yiw$p
+	alpha betaalph|a
+:type `[
+	alpha beta|alpha
+:type `]
+	alpha betaalph|a
+:end
+
+:start Marks `[ and `] after a linewise put
+	al|pha
+	beta
+	gamma
+:type yjGp
+	alpha
+	beta
+	gamma
+	|alpha
+	beta
+:type `[
+	alpha
+	beta
+	gamma
+	|alpha
+	beta
+:type `]
+	alpha
+	beta
+	gamma
+	alpha
+	bet|a
+:end
+
+:start Marks `[ and `] to reselect put text
+	al|pha beta
+	gamma
+:type yiwjp
+	alpha beta
+	galph|aamma
+:type `[v`]U
+	alpha beta
+	g|ALPHAamma
+:end
+
+:start Marks `[ and `] after an insert
+	al|pha beta
+:type ifoo\<Esc>
+	alfo|opha beta
+:type 0`[
+	al|foopha beta
+:type `]
+	alfoo|pha beta
+:end
+
+:start Marks `[ and `] after a delete
+	alpha be|ta gamma
+:type dw
+	alpha be|gamma
+:type 0`[
+	alpha be|gamma
+:type 0`]
+	alpha be|gamma
+:end
+
+:start Marks `< and `> after charwise Visual mode
+	alpha
+	be|ta gamma
+	delta
+:type vkl\<Esc>
+	alp|ha
+	beta gamma
+	delta
+:type `>
+	alpha
+	be|ta gamma
+	delta
+:type `<
+	alp|ha
+	beta gamma
+	delta
+:type jvlo\<Esc>`>
+	alpha
+	beta| gamma
+	delta
+:end
+
+:start Marks `< and `> after linewise Visual mode
+:set startofline
+	alpha
+	be|ta gamma
+	delta
+:type Vj\<Esc>gg
+	|alpha
+	beta gamma
+	delta
+:type `<
+	alpha
+	|beta gamma
+	delta
+:type `>
+	alpha
+	beta gamma
+	delt|a
+:end
+
+:start Mark `. (the last change)
+:set startofline
+	alpha beta
+	gamma de|lta
+	epsilon
+:type x
+	alpha beta
+	gamma de|ta
+	epsilon
+:type gg`.
+	alpha beta
+	gamma de|ta
+	epsilon
+:type G'.
+	alpha beta
+	|gamma deta
+	epsilon
+:end
+
+:start Mark `^ (where Insert mode was left)
+	al|pha beta
+	gamma
+:type afoo\<Esc>
+	alpfo|oha beta
+	gamma
+:type j`^
+	alpfoo|ha beta
+	gamma
+:end
+
+:start Mark `^ after an insert at the end of the line
+	al|pha
+	beta
+:type Afoo\<Esc>j
+	alphafoo
+	bet|a
+:type `^
+	alphafo|o
+	beta
+:end
+
+:start Marks `` and '' (before the latest jump)
+:set startofline
+	alpha
+	  be|ta
+	gamma
+	delta
+:type G
+	alpha
+	  beta
+	gamma
+	|delta
+:type ``
+	alpha
+	  be|ta
+	gamma
+	delta
+:type ``
+	alpha
+	  beta
+	gamma
+	|delta
+:type ''
+	alpha
+	  |beta
+	gamma
+	delta
+:end
+
+:start Mark `` after a search, %, and :n
+:set startofline
+	alpha (beta)
+	gam|ma
+	delta
+:type /delta\<CR>
+	alpha (beta)
+	gamma
+	|delta
+:type ``
+	alpha (beta)
+	gam|ma
+	delta
+:type gg0f(%
+	alpha (beta|)
+	gamma
+	delta
+:type ``
+	alpha |(beta)
+	gamma
+	delta
+:type :3\<CR>
+	alpha (beta)
+	gamma
+	|delta
+:type ``
+	alpha (beta|)
+	gamma
+	delta
+:end
+
+:start Mark `` is not set by j, w or f
+:set startofline
+	alpha beta
+	gam|ma delta
+	epsilon
+:type G
+	alpha beta
+	gamma delta
+	|epsilon
+:type kwfl
+	alpha beta
+	gamma de|lta
+	epsilon
+:type ``
+	alpha beta
+	gam|ma delta
+	epsilon
+:end
+
+:start Mark `. after inserting several characters
+	alpha beta
+	gam|ma
+:type kafoo\<Esc>
+	alphfo|oa beta
+	gamma
+:type j`.
+	alphfo|oa beta
+	gamma
+:end

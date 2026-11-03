@@ -1,0 +1,154 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Comment leaders, with the baseline 'comments' option: continuing comments
+# with <CR> and o ('formatoptions' r and o), three-part /* */ comments, J
+# removing leaders ('formatoptions' j), and formatting comments with gq and
+# automatic wrapping ('formatoptions' c and q).
+
+:start Comment <CR> (formatoptions r continues the comment)
+:set formatoptions=tcqr tabstop=8
+	// al|pha
+	    # charlie
+:type A\<CR>bravo\<Esc>
+	// alpha
+	// brav|o
+	    # charlie
+:type GA\<CR>delta\<Esc>
+	// alpha
+	// bravo
+	    # charlie
+	    # delt|a
+:end
+
+:start Comment <CR> (formatoptions without r)
+:set formatoptions=tcqo autoindent
+	// al|pha
+:type A\<CR>bravo\<Esc>
+	// alpha
+	brav|o
+:end
+
+:start Comment o and O (formatoptions o continues the comment)
+:set formatoptions=tcqo tabstop=8
+	// al|pha
+	    # charlie
+:type obravo\<Esc>
+	// alpha
+	// brav|o
+	    # charlie
+:type GOdelta\<Esc>
+	// alpha
+	// bravo
+	    # delt|a
+	    # charlie
+:end
+
+:start Comment o (a # needs a blank after it)
+:set formatoptions=tcqo autoindent
+	#al|pha
+	# bravo
+:type ocharlie\<Esc>
+	#alpha
+	charli|e
+	# bravo
+:type joecho\<Esc>
+	#alpha
+	charlie
+	# bravo
+	# ech|o
+:end
+
+:start Comment <CR> (three-part comment, middle and end)
+:set formatoptions=tcqro
+	/* al|pha
+:type A\<CR>bravo\<CR>/\<Esc>
+	/* alpha
+	 * bravo
+	 *|/
+:type obravo\<Esc>
+	/* alpha
+	 * bravo
+	 */
+	brav|o
+:end
+
+:start Comment J (formatoptions j removes the leader)
+:set formatoptions=tcqj nojoinspaces
+	// al|pha
+	// bravo
+	# charlie
+	# delta
+	/* echo
+	 * foxtrot
+	 */
+:type J
+	// alpha| bravo
+	# charlie
+	# delta
+	/* echo
+	 * foxtrot
+	 */
+:type jJ
+	// alpha bravo
+	# charlie| delta
+	/* echo
+	 * foxtrot
+	 */
+:type j2J
+	// alpha bravo
+	# charlie delta
+	/* echo| foxtrot
+	 */
+:end
+
+:start Comment J (formatoptions without j keeps the leader)
+:set formatoptions=tcq nojoinspaces
+	// al|pha
+	// bravo
+:type J
+	// alpha| // bravo
+:end
+
+:start Comment gqq (breaks a comment with its leader)
+:set textwidth=20 formatoptions=tcq tabstop=8
+	    // the quick br|own fox jumps over the lazy dog
+:type gqq
+	    // the quick
+	    // brown fox
+	    // jumps over
+	    |// the lazy dog
+:end
+
+:start Comment gqap (joins comment lines)
+:set textwidth=20 formatoptions=tcq nojoinspaces
+	# al|pha
+	# bravo charlie delta echo
+	# foxtrot
+:type gqap
+	# alpha bravo
+	# charlie delta echo
+	|# foxtrot
+:end
+
+:start Comment auto-wrap (formatoptions c without t)
+:set textwidth=20 formatoptions=cq
+	// the quick brown f|ox
+	the quick brown fox
+:type A jumps over\<Esc>
+	// the quick brown
+	// fox jumps ove|r
+	the quick brown fox
+:type GA jumps over\<Esc>
+	// the quick brown
+	// fox jumps over
+	the quick brown fox jumps ove|r
+:end
+
+:start Comment gqq (a list item continues under its text)
+:set textwidth=20 formatoptions=tcq autoindent
+	- the quick br|own fox jumps over the lazy dog
+:type gqq
+	- the quick brown
+	  fox jumps over the
+	  |lazy dog
+:end

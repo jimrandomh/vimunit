@@ -1,0 +1,131 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Changing case: ~, g~, gu, gU, and g? (rot13).
+
+:start Command ~ (with a count, stops at the end of the line)
+:set notildeop
+	Lo|rem ipsum
+	dolor
+:type 3~
+	LoREM| ipsum
+	dolor
+:type 100~
+	LoREM IPSU|M
+	dolor
+:type ~
+	LoREM IPSU|m
+	dolor
+:end
+
+:start Command ~ (non-letters are passed over)
+:set notildeop
+	|a1-b_C
+	dolor
+:type 6~
+	A1-B_|c
+	dolor
+:end
+
+:start Command ~ (repeat with .)
+:set notildeop
+	|lorem ipsum
+:type 2~
+	LO|rem ipsum
+:type .
+	LORE|m ipsum
+:type w3.
+	LOREm IPS|um
+:type u
+	LOREm |ipsum
+:end
+
+:start Command ~ (as an operator with tildeop)
+:set tildeop
+	Lo|rem ipsum
+	dolor
+:type ~w
+	Lo|REM ipsum
+	dolor
+:type ~~
+	|lOrem IPSUM
+	dolor
+:type ~j
+	|LoREM ipsum
+	DOLOR
+:end
+
+:start Operators gU and gu (cursor moves to the start of the changed text)
+	Lorem ip|sum dolor
+:type gU$
+	Lorem ip|SUM DOLOR
+:type gu0
+	|lorem ipSUM DOLOR
+:type wgUe
+	lorem |IPSUM DOLOR
+:end
+
+:start Operators gU, gu, g~ (linewise forms move the cursor to the first non-blank)
+	    Lorem ip|sum
+	dolor
+:type gUU
+	    |LOREM IPSUM
+	dolor
+:type $guu
+	    |lorem ipsum
+	dolor
+:type $g~g~
+	    |LOREM IPSUM
+	dolor
+:type $gUgU
+	    |LOREM IPSUM
+	dolor
+:end
+
+:start Operators gU, gu (linewise with a count keeps the cursor column)
+	    Lorem ip|sum
+	    dolor sit
+	amet
+:type 2gUU
+	    LOREM IP|SUM
+	    DOLOR SIT
+	amet
+:type gu2j
+	    lorem ip|sum
+	    dolor sit
+	amet
+:type j$2gUU
+	    lorem ipsum
+	    DOLOR SI|T
+	AMET
+:end
+
+:start Operator gU (with a motion to another line)
+	Lorem ip|sum
+	dolor sit
+:type gUj
+	LOREM IP|SUM
+	DOLOR SIT
+:type ugUw
+	Lorem ip|SUM
+	dolor sit
+:type ugUe
+	Lorem ip|SUM
+	dolor sit
+:end
+
+:start Operator g? (rot13)
+	|Hello, World 123
+	Lorem
+:type g?$
+	|Uryyb, Jbeyq 123
+	Lorem
+:type g??
+	|Hello, World 123
+	Lorem
+:type g?g?
+	|Uryyb, Jbeyq 123
+	Lorem
+:type jg?w
+	Uryyb, Jbeyq 123
+	|Yberz
+:end

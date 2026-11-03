@@ -1,0 +1,101 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Searching for a character in the line: f, t, F, T, ; and ,.
+
+:start Motion f (count larger than the number of matches fails)
+	|Lorem ipsum dolor
+	sit
+:type 4fo
+	|Lorem ipsum dolor
+	sit
+:type 3fo
+	Lorem ipsum dol|or
+	sit
+:type fi
+	Lorem ipsum dol|or
+	sit
+:end
+
+:start Motion t (target right next to the cursor)
+	|a-b-c-d-e
+:type t-
+	|a-b-c-d-e
+:type ;
+	a-|b-c-d-e
+:type ;
+	a-b-|c-d-e
+:type ,
+	a-|b-c-d-e
+:type ,
+	a-|b-c-d-e
+:end
+
+:start Motion T (target right next to the cursor)
+	a-b-c-d-|e
+:type T-
+	a-b-c-d-|e
+:type ;
+	a-b-c-|d-e
+:type ,
+	a-b-c-|d-e
+:end
+
+:start Motion t (with a count)
+	|a,b,c,d,e
+:type 3t,
+	a,b,|c,d,e
+:type 2;
+	a,b,c,|d,e
+:end
+
+:start Motions ; and , (after a failed f)
+	|Lorem ipsum dolor
+:type fo
+	L|orem ipsum dolor
+:type fz
+	L|orem ipsum dolor
+:type ;
+	L|orem ipsum dolor
+:type fi,
+	Lorem |ipsum dolor
+:end
+
+:start Operators d and c with f and t (inclusive)
+	|Lorem ipsum(dolor) sit
+:type dt(
+	|(dolor) sit
+:type df)
+	| sit
+:type uu0ct(X\<Esc>
+	|X(dolor) sit
+:end
+
+:start Operators d and c with F and T (exclusive)
+	Lorem ipsum dol|or
+:type dFi
+	Lorem |or
+:type u$hdTi
+	Lorem i|or
+:type u$hc2FoX\<Esc>
+	L|Xor
+:end
+
+:start Operators with ; and ,
+	|Lorem-ipsum-dolor-sit-amet
+:type 2f-
+	Lorem-ipsum|-dolor-sit-amet
+:type d;
+	Lorem-ipsum|sit-amet
+:type d,
+	Lorem|sit-amet
+:type 0c;X\<Esc>
+	|Xamet
+:end
+
+:start Operator d with t (target right next to the cursor)
+	|a-b-c-d-e
+:type dt-
+	|-b-c-d-e
+:type ;d;
+	-|-d-e
+:end
