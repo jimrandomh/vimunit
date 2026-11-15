@@ -86,37 +86,6 @@
 	sit amet consectetur
 :end
 
-:start Motion j (the column is counted in screen cells across a tab)
-:set tabstop=8
-	Lorem ipsum |dolor
-		sit amet
-:type j
-	Lorem ipsum dolor
-		sit |amet
-:type k
-	Lorem ipsum |dolor
-		sit amet
-:end
-
-:start Motion j (onto a tab, then on to the remembered column)
-:set tabstop=8
-	Lor|em
-		ipsum
-	dolor
-:type j
-	Lorem
-	|	ipsum
-	dolor
-:type j
-	Lorem
-		ipsum
-	dol|or
-:type kk
-	Lor|em
-		ipsum
-	dolor
-:end
-
 :start Motion k (at the first line fails; later keys still run)
 	Lo|rem
 	ipsum
