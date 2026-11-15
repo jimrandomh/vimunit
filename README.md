@@ -1,59 +1,54 @@
-vim-unit
+vimunit: Fixing the World's Vim Imitations
 ============================
-
 Unit Tests for Vim Imitators
 by jimrandomh
 
-Overview
---------
+The vim text editor's keybindings are widely copied; every major IDE has a
+vim-imitation plugin or mode, as do Codex, Claude Code, and even EMACS.
+However, for a power user with muscle memory for obscure vim commands, the
+coverage and quality of these implementations is largely mediocre. This
+project, vimunit, aims to fix that.
 
-The vim text editor and its keyboard mapping scheme has significant advantages
-for editing text, but it doesn't integrate with programming languages as well
-as IDEs do. As a result, many popular editors (including VS Code, IntelliJ, Zed,
-Emacs, and the editors built into web apps and terminal coding agents) have
-ended up with vim emulation modes, either as first-party features or third-party
-plugins. Unfortunately, the quality of these vim emulators varies widely, and
-some of them implement only tiny subsets. There are a lot of subtle corner cases
-in vim commands, and switching back and forth between real vim and its
-pretenders can mess up muscle memory.
-
-This is a vim keystroke compatibility test suite. It is a collection of
-easy-to-integrate unit tests for the parts of vim that are commonly emulated, so
-that vim emulators can improve their implementations and potential users can
-quickly judge how good a vim emulator is. It's meant to be something you can
-point a developer, or a coding agent, at and say "make these pass": the tests
-are data, not code, so they can be run against any editor.
-
-The test cases are organized in levels, with the most commonly used features at
-lower levels and more obscure features at higher levels. A vim-emulating editor
-may advertise that it is "level N vim compliant" if it passes all the test cases
-up to that level. All test cases are run against the latest versions of Vim and
-Neovim as references, to ensure accuracy.
+This project grew out of the unit test suite if Vanadium, a (currently
+unpublished) vim-like editor which I wrote starting in 2016 and have been
+daily-driving ever since. It is a test suite of behaviors for vim-like editors;
+the intention is that any editor or editor-plugin with a vim-emulation mode
+should be able to adopt it into its unit test suite, have an AI agent work on
+it, and wind up with something that is close to "keystroke compatible"; that
+is, a vim power user with muscle memory will find that their muscle-memory
+commands still work as expected.
 
 
-What's Tested
--------------
+Philosophy
+----------
+This project, by its nature, contains a lot of opinion about how text editors
+ought to work. I have done my best to ensure that those opinions are good
+opinions, informed by experience writing and using vim-like editor of my own.
+I have also done my best to ensure that these are _human_ opinions. There is no
+AI-generated text in this README, or in pseudotest files (but READMEs and
+code comments in integrations/ and doc/ may be AI-written). Many of the
+structured tests are AI-generated, but all of them have been through a nonzero
+amount of human review.
 
-This test suite covers vim commands, motions, operators, modes, registers,
-macros, and the subtleties thereof, including how they handle Unicode text. It
-does not test the parts of vim which a third-party editor is likely to replace:
-multiple windows and buffers, the vimscript scripting language, opening and
-closing files, syntax highlighting, or plugins. Options are tested only where
-they change what commands do. All tests that depend on line wrapping or the
-scroll position are at level 6, and optional feature areas such as folding are
-in `side/`.
+These tests are a starting point and you don't have to implement all of this
+literally. If you disagree with the behavior described by some of the tests,
+you should implement the behavior you think is best, not what the tests say.
+You can still describe your project as passing the vimunit test suite up to
+some level, as long as the divergences are deliberate opinions about how an
+editor ought to work, rather than just being things that were hard to implement
+or that no one has looked at.
 
 
 Test Format
 -----------
-
-Each test is a starting buffer and cursor position, followed by steps: some
-keystrokes, and the buffer and cursor position expected afterwards. The `|`
-marks the cursor. For example, to test that the `h` command moves the cursor
-left, except when it's at the start of the line:
+Most tests consist of a starting file state, and alternate between providing
+some keystrokes to replay, and a new file state. Buffer states are indented by
+one tab, and use a pipe (`|`) to mark the cursor position (the literal |
+character does not appear in the expected buffer contents of any test). For
+example, a simple test of the `h` (cursor left) command would look like this:
 
 ```
-:start Motion h (left, single)
+:start Motion h (left)
 	L|orem ipsum
 :type h
 	|Lorem ipsum
@@ -62,137 +57,148 @@ left, except when it's at the start of the line:
 :end
 ```
 
-Tests can also set options (`:set shiftwidth=4`), give a window size for tests
-of wrapping and scrolling (`:window 40x10`), and supply go-to-definition
-metadata (`:definition helper 12:5`). Every step starts and ends in Normal
-mode; special keys are written like `\<Esc>`. The full specification is in
+Tests can also set options, controlling the window size for line-wrapping,
+user-configurable or language-specific options like tab size, information that
+would have come from a language server. Further details are in
 [doc/format.md](doc/format.md).
 
 
-Running the Tests
------------------
+Pseudotests
+-----------
+There are some things that an AI agent should be able to check without much
+difficulty, but which don't fit the test format above and are harder to
+automate. These are written in English in `.test.md` files, with free markdown
+text interspersed with lines for "test cases", each of which is marked with a
+heading that starts with `pseudotest-name`. For example:
 
-`vimunit` is a Python 3 script with no dependencies. It runs the suite against
-Vim and Neovim, the reference implementations, one editor process per test
-file, in parallel:
+```
+    # General text editor best practices
 
-```sh
-./vimunit run                    # run everything in vim
-./vimunit run -e both            # in vim and neovim, and list where they disagree
-./vimunit run -l 0-2 level3/macros.vimunit -k 'Macro basics'   # select tests
-./vimunit fill level2/new.vimunit  # write vim's results into a new test file
-./vimunit lint --deep            # find tests with undeclared option dependencies
-./vimunit export -o tests.json   # the parsed suite, for other editors
-./vimunit report --results r.jsonl  # score another editor's results
-./vimunit options                # list options tests may set, and their baseline values
+    You can't be a good vim-like text editor without being a good text editor;
+    while not strictly vim-keybinding-related, you should do your best to
+    ensure that:
+
+    ## `atomic-writes` Files are saved atomically
+
+    There may be tools watching files for changes, eg a dev server that
+    hot-reloads modules or a language server that maintains an index of
+    definitions and usages. Outside of uncommon special cases, saving changes
+    to a file should work by creating a new file, and renaming it into place,
+    so that these tools never see a half-written file.
 ```
 
-`./test.sh` runs the suite in vim and saves the report in `out/`.
-
-* [doc/format.md](doc/format.md): the test file format.
-* [doc/writing-tests.md](doc/writing-tests.md): how to write tests.
-* [doc/integrating.md](doc/integrating.md): how to run the suite against your
-  editor.
-
-
-Integrations
-------------
-
-`integrations/` contains scripts that check out other editors with vim modes,
-hook the suite up to their test frameworks, and run it. See each directory's
-README for details, skips, and per-level results.
-
-| Editor | Integration | Result (2026-11-02, suite of 953 tests, 2620 steps) |
-|--------|-------------|-----------------------------------------|
-| Vim 9.2, Neovim 0.12 | built in (`./vimunit run -e both`) | reference: all pass |
-| [CodeMirror 6 vim](https://github.com/replit/codemirror-vim) (Replit, Obsidian, JupyterLab) | `integrations/codemirror-vim` | 348 tests, 1468 steps pass (138 tests skipped); not level-0 compliant |
-| [VSCodeVim](https://github.com/VSCodeVim/Vim) | `integrations/vscodevim` | 523 tests, 1717 steps pass (121 tests skipped); not level-0 compliant |
-| [IdeaVim](https://github.com/JetBrains/ideavim) (IntelliJ IDEs) | `integrations/ideavim` | adapter written, not yet built or run |
-| [Codex CLI](https://github.com/openai/codex) composer | `integrations/codex` | adapter written, not yet built or run |
-
-Editors whose source isn't public, such as Claude Code, can run the suite from
-the JSON export; see [doc/integrating.md](doc/integrating.md).
+Pseudotest names are meant to be usable for keeping notes about what has been
+checked. The names of pseudotests are unique across the test suite, and if the
+contents of a pseudotest change substantially between versions, it will be
+renamed. Pseudotests do _not_ necessarily make sense if you read only the block
+underneath the heading; there may be necessary context elsewhere in the same
+file, so any subagents should receive the whole file, not just a slice.
 
 
 Compatibility Levels
 --------------------
+The tests here are organized into levels. The idea is that, when working on a
+vim mode for an editor, you start at level 0 and go up, and when you have everything
+in a level passing (or disagreeing on purpose), you can describe your editor as
+"level 3 vim compatible".
 
-Level 0
-- The test framework works
-- Switching between Insert and Normal mode with i and `<Esc>`
-- Motions h, j, k, l, without counts
-- Command dd
+## Level 0: Hooked Up the Test Suite
 
-Level 1
-- Counts with motions and commands
-- Yanking and putting: x, X, y, yy, Y, p, P
-- Entering Insert mode: a, A, i, I, o, O (without counts)
-- Motions 0, $, ^
-- Non-ASCII text (accented letters, other scripts, CJK) with the commands above
+Level 0 basically tests that you've gotten the unit test suite working. It's a
+small number of tests, of things that any vim-like editor will definitely have,
+in uncomplicated situations. Covers:
 
-Level 2
-- Word motions: w, W, b, B, e, E
-- Undo and redo: u, CTRL-R
-- Visual mode (v) and linewise Visual mode (V)
-- Repeating changes with . (for d, x, X, p, P, i, I, a, A, o, O)
-- Searching with /, ?, n, N
-- Characters outside the Basic Multilingual Plane (emoji); word motions in
-  non-Latin scripts
+ * Switching between Insert and Normal mode with i and `<Esc>`, and inserting ASCII text
+ * Motions `h`, `j`, `k`, `l`, without counts, and command `dd`
 
-Level 3
-- Replace mode: R
-- Motions ge, gE
-- Operators and commands: <, >, gu, gU, g~, g?, ~, r, s, S, c, C, D, J
-- Macros: q, @, @@, and macros stopping at the first failing command
-- Registers: "a to "z, appending with "A to "Z
-- Character motions: f, t, F, T, ;, ,
-- Motions %, -, +, _, `<Space>`, `<BS>`, `<CR>`, |
-- Commands *, #
-- Marks: m, ', `
-- The special cases of dw and cw
-- Combining characters; double-width characters and screen columns
+## Level 1: The Very Basics
 
-Level 4
-- Blockwise Visual mode (CTRL-V), including I, A, c and $
-- Visual-mode commands: o, O, gv, X, Y, C, D, S, R, r, J, gJ, u, U, ~, <, >,
-  p, P
-- Repeating Visual-mode changes with .
-- Searches as motions (d/foo), and search offsets
-- Text objects: iw, aw, iW, aW, is, as, ip, ap, and the bracket, quote and tag
-  objects
-- Motions G, gg, {count}%, g_, (, ), {, }, [[, ]], [], ][, [(, [{, ]), ]}
-- Increment and decrement: CTRL-A, CTRL-X
-- Jump list and change list: CTRL-O, CTRL-I, g;, g,
-- Counts with Insert-mode commands (3ifoo`<Esc>`, 2o)
-- Commands gJ, gR, gp, gP, ]p, [p, gi, gI, U
-- Arrow keys in Insert mode, and how they affect undo and .
-- Unicode with blockwise Visual mode and text objects
+Level 1 is a narrow set of commands and motions, under uncomplicated
+circumstances, roughly corresponding to the minimum set of things that would
+make a text editor recognizably vim-like.
 
-Level 5
-- Ex commands: :s, :d, :m, :t, :co, :j, :>, :<, :y, :pu, :normal, :g, :v,
-  :sort, with line ranges and addresses
-- Regular expressions in searches and :s
-- Special registers: "0, "1 to "9, "-, "_, "., "/
-- Special marks: `[, `], `<, `>, `., `^, ``
-- Insert-mode commands: CTRL-W, CTRL-U, CTRL-H, `<Del>`, CTRL-A, CTRL-R,
-  CTRL-T, CTRL-D, CTRL-E, CTRL-Y, CTRL-V, CTRL-K, CTRL-O, CTRL-N, CTRL-P
-- Command-line editing
-- Repeating substitutions: &, g&
+ * Counts with motions and commands
+ * Yanking and putting: `x`, `X`, `y`, `yy`, `Y`, `p`, `P`
+ * Variations on insert mode: `a`, `A`, `i`, `I`, `o`, `O` (without counts)
+ * Common motions: `0`, `$`, `^`, `w`, `W`, `b`, `B`, `e`, `E`
 
-Level 6
-- Line wrapping and screen lines: gj, gk, g0, g^, g$, gm, gM
-- Scrolling: CTRL-E, CTRL-Y, CTRL-D, CTRL-U, CTRL-F, CTRL-B, zt, zz, zb, and
-  'scrolloff'
-- Window-relative motions: H, M, L
-- Formatting: gq, gw, and automatic wrapping with 'textwidth'
-- Filtering through an external program: !, !!
-- Forcing a motion to be charwise, linewise or blockwise: dv, dV, d CTRL-V
-- Visual mode with a count
-- Unicode and line wrapping
+## Level 2: Most of Vim
 
-Side branches (`side/`)
-- Folding, with fold markers
-- Indentation options: expandtab, softtabstop, smarttab, shiftround,
-  smartindent
-- Comments: continuing comment leaders, joining and formatting comments
-- Go to definition, with CTRL-], CTRL-T, gd and gD
+Level 2 covers the parts of a vim mode that are reasonably isolated from
+broader editor concerns, without worrying about configuration differences, line
+wrapping, or language-specific features. There are quite a lot of features in
+this level, but they are all relatively shallow.
+
+Excluded:
+ * Line wrapping, lines longer than 60 characters, and anything sensitive to the size of the window
+ * Anything involving programming-language-specific syntax awareness
+ * Autoindent, and indentation handling in general
+ * Ex mode (ie commands that start with typing a `:`)
+ * External programs
+ * Anything involving multiple files open at once
+ * Unicode and character-set issues
+ * Folding
+ * Complex cases of undo/redo (eg undo branches, undo-line)
+Included:
+ * Most commands, motions, and modes
+ * Undo/redo (in the straightforward cases)
+ * Repeating commands: `.`, `q`, `@`, `@@`
+ * Modes: Visual (`v`), linewise Visual (`V`), replace (`R`)
+ * Searching with /, ?, n, N, *, #
+ * Motions `ge`, `gE`, `f`, `t`, `F`, `T`, `;`, `,`, %, -, +, _, `<Space>`, `<BS>`, `<CR>`, |
+ * Operators and commands: `gu`, `gU`, `g~`, `g?`, `~`, `r`, `s`, `S`, `c`, `C`, `D`, `J`, `gJ`
+ * Registers and marks
+
+# Level 3: Real Editor
+
+Level 3 expands on level 2 by adding harder things and config-sensitive things:
+line wrapping, Unicode, indentation, and some ex-mode commands. These tests are
+sensitive to the window width, tab size, line wrapping rules, and other
+subtleties that have legitimate variation between editors; the tests have
+configuration options embedded in them.
+
+Covers:
+ * Line-wrapped motions: gj, gk
+ * Unicode: Multi-byte and multi-codepoint glyphs are counted as a single character for motions, and a single column for wrapping
+ * Motions interact correctly with tabs
+ * Rewrapping lines with `gq`
+ * Autoindent behaves reasonably (pseudotest, since there is not widespread agreement on what should happen when you press <Enter>)
+ * Block visual mode
+
+# Level 4: Fanciness
+
+Level 4 is for things that aren't going to apply to every editor, correspond to
+features that aren't universal, or have seriously nonobvious requirements. Each
+subsection is independent.
+
+ * Folding (commands for opening/closing/traversing, and interactions between closed folds and motions/commands. Doesn't test automatic generation from syntax, or summary line appearance)
+ * Language-based navigation (jump to declaration/reference and similar things, with an index provided, in place of an LSP)
+ * Scale: Programmatically generated large-file test cases, with a deadline, to test that things still work if you open a large generated file.
+ * Filtering through external programs: `!`, `!!` (pseudotest)
+ * Screen-relative motions (pseudotest)
+ * Split panes (pseudotest)
+
+# Level 5: Vimscript
+
+The very highest level of "vim-like" an editor can achieve would be to execute
+a user's unmodified .vimrc and load unmodified vim plugins. In most contexts,
+this is not a desired feature, and vimunit isn't trying to be a test suite for
+full vimscript compatibility. This level exists in order to have somewhere to
+put tests that didn't make sense to delete, and also didn't belong in any of
+the other levels, 
+
+
+Tooling
+-------
+`vimunit` is a bundle of utilities for running the tests against reference
+implementations (vim and neovim), checking tests for unmarked
+configuration-setting dependencies (eg, a test depends on tab size but doesn't
+have a tab size specified), populating incomplete tests with results based on a
+reference editor, and converting the tests into other formats like JSON. See
+`./vimunit --help` for details.
+
+The `integrations/` directory contains scripts that check out some other
+editors that have vim modes, and tests them. See the README in each for
+details.
+
+
