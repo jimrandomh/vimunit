@@ -2,6 +2,54 @@
 #
 # Shifting lines with > and <.
 
+:start Commands >,< (indent,dedent)
+:set tabstop=4 shiftwidth=4 noexpandtab startofline
+	Lo|rem ipsum
+	dolor sit
+	amet
+:type >>
+		|Lorem ipsum
+	dolor sit
+	amet
+:type >3>
+			|Lorem ipsum
+		dolor sit
+		amet
+:type 2<<
+		|Lorem ipsum
+	dolor sit
+		amet
+:type jj2>k
+			|Lorem ipsum
+		dolor sit
+			amet
+:type wvj2<
+	|Lorem ipsum
+	dolor sit
+			amet
+:end
+
+:start Mark ' with operators (> and c)
+:set shiftwidth=4 tabstop=8 noexpandtab autoindent startofline
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type majj
+	Lorem
+	ipsum
+	|dolor
+	sit
+:type >'a
+	    |Lorem
+	    ipsum
+	    dolor
+	sit
+:type jjc'aX\<Esc>
+	    |X
+	sit
+:end
+
 :start Operator > (empty lines are not indented)
 :set shiftwidth=4 tabstop=8 noexpandtab startofline
 	Lo|rem
@@ -225,4 +273,38 @@
 	        alpha
 	                |bravo
 	        charlie
+:end
+
+:start Visual > and < with count (count is the number of shifts)
+:set shiftwidth=2 expandtab startofline
+	|Lorem
+	ipsum
+	dolor
+:type vj3>
+	      |Lorem
+	      ipsum
+	dolor
+:type j.
+	      Lorem
+	            |ipsum
+	      dolor
+:type Vj2<
+	      Lorem
+	        |ipsum
+	  dolor
+:end
+
+:start Commands gUi( and >i{
+:set shiftwidth=2 expandtab startofline
+	foo(b|ar) {
+	baz
+	}
+:type gUi(
+	foo(|BAR) {
+	baz
+	}
+:type j>i{
+	foo(BAR) {
+	  |baz
+	}
 :end

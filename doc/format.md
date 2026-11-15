@@ -27,9 +27,9 @@ and normalized.
 
 * Test files are UTF-8 with LF line endings and have the extension
   `.vimunit`.
-* They live in `level0/` through `level6/` (see the compatibility levels in
-  the [README](../README.md)) and in `side/` for optional feature areas such
-  as folding. Within a directory, files are grouped by feature.
+* They live in `level0/` through `level5/` (see the compatibility levels in
+  the [README](../README.md)). Within a directory, files are grouped by
+  feature.
 * Outside of tests, a file may contain only blank lines and comments.
 
 ## Tests
@@ -37,7 +37,7 @@ and normalized.
 A test starts with a line `:start <description>` and ends with a line `:end`.
 The description must be unique within its file. A test's **id** is its file's
 path relative to the repository root, a colon and a space, and the
-description: `level2/wordwise.vimunit: Motion w (next word)`.
+description: `level1/wordwise.vimunit: Motion w (next word)`.
 
 Inside a test, in order:
 

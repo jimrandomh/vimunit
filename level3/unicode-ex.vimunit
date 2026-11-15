@@ -1,0 +1,228 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Non-ASCII text with Ex commands, regular expressions, special marks, and
+# Insert-mode and command-line editing: :s, :sort, regex character classes,
+# entering characters by code point (CTRL-V) and digraph (CTRL-K), and CTRL-W
+# and <BS> over non-ASCII text.
+
+:start :s (non-ASCII pattern and replacement)
+	|café crème brûlée
+	日本語のテキスト
+:type :s/é/e/g\<CR>
+	|cafe crème brûlee
+	日本語のテキスト
+:type j:s/日本/中国/\<CR>
+	cafe crème brûlee
+	|中国語のテキスト
+:type :%s/[èû]/_/g\<CR>
+	|cafe cr_me br_lee
+	中国語のテキスト
+:end
+
+# The "é" on the second line is "e" followed by U+0301 COMBINING ACUTE ACCENT.
+:start Regex . (matches one character, whatever its size)
+	|aé日😀bc
+	cét
+:type :s/^.\\{4}//\<CR>
+	|bc
+	cét
+:type j:s/c.t/X/\<CR>
+	bc
+	|X
+:type u:s/./_/g\<CR>
+	bc
+	|___
+:end
+
+:start Regex \w, \a, \l and \u (ASCII only)
+	|aé日Ж1_ ÀBß
+:type :s/\\w/./g\<CR>
+	|.é日Ж.. À.ß
+:type u:s/\\a/./g\<CR>
+	|.é日Ж1_ À.ß
+:type u:s/\\l/./g\<CR>
+	|.é日Ж1_ ÀBß
+:type u:s/\\u/./g\<CR>
+	|aé日Ж1_ À.ß
+:end
+
+:start Regex \k (keyword characters)
+	|aé日Ж😀1_ ,.。—𝐀
+:type :s/\\k/./g\<CR>
+	|....... ,.。—𝐀
+:end
+
+# [:lower:] and [:upper:] match non-ASCII letters, but [:alpha:] only matches
+# ASCII letters (see :help [:alpha:]).
+:start Regex [[:lower:]], [[:upper:]] and [[:alpha:]] (non-ASCII letters)
+	|aéЖжΣ日1
+:type :s/[[:lower:]]/./g\<CR>
+	|..Ж.Σ日1
+:type u:s/[[:upper:]]/./g\<CR>
+	|aé.ж.日1
+:type u:s/[[:alpha:]]/./g\<CR>
+	|.éЖжΣ日1
+:end
+
+:start Regex [] (ranges and negation with non-ASCII characters)
+	|aàéüÿ日z
+:type :s/[à-ü]/./g\<CR>
+	|a...ÿ日z
+:type u:s/[^a-z]/_/g\<CR>
+	|a_____z
+:end
+
+:start Search \%u and \%U (character by code point)
+	|abc 日本 😀 é ñ
+:type /\\%u65e5\<CR>
+	abc |日本 😀 é ñ
+:type /\\%U0001f600\<CR>
+	abc 日本 |😀 é ñ
+:type /\\%d233\<CR>
+	abc 日本 😀 |é ñ
+:type /\\%xf1\<CR>
+	abc 日本 😀 é |ñ
+:end
+
+# In the first line, the final letter is the final form ς (U+03C2).
+:start Search with ignorecase (non-ASCII case folding)
+:set ignorecase nosmartcase
+	|ПРИВЕТ οδος привет ÉTÉ été
+:type /привет\<CR>
+	ПРИВЕТ οδος |привет ÉTÉ été
+:type n
+	|ПРИВЕТ οδος привет ÉTÉ été
+:type /σ\<CR>
+	ПРИВЕТ οδο|ς привет ÉTÉ été
+:type /été\<CR>
+	ПРИВЕТ οδος привет |ÉTÉ été
+:type n
+	ПРИВЕТ οδος привет ÉTÉ |été
+:end
+
+# The first "é" is "e" followed by U+0301 COMBINING ACUTE ACCENT, the second is
+# precomposed.
+:start Regex \Z (ignore combining characters)
+	|e é é
+:type :s/e/X/g\<CR>
+	|X é é
+:type u:s/e\\Z/X/g\<CR>
+	|X X é
+:end
+
+:start :s (case modifiers \u and \U with non-ASCII letters)
+	|élan привет ılık ǆ
+:type :s/\\k\\+/\\u&/g\<CR>
+	|Élan Привет Ilık Ǆ
+:type :s/\\k\\+/\\U&/g\<CR>
+	|ÉLAN ПРИВЕТ ILIK Ǆ
+:end
+
+:start :sort (non-ASCII lines sort by code point)
+	|zebra
+	äpfel
+	apple
+	Ärger
+	Banane
+:type :sort\<CR>
+	|Banane
+	apple
+	zebra
+	Ärger
+	äpfel
+:type :sort i\<CR>
+	|apple
+	Banane
+	zebra
+	Ärger
+	äpfel
+:end
+
+:start Insert CTRL-V (code points with u and U)
+	|ab
+:type a\<C-V>u00e9\<Esc>
+	a|éb
+:type a\<C-V>U0001F600\<Esc>
+	aé|😀b
+:type a\<C-V>u65e5\<Esc>
+	aé😀|日b
+:end
+
+:start Insert CTRL-V (short code points and other bases)
+	|ab
+:type a\<C-V>ue9z\<Esc>
+	aé|zb
+:type a\<C-V>241\<Esc>
+	aéz|ñb
+:type a\<C-V>xfc\<Esc>
+	aézñ|üb
+:type a\<C-V>o347\<Esc>
+	aézñü|çb
+:end
+
+:start Insert CTRL-K (digraphs)
+	|ab
+:type a\<C-K>e'\<C-K>a:\<C-K>ss\<Esc>
+	aéä|ßb
+:type a\<C-K>a*\<C-K>Eu\<C-K>OK\<Esc>
+	aéäßα€|✓b
+:end
+
+:start Insert CTRL-K (reversed and unknown digraphs)
+	|ab
+:type a\<C-K>'e\<C-K>:a\<Esc>
+	aé|äb
+:type a\<C-K>zq\<Esc>
+	aéä|qb
+:end
+
+:start Commands r and f with a CTRL-K digraph
+	|cafe crème
+:type r\<C-K>C,
+	|Çafe crème
+:type f\<C-K>e`
+	Çafe cr|ème
+:type 0dt\<C-K>e`
+	|ème
+:end
+
+:start Insert CTRL-W (non-ASCII words)
+	naïve café|.
+	Привет мир.
+:type i\<C-W>\<Esc>
+	naïve| .
+	Привет мир.
+:type j$i\<C-W>\<C-W>\<Esc>
+	naïve .
+	|.
+:end
+
+:start Insert CTRL-W (CJK classes and emoji)
+	日本語のテキスト|。
+	ok👍👍!
+:type i\<C-W>\<Esc>
+	日本語|の。
+	ok👍👍!
+:type a\<C-W>\<C-W>\<Esc>
+	|。
+	ok👍👍!
+:type j$i\<C-W>\<C-W>\<Esc>
+	。
+	|!
+:end
+
+# The "é" is "e" followed by U+0301 COMBINING ACUTE ACCENT.
+:start Insert <BS> (deletes a character with its combining marks)
+:set nodelcombine
+	café|!
+:type i\<BS>\<Esc>
+	ca|f!
+:end
+
+:start Command-line editing (multibyte characters)
+	|xy abc
+:type :s/xy/日本\<Left>語\<CR>
+	|日語本 abc
+:type :s/abc/日本語\<BS>のテキスト\<C-W>X/\<CR>
+	|日語本 日本のX
+:end

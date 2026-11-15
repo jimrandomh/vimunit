@@ -98,9 +98,9 @@
 :end
 
 :start Command . (a count replaces both counts of [count]d[count]w)
-	|Lorem ipsum dolor sit amet consectetur adipisicing elit sed do
+	|Lorem ipsum dolor sit amet consectetur magna elit sed do
 :type 2d2w
-	|amet consectetur adipisicing elit sed do
+	|amet consectetur magna elit sed do
 :type .
 	|sed do
 :type 1.
@@ -117,21 +117,6 @@
 	Lorrrrr|rem
 :type .
 	Lorrrrrrrr|rem
-:end
-
-:start Command . (after o with autoindent, on a line with a different indent)
-:set autoindent tabstop=8 noexpandtab
-	    Lo|rem
-	ipsum
-:type odolor\<Esc>
-	    Lorem
-	    dolo|r
-	ipsum
-:type j.
-	    Lorem
-	    dolor
-	ipsum
-	dolo|r
 :end
 
 :start Command . (yanks and motions are not repeated)

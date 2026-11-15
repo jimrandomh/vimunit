@@ -108,10 +108,28 @@ window (e.g. `:window 20x6`) with lines long enough to wrap.
 
 ## Where tests go
 
-Put a test in the lowest level where its commands appear in the
-[README](../README.md)'s list of levels, in a file named for the feature.
-Optional feature areas go in `side/`. Unicode tests go in a `unicode.vimunit`
-file in the level of the commands they exercise. Start each file with:
+Put a test in the lowest level of the [README](../README.md)'s list of levels
+that covers everything the test depends on, in a file named for the feature.
+That means the commands it types, and also the circumstances:
+
+* Levels 0 to 2 are plain ASCII text in lines of at most 60 characters, with
+  the baseline options and nothing that depends on the size of the window. A
+  test there may declare the baseline value of an option it depends on
+  (`:set startofline`), but a test of any other value belongs in a higher
+  level.
+* A test goes in level 3 if it has non-ASCII text (in the `unicode-*.vimunit`
+  files), depends on the width of a tab, on indentation settings or
+  `autoindent`, or on line wrapping, uses an Ex command or blockwise Visual
+  mode, or sets a non-default value of an option that commonly differs between
+  editors (`ignorecase`, `joinspaces`, `nostartofline`, ...).
+* Level 4 is for the optional feature areas listed in the README: folding,
+  go-to-definition, scrolling and motions relative to the window, and
+  filtering through external programs.
+* Level 5 is for what is left, such as tests of options that have no
+  counterpart outside Vim (`tildeop`, `delcombine`, `copyindent`).
+
+A test whose steps belong in different levels goes in the highest of them;
+consider splitting it instead. Start each file with:
 
 ```
 # This file is part of vim-unit: Unit tests for vim imitators

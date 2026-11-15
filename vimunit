@@ -1020,7 +1020,7 @@ def rewrite_file(abspath, edits):
 def _add_selection_args(p):
     p.add_argument("paths", nargs="*", help="test files or directories (default: the whole suite)")
     p.add_argument("-k", "--filter", metavar="REGEX", help="only tests whose id ('path: description') matches")
-    p.add_argument("-l", "--levels", metavar="LEVELS", help="only these levels, e.g. 0-3 or 2,4,side")
+    p.add_argument("-l", "--levels", metavar="LEVELS", help="only these levels, e.g. 0-3 or 2,4")
 
 
 def _add_run_args(p):

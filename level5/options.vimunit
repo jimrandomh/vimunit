@@ -1,0 +1,93 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Options that have no counterpart in most other editors: 'tildeop',
+# 'gdefault', 'wrapmargin', the 'formatoptions' flags t and l, 'smartindent',
+# 'copyindent' and 'preserveindent'.
+
+:start Command ~ (as an operator with tildeop)
+:set tildeop
+	Lo|rem ipsum
+	dolor
+:type ~w
+	Lo|REM ipsum
+	dolor
+:type ~~
+	|lOrem IPSUM
+	dolor
+:type ~j
+	|LoREM ipsum
+	DOLOR
+:end
+
+:start Ex :s with gdefault (the g flag inverts)
+:set gdefault
+	alpha alpha alpha
+	be|ta beta beta
+:type :s/beta/X/\<CR>
+	alpha alpha alpha
+	|X X X
+:type k:s/alpha/Y/g\<CR>
+	|Y alpha alpha
+	X X X
+:end
+
+:start Auto-wrap while typing (formatoptions without t)
+:set textwidth=20 formatoptions=cq
+	the quick brown fo|x
+:type A jumps over\<Esc>
+	the quick brown fox jumps ove|r
+:end
+
+:start Auto-wrap while typing (formatoptions l, line was already long)
+:set textwidth=20 formatoptions=tcql
+	the quick brown fox jumps ov|er
+	short
+:type A the lazy\<Esc>
+	the quick brown fox jumps over the laz|y
+	short
+:type jA one two three four five\<Esc>
+	the quick brown fox jumps over the lazy
+	short one two three
+	four fiv|e
+:end
+
+:start Auto-wrap while typing (wrapmargin)
+:window 30x6
+:set textwidth=0 wrapmargin=10 formatoptions=tcq
+	the quick brown fo|x
+:type A jumps over the lazy\<Esc>
+	the quick brown fox
+	jumps over the laz|y
+:end
+
+:start Indent smartindent (after { and before })
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+	|if (x) {
+:type A\<CR>y = 1;\<CR>}\<Esc>
+	if (x) {
+	    y = 1;
+	|}
+:end
+
+:start Indent smartindent (# goes to the first column)
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+	|if (x) {
+:type o#if y\<Esc>
+	if (x) {
+	#if |y
+:end
+
+:start Indent copyindent (new line copies the indent characters)
+:set autoindent copyindent expandtab shiftwidth=4 tabstop=8
+		  |alpha
+:type ox\<Esc>
+		  alpha
+		  |x
+:end
+
+:start Indent preserveindent (>> keeps the existing indent characters)
+:set preserveindent expandtab shiftwidth=4 tabstop=8 startofline
+		|alpha
+:type >>
+		    |alpha
+:end

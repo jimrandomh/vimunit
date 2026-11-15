@@ -1,19 +1,5 @@
 # This file is part of vim-unit: Unit tests for vim imitators
 
-:start Command i (insert)
-:set autoindent
-	Lorem |sit amet
-:type i\<Esc>
-	Lorem| sit amet
-:type i ipsum\<CR>dolor \<Esc>
-	Lorem ipsum
-	dolor| sit amet
-:type i\<CR>\<Esc>
-	Lorem ipsum
-	dolor
-	|sit amet
-:end
-
 :start Insert mode backspace
 	Lorem |dolor
 :type ixx\<BS>\<BS>ipsum \<Esc>
@@ -72,58 +58,6 @@
 	Lorem ipsum
 :end
 
-:start Commands o and O (autoindent copies the indent of the current line)
-:set autoindent tabstop=8 noexpandtab
-	    Lo|rem
-		ipsum
-:type odolor\<Esc>
-	    Lorem
-	    dolo|r
-		ipsum
-:type jOsit\<Esc>
-	    Lorem
-	    dolor
-		si|t
-		ipsum
-:end
-
-:start Command o (noautoindent)
-:set noautoindent
-	    Lo|rem
-:type odolor\<Esc>
-	    Lorem
-	dolo|r
-:end
-
-:start Autoindent (removed from a new line if nothing is typed)
-:set autoindent
-	    Lo|rem
-	ipsum
-:type o\<Esc>
-	    Lorem
-	|
-	ipsum
-:type kO\<Esc>
-	|
-	    Lorem
-
-	ipsum
-:type jA\<CR>\<Esc>
-
-	    Lorem
-	|
-
-	ipsum
-:end
-
-:start Command i (Enter with autoindent splits an indented line)
-:set autoindent tabstop=8 noexpandtab
-	    Lorem ip|sum
-:type i\<CR>\<Esc>
-	    Lorem ip
-	   | sum
-:end
-
 :start Command I (on an indented line; Esc leaves the cursor on the indent)
 	    Lorem ip|sum
 		dolor
@@ -167,4 +101,10 @@
 	Lo|rem ipsum
 :type A\<Esc>
 	Lorem ipsu|m
+:end
+
+:start Backspacing in insert mode doesn't displace the put-buffer
+	Lorem| dolor
+:type yyi ipx\<BS>sum\<Esc>
+	Lorem ipsu|m dolor
 :end

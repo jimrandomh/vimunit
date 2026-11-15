@@ -1,0 +1,275 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Autoindent: what o, O, <CR>, cc, S, c on whole lines, r<CR>, CTRL-U and
+# CTRL-R do with the indent, with 'autoindent' on and off.
+
+:start Command i (insert)
+:set autoindent
+	Lorem |sit amet
+:type i\<Esc>
+	Lorem| sit amet
+:type i ipsum\<CR>dolor \<Esc>
+	Lorem ipsum
+	dolor| sit amet
+:type i\<CR>\<Esc>
+	Lorem ipsum
+	dolor
+	|sit amet
+:end
+
+:start Commands o and O (autoindent copies the indent of the current line)
+:set autoindent tabstop=8 noexpandtab
+	    Lo|rem
+		ipsum
+:type odolor\<Esc>
+	    Lorem
+	    dolo|r
+		ipsum
+:type jOsit\<Esc>
+	    Lorem
+	    dolor
+		si|t
+		ipsum
+:end
+
+:start Command o (noautoindent)
+:set noautoindent
+	    Lo|rem
+:type odolor\<Esc>
+	    Lorem
+	dolo|r
+:end
+
+:start Autoindent (removed from a new line if nothing is typed)
+:set autoindent
+	    Lo|rem
+	ipsum
+:type o\<Esc>
+	    Lorem
+	|
+	ipsum
+:type kO\<Esc>
+	|
+	    Lorem
+
+	ipsum
+:type jA\<CR>\<Esc>
+
+	    Lorem
+	|
+
+	ipsum
+:end
+
+:start Command i (Enter with autoindent splits an indented line)
+:set autoindent tabstop=8 noexpandtab
+	    Lorem ip|sum
+:type i\<CR>\<Esc>
+	    Lorem ip
+	   | sum
+:end
+
+:start Command . (after o with autoindent, on a line with a different indent)
+:set autoindent tabstop=8 noexpandtab
+	    Lo|rem
+	ipsum
+:type odolor\<Esc>
+	    Lorem
+	    dolo|r
+	ipsum
+:type j.
+	    Lorem
+	    dolor
+	ipsum
+	dolo|r
+:end
+
+:start Linewise Visual mode (c keeps the indent with autoindent)
+:set autoindent tabstop=8 noexpandtab
+	Lorem
+	  ip|sum
+	  dolor
+	sit
+:type Vjcamet\<Esc>
+	Lorem
+	  ame|t
+	sit
+:end
+
+:start Command cc (keeps the indent with autoindent)
+:set autoindent
+	    Lo|rem
+	ipsum
+:type ccX\<Esc>
+	    |X
+	ipsum
+:end
+
+:start Command cc (removes the indent without autoindent)
+:set noautoindent
+	    Lo|rem
+	ipsum
+:type ccX\<Esc>
+	|X
+	ipsum
+:end
+
+:start Command S (substitute lines)
+:set autoindent
+	  Lo|rem
+	ipsum
+	dolor
+:type SNot lorem\<Esc>
+	  Not lore|m
+	ipsum
+	dolor
+:type 3Sxyz\<Esc>
+	  xy|z
+:end
+
+:start Command r<CR> (keeps the indent with autoindent)
+:set autoindent tabstop=8
+	    Lo|rem ipsum
+:type 3r\<CR>
+	    Lo
+	   | ipsum
+:end
+
+:start Command o with a count (autoindent)
+:set autoindent
+	  Lo|rem
+	ipsum
+:type 3ofoo\<Esc>
+	  Lorem
+	  foo
+	  foo
+	  fo|o
+	ipsum
+:type u
+	  Lo|rem
+	ipsum
+:type 3o\<Esc>
+	  Lorem
+
+
+	|
+	ipsum
+:end
+
+:start Command O with a count (autoindent)
+:set autoindent tabstop=8
+	Lorem
+	    ip|sum
+:type 2Ofoo\<Esc>
+	Lorem
+	    foo
+	    fo|o
+	    ipsum
+:end
+
+:start Text object i{ (change lines between braces)
+:set autoindent
+	if (x) {
+	    fo|o();
+	    bar();
+	}
+:type ci{baz\<Esc>
+	if (x) {
+	    ba|z
+	}
+:end
+
+:start Insert CTRL-U keeps the indent with autoindent
+:set autoindent
+	    al|pha beta
+:type A\<C-U>X\<Esc>
+	    |X
+:type A\<C-U>\<C-U>Y\<Esc>
+	|Y
+:end
+
+:start Insert CTRL-U deletes the indent without autoindent
+:set noautoindent
+	    al|pha beta
+:type A\<C-U>X\<Esc>
+	|X
+:end
+
+:start Insert CTRL-U on an autoindented line
+:set autoindent tabstop=8
+	    al|pha
+:type ofoo\<C-U>X\<Esc>
+	    alpha
+	    |X
+:type ofoo\<C-U>\<C-U>Y\<Esc>
+	    alpha
+	    X
+	|Y
+:end
+
+:start Insert CTRL-R and CTRL-R CTRL-R with autoindent (indent is added)
+:set autoindent tabstop=8
+	    alpha
+	      be|ta
+	gamma
+:type yj
+	    alpha
+	      be|ta
+	gamma
+:type Go\<C-R>"\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	      gamma
+	|
+:type uo\<C-R>\<C-R>"\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	      gamma
+	|
+:end
+
+:start Insert CTRL-R CTRL-O with autoindent (no indent is added)
+:set autoindent
+	    alpha
+	      be|ta
+	gamma
+:type yj
+	    alpha
+	      be|ta
+	gamma
+:type Go\<C-R>\<C-O>"X\<Esc>
+	    alpha
+	      beta
+	gamma
+	      beta
+	gamma
+	|X
+:end
+
+:start Indent autoindent (indent removed from a line left empty)
+:set autoindent shiftwidth=4 tabstop=8 expandtab
+	    al|pha
+	bravo
+:type o\<Esc>
+	    alpha
+	|
+	bravo
+:type kA\<CR>\<CR>x\<Esc>
+	    alpha
+
+	    |x
+
+	bravo
+:end
+
+:start Indent autoindent (without copyindent, expandtab converts the indent)
+:set autoindent nocopyindent expandtab shiftwidth=4 tabstop=8
+		  |alpha
+:type ox\<Esc>
+		  alpha
+	          |x
+:end

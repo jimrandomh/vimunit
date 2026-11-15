@@ -133,7 +133,7 @@ of the file).
 * Tests that set an option IdeaVim doesn't have to a non-baseline value (see
   above), or a value IdeaVim rejects.
 * Marker folding: tests whose buffers contain fold markers while
-  `foldmethod=marker` is in effect (including `side/folding.vimunit`, which
+  `foldmethod=marker` is in effect (including `level4/folding.vimunit`, which
   sets it). IntelliJ has no folding for plain text, and IdeaVim has no
   `foldmethod`.
 * `:definition`: IntelliJ's go-to-declaration can't be given the test's

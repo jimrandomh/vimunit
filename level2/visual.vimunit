@@ -167,18 +167,6 @@
 	sit
 :end
 
-:start Linewise Visual mode (c keeps the indent with autoindent)
-:set autoindent tabstop=8 noexpandtab
-	Lorem
-	  ip|sum
-	  dolor
-	sit
-:type Vjcamet\<Esc>
-	Lorem
-	  ame|t
-	sit
-:end
-
 :start Visual mode (switching between v and V)
 :set startofline
 	Lorem ipsum

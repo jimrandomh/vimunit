@@ -1,0 +1,56 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Virtual Replace mode (gR) and gr: replacing by screen column, so that
+# typing over a tab doesn't move the text after it.
+
+:start Command gR (typing over a tab)
+:set tabstop=8
+	|a	b
+:type gRxyz\<Esc>
+	xy|z	b
+:type 0gRabcdefghij\<Esc>
+	abcdefghi|j
+:end
+
+:start Command gR (<BS> restores the tab)
+:set tabstop=8
+	|a	b
+:type gRxyz\<BS>\<BS>\<Esc>
+	|x	b
+:end
+
+:start Command gR (typing a tab)
+:set tabstop=8 softtabstop=0 noexpandtab nosmarttab
+	|abcdefghijk
+:type gR\<Tab>X\<Esc>
+		|Xjk
+:type u0lgR\<Tab>\<Esc>
+	a|	ijk
+:end
+
+:start Command gR (<CR> replaces the rest of the line)
+	Lorem |ipsum
+	dolor sit
+	amet
+:type gRab\<CR>cd\<Esc>
+	Lorem ab
+	c|dlor sit
+	amet
+:end
+
+:start Command gR (past the end of the line)
+	Lo|rem
+	ipsum
+:type gRxyzzy\<Esc>
+	Loxyzz|y
+	ipsum
+:end
+
+:start Command gr (virtual replace one character)
+:set tabstop=8
+	a|	b
+:type grx
+	a|x	b
+:type ur-
+	a|-b
+:end

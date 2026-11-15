@@ -1,0 +1,71 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Insert-mode commands that change the indent (CTRL-T, CTRL-D), insert a
+# literal tab (CTRL-V), or enter characters by Unicode code point (CTRL-V u)
+# and digraph (CTRL-K).
+
+:start Insert CTRL-T and CTRL-D (change the indent)
+:set shiftwidth=4 tabstop=8 noexpandtab
+	al|pha
+:type i\<C-T>X\<Esc>
+	    al|Xpha
+:type A\<C-T>Y\<Esc>
+		alXpha|Y
+:type i\<C-D>Z\<Esc>
+	    alXpha|ZY
+:type A\<C-D>\<C-D>\<C-D>\<Esc>
+	alXphaZ|Y
+:end
+
+:start Insert CTRL-T and CTRL-D round to a multiple of shiftwidth
+:set shiftwidth=4 tabstop=8 expandtab
+	   al|pha
+	      beta
+:type a\<C-T>\<Esc>
+	    al|pha
+	      beta
+:type ji\<C-D>\<Esc>
+	    alpha
+	   | beta
+:end
+
+:start Insert 0 CTRL-D (delete all indent)
+:set shiftwidth=4 tabstop=8 noexpandtab autoindent
+		al|pha
+:type o0\<C-D>X\<Esc>
+		alpha
+	|X
+:type kA0\<C-D>Y\<Esc>
+	alpha|Y
+	X
+:end
+
+:start Insert ^ CTRL-D (delete the indent for this line only)
+:set shiftwidth=4 tabstop=8 noexpandtab autoindent
+	    al|pha
+:type o^\<C-D>label:\<CR>beta\<Esc>
+	    alpha
+	label:
+	    bet|a
+:end
+
+:start Insert CTRL-V (insert a key literally)
+:set expandtab tabstop=8 shiftwidth=8 softtabstop=0
+	a|b
+:type i\<Tab>\<C-V>\<Tab>\<Esc>
+	a       |	b
+:end
+
+:start Insert CTRL-V with a Unicode code point
+	|x
+:type i\<C-V>u00e9\<C-V>u20AC\<C-V>U0001F600\<Esc>
+	é€|😀x
+:end
+
+:start Insert CTRL-K (digraphs)
+	|x
+:type i\<C-K>e'\<C-K>a:\<C-K>ss\<C-K>Eu\<C-K>12\<Esc>
+	éäß€|½x
+:type a\<C-K>'e\<C-K>:o\<Esc>
+	éäß€½é|öx
+:end

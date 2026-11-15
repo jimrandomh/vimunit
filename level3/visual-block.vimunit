@@ -1,0 +1,424 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Blockwise Visual mode (CTRL-V): selecting a block, deleting, yanking and
+# putting blocks, inserting, appending and changing text on every line of
+# a block, switching between the Visual modes, forcing a motion to be
+# blockwise (d CTRL-V), and [count]v after a blockwise operation.
+
+:start Visual block d (lines that end before or inside the block)
+	Lorem |ipsum dolor
+	sit
+	amet co
+	adipisicing elit
+:type \<C-V>3jlld
+	Lorem |um dolor
+	sit
+	amet c
+	adipisng elit
+:type u
+	Lorem |ipsum dolor
+	sit
+	amet co
+	adipisicing elit
+:end
+
+:start Visual block d (block cuts through a tab)
+:set tabstop=8 noexpandtab
+	abc|defghijk
+	a	bcdefghij
+	abcdefghijk
+:type \<C-V>jjlld
+	abc|ghijk
+	a    bcdefghij
+	abcghijk
+:end
+
+:start Visual block y (cursor moves to the top-left corner)
+	abcdefg
+	hijklmn
+	opq|rstu
+:type \<C-V>khyx
+	abcdefg
+	hi|klmn
+	opqrstu
+:type j\<C-V>klyx
+	abcdefg
+	hi|lmn
+	opqrstu
+:end
+
+:start Visual block y and p (put a block after the cursor column)
+	ab|cd
+	efgh
+	ijkl
+:type \<C-V>jly$p
+	abcd|cd
+	efghgh
+	ijkl
+:type u0P
+	|cdabcd
+	ghefgh
+	ijkl
+:type u$3p
+	abcd|cdcdcd
+	efghghghgh
+	ijkl
+:end
+
+:start Visual block p (pads short lines and adds lines at the end)
+	|ab
+	cd
+	efghij
+	k
+:type \<C-V>jlyjj$p
+	ab
+	cd
+	efghij|ab
+	k     cd
+:type uG$p
+	ab
+	cd
+	efghij
+	k|ab
+	 cd
+:end
+
+:start Visual block y with $ and P (ragged block is padded)
+	|ab
+	cdef
+	gh
+	123
+	456
+	789
+:type \<C-V>jj$y3jP
+	ab
+	cdef
+	gh
+	|ab  123
+	cdef456
+	gh  789
+:end
+
+:start Visual block o and O (opposite corners)
+	abcdef
+	gh|ijkl
+	mnopqr
+	stuvwx
+:type \<C-V>jlOjd
+	abcdef
+	gh|kl
+	mnqr
+	stwx
+:type u\<C-V>jlojd
+	abcdef
+	ghijkl
+	mn|qr
+	stuvwx
+:end
+
+:start Visual block I (insert on every line)
+	ab|cd
+	efgh
+	ijkl
+:type \<C-V>jjI--\<Esc>
+	ab|--cd
+	ef--gh
+	ij--kl
+:type u
+	ab|cd
+	efgh
+	ijkl
+:type jj\<C-V>kkI+\<Esc>
+	ab|+cd
+	ef+gh
+	ij+kl
+:end
+
+:start Visual block I (short lines are skipped)
+	Lorem |ipsum
+	sit
+	amet consectetur
+:type \<C-V>jjI*\<Esc>
+	Lorem |*ipsum
+	sit
+	amet c*onsectetur
+:end
+
+:start Visual block I (empty line in the first column)
+	|abc
+
+	def
+:type \<C-V>jjI#\<Esc>
+	|#abc
+	#
+	#def
+:end
+
+:start Visual block I (repeat with .)
+	|abc
+	def
+	ghi
+	jkl
+:type \<C-V>jI-\<Esc>
+	|-abc
+	-def
+	ghi
+	jkl
+:type jj.
+	-abc
+	-def
+	|-ghi
+	-jkl
+:end
+
+:start Visual block A (pads short lines)
+	Lorem |ipsum
+	sit
+
+	amet consectetur
+:type \<C-V>3jlA*\<Esc>
+	Lorem |ip*sum
+	sit     *
+	        *
+	amet con*sectetur
+:end
+
+:start Visual block A with $ (append at the end of every line)
+	Lo|rem
+	ipsum dolor
+
+	sit
+:type \<C-V>3j$A;\<Esc>
+	Lo|rem;
+	ipsum dolor;
+	;
+	sit;
+:end
+
+:start Visual block A (selected from right to left)
+	abc|de
+	fghij
+:type \<C-V>jhhA+\<Esc>
+	a|bcd+e
+	fghi+j
+:end
+
+:start Visual block c (change the block on every line)
+	Lorem |ipsum
+	sit
+	amet consectetur
+	dolor si
+:type \<C-V>3jllc#\<Esc>
+	Lorem |#um
+	sit
+	amet c#ectetur
+	dolor #
+:end
+
+:start Visual block c (repeat with .)
+	ab|cdef
+	ghijkl
+	mnopqr
+	stuvwx
+:type \<C-V>jlc+\<Esc>
+	ab|+ef
+	gh+kl
+	mnopqr
+	stuvwx
+:type jjl.
+	ab+ef
+	gh+kl
+	mno|+r
+	stu+x
+:end
+
+:start Visual block C (change to the end of every line)
+	ab|cdef
+	ghi
+	jklmno
+:type \<C-V>jjC;\<Esc>
+	ab|;
+	gh;
+	jk;
+:end
+
+:start Visual block D and $ (delete to the end of every line)
+	ab|cdef
+	gh
+	ijklmn
+:type \<C-V>jjD
+	a|b
+	gh
+	ij
+:type u0l\<C-V>$jjd
+	|a
+	g
+	i
+:end
+
+:start Visual block X and Y (only the block, not whole lines)
+	ab|cdef
+	ghijkl
+	mnopqr
+:type \<C-V>jlX
+	ab|ef
+	ghkl
+	mnopqr
+:type \<C-V>jlY$p
+	abef|ef
+	ghklkl
+	mnopqr
+:end
+
+:start Visual block r (replace every character in the block)
+	ab|cdef
+	gh
+	ijklmn
+:type \<C-V>jjllr*
+	ab|***f
+	gh
+	ij***n
+:end
+
+:start Visual block ~, u, U (case of the block only)
+	ab|cdef
+	GHIJKL
+	mnopqr
+:type \<C-V>jjl~
+	ab|CDef
+	GHijKL
+	mnOPqr
+:type \<C-V>jjlu
+	ab|cdef
+	GHijKL
+	mnopqr
+:type \<C-V>jjlU
+	ab|CDef
+	GHIJKL
+	mnOPqr
+:end
+
+:start Visual block > (shift from the left edge of the block)
+:set shiftwidth=2 expandtab
+	ab|cd
+	efgh
+	ijkl
+:type \<C-V>j>
+	ab|  cd
+	ef  gh
+	ijkl
+:type \<C-V>j3>
+	ab|        cd
+	ef        gh
+	ijkl
+:end
+
+:start Visual block < (shift left from the left edge of the block)
+:set shiftwidth=4 expandtab
+	ab|      cd
+	ef  gh
+	ij        kl
+:type \<C-V>jj<
+	ab|  cd
+	efgh
+	ij    kl
+:end
+
+:start Visual block p (replace a block with a one-line register)
+	|TEXT aaaaaa
+	bbbbbb
+	cccccc
+:type yiwj0ll\<C-V>jlp
+	TEXT aaaaaa
+	bbTEX|Tbb
+	ccTEXTcc
+:end
+
+:start Visual v, V, CTRL-V (switch mode, keeping the selection)
+:set startofline
+	ab|cdef
+	ghijkl
+	mnopqr
+:type vjl\<C-V>d
+	ab|ef
+	ghkl
+	mnopqr
+:type uvjlVd
+	|mnopqr
+:type ufc\<C-V>jlvd
+	ab|kl
+	mnopqr
+:type ufcVjvd
+	ab|jkl
+	mnopqr
+:end
+
+:start Visual v, V, CTRL-V (pressing the same key again leaves Visual mode)
+	ab|cdef
+	ghijkl
+:type vlvx
+	abc|ef
+	ghijkl
+:type VjVx
+	abcef
+	ghi|kl
+:type \<C-V>k\<C-V>x
+	abc|f
+	ghikl
+:end
+
+:start Forced motion d CTRL-V (blockwise)
+	alpha bravo
+	char|lie delta
+	echo foxtrot
+	golf hotel
+:type d\<C-V>2j
+	alpha bravo
+	char|ie delta
+	echofoxtrot
+	golfhotel
+:type u
+	alpha bravo
+	char|lie delta
+	echo foxtrot
+	golf hotel
+:type d\<C-V>3w
+	alpha bravo
+	char|e delta
+	echooxtrot
+	golf hotel
+:end
+
+:start Forced motion y CTRL-V (register is blockwise)
+	alpha bravo
+	char|lie delta
+	echo foxtrot
+:type y\<C-V>3w
+	alpha bravo
+	char|lie delta
+	echo foxtrot
+:type gg0P
+	|lialpha bravo
+	 fcharlie delta
+	echo foxtrot
+:end
+
+:start Visual 1v (size of the last blockwise operation)
+	alpha |bravo
+	charlie delta
+	echo foxtrot
+	golf hotel
+	india juliet
+:type \<C-V>jld
+	alpha |avo
+	charlidelta
+	echo foxtrot
+	golf hotel
+	india juliet
+:type jw1vd
+	alpha avo
+	charlidelta
+	|ho foxtrot
+	lf hotel
+	india juliet
+:end

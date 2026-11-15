@@ -1,0 +1,98 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Searching for the word under the cursor: *, #, g* and g#.
+
+:start Command *,# (search under cursor)
+	|lorem ipsum dolor lorem lorem dolor ipsum lorem
+:type *
+	lorem ipsum dolor |lorem lorem dolor ipsum lorem
+:type #
+	|lorem ipsum dolor lorem lorem dolor ipsum lorem
+:type *2n
+	lorem ipsum dolor lorem lorem dolor ipsum |lorem
+:type 2#
+	lorem ipsum dolor |lorem lorem dolor ipsum lorem
+:type N
+	lorem ipsum dolor lorem |lorem dolor ipsum lorem
+:type ll*
+	lorem ipsum dolor lorem lorem dolor ipsum |lorem
+:end
+
+:start Command * (matches whole words only)
+:set wrapscan noignorecase
+	|ipsum ipsums xipsum ipsum
+:type *
+	ipsum ipsums xipsum |ipsum
+:type *
+	|ipsum ipsums xipsum ipsum
+:end
+
+:start Command g* (matches partial words)
+:set wrapscan noignorecase
+	|ipsum ipsums xipsum ipsum
+:type g*
+	ipsum |ipsums xipsum ipsum
+:type n
+	ipsum ipsums x|ipsum ipsum
+:type n
+	ipsum ipsums xipsum |ipsum
+:type n
+	|ipsum ipsums xipsum ipsum
+:end
+
+:start Command # (matches whole words only)
+:set wrapscan noignorecase
+	ipsum xipsum ipsums |ipsum
+:type #
+	|ipsum xipsum ipsums ipsum
+:type #
+	ipsum xipsum ipsums |ipsum
+:end
+
+:start Command g# (matches partial words)
+:set wrapscan noignorecase
+	ipsum xipsum ipsums |ipsum
+:type g#
+	ipsum xipsum |ipsums ipsum
+:type n
+	ipsum x|ipsum ipsums ipsum
+:type n
+	|ipsum xipsum ipsums ipsum
+:end
+
+:start Command * (from the middle of a word)
+:set wrapscan noignorecase
+	lorem ipsum lo|rem dolor lorem
+:type *
+	lorem ipsum lorem dolor |lorem
+:type #
+	lorem ipsum |lorem dolor lorem
+:end
+
+:start Command * (on a non-keyword character, uses the next keyword)
+:set wrapscan noignorecase
+	|= lorem ipsum lorem
+:type *
+	= lorem ipsum |lorem
+:type 0#
+	= lorem ipsum |lorem
+:end
+
+:start Command * (with no keyword after the cursor, uses the non-blank word)
+:set wrapscan noignorecase
+	lorem ++ ipsum |++
+:type *
+	lorem |++ ipsum ++
+:end
+
+:start Command * (wraps around the end of the buffer)
+:set wrapscan noignorecase
+	lorem ipsum
+	dolor |lorem
+:type *
+	|lorem ipsum
+	dolor lorem
+:type #
+	lorem ipsum
+	dolor |lorem
+:end

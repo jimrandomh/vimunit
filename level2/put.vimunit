@@ -1,0 +1,111 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Putting with gp and gP (cursor left after the pasted text).
+
+:start Command gp and gP (charwise)
+	|Lorem ipsum
+:type yegp
+	LLorem|orem ipsum
+:type u0gP
+	Lorem|Lorem ipsum
+:type u03gp
+	LLoremLoremLorem|orem ipsum
+:end
+
+:start Command gp (charwise, at the end of the line)
+	Lorem |ipsum
+:type yw$gp
+	Lorem ipsumipsu|m
+:type u$gP
+	Lorem ipsuipsum|m
+:end
+
+:start Command gp (charwise, several lines)
+	Lo|rem
+	ipsum dolor
+:type vjy
+	Lo|rem
+	ipsum dolor
+:type 0gp
+	Lrem
+	ips|orem
+	ipsum dolor
+:end
+
+:start Command gp and gP (linewise)
+:set startofline
+	|Lorem
+	  ipsum
+	dolor
+:type yjgp
+	Lorem
+	Lorem
+	  ipsum
+	|  ipsum
+	dolor
+:type u2GgP
+	Lorem
+	Lorem
+	  ipsum
+	|  ipsum
+	dolor
+:type u2G2gp
+	Lorem
+	  ipsum
+	Lorem
+	  ipsum
+	Lorem
+	  ipsum
+	|dolor
+:end
+
+:start Command gp (linewise, at the end of the buffer)
+:set startofline
+	Lo|rem
+	ipsum
+:type yyjgp
+	Lorem
+	ipsum
+	|Lorem
+:type gp
+	Lorem
+	ipsum
+	Lorem
+	|Lorem
+:end
+
+:start Command . after gp
+:set startofline
+	|Lorem
+	ipsum
+:type yygp
+	Lorem
+	Lorem
+	|ipsum
+:type .
+	Lorem
+	Lorem
+	ipsum
+	|Lorem
+:type .
+	Lorem
+	Lorem
+	ipsum
+	Lorem
+	|Lorem
+:end
+
+:start Command . after gP
+:set startofline
+	|Lorem
+	ipsum
+:type yyjgP
+	Lorem
+	Lorem
+	|ipsum
+:type .
+	Lorem
+	Lorem
+	Lorem
+	|ipsum
+:end

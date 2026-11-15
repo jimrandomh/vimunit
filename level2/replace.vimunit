@@ -1,0 +1,145 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+
+:start Replace mode (R)
+	Lo|rem ipsum dolor
+	sit amet
+:type Rxyz\<Esc>
+	Loxy|z ipsum dolor
+	sit amet
+:type $Rsit amet\<CR>xyz\<Esc>
+	Loxyz ipsum dolosit amet
+	xy|z
+	sit amet
+:type R123\<Esc>k.
+	Loxy12|3psum dolosit amet
+	xy123
+	sit amet
+:type u
+	Loxy|z ipsum dolosit amet
+	xy123
+	sit amet
+:type R54327\<BS>1\<Esc>
+	Loxy5432|1um dolosit amet
+	xy123
+	sit amet
+:type u
+	Loxy|z ipsum dolosit amet
+	xy123
+	sit amet
+:end
+
+:start Command r (replace char)
+	Lo|rem ipsum dolor
+:type rx
+	Lo|xem ipsum dolor
+:type 3ry
+	Loyy|y ipsum dolor
+:type w.
+	Loyyy yy|yum dolor
+:end
+
+:start Replace mode R (with a count)
+	Lo|rem ipsum dolor
+:type 3Rab\<Esc>
+	Loababa|bsum dolor
+:type u
+	Lo|rem ipsum dolor
+:type w2Rxy\<Esc>
+	Lorem xyx|ym dolor
+:end
+
+:start Replace mode R (past the end of the line)
+	Lorem ip|sum
+	dolor
+:type Rabcdefg\<Esc>
+	Lorem ipabcdef|g
+	dolor
+:type j0Rsit amet\<Esc>
+	Lorem ipabcdefg
+	sit ame|t
+:end
+
+:start Replace mode R (backspace restores the replaced characters)
+	Lo|rem ipsum
+:type Rabcd\<BS>\<BS>\<Esc>
+	Loa|bm ipsum
+:type uRabcd\<BS>\<BS>\<BS>\<BS>\<Esc>
+	L|orem ipsum
+:end
+
+:start Replace mode R (backspace before the start of the replacement)
+	Lorem ip|sum
+:type Rx\<BS>\<BS>\<BS>y\<Esc>
+	Lorem |ypsum
+:end
+
+:start Replace mode R (backspace deletes characters typed past the end of the line)
+	Lor|em
+	ipsum
+:type Rabcdef\<BS>\<BS>\<BS>\<Esc>
+	Lorab|c
+	ipsum
+:type uRabcdef\<BS>\<BS>\<BS>\<BS>\<BS>\<Esc>
+	Lor|am
+	ipsum
+:end
+
+:start Replace mode R (Enter breaks the line without replacing a character)
+	Lo|rem ipsum
+	dolor
+:type Rab\<CR>cd\<Esc>
+	Loab
+	c|dipsum
+	dolor
+:type u
+	Lo|rem ipsum
+	dolor
+:end
+
+:start Command r (count larger than the rest of the line)
+	Lorem ip|sum
+	dolor
+:type 6rx
+	Lorem ip|sum
+	dolor
+:type 3rx
+	Lorem ipxx|x
+	dolor
+:end
+
+:start Command r (on an empty line)
+	Lorem
+	|
+	ipsum
+:type rx
+	Lorem
+	|
+	ipsum
+:type 3rx
+	Lorem
+	|
+	ipsum
+:end
+
+:start Command r<CR> (replaces the characters with one line break)
+	Lorem| ipsum dolor
+:type r\<CR>
+	Lorem
+	|ipsum dolor
+:type e3r\<CR>
+	Lorem
+	ipsu
+	|olor
+:end
+
+:start Command r (repeat with . and a new count)
+	|Lorem ipsum dolor
+:type 2rx
+	x|xrem ipsum dolor
+:type w.
+	xxrem x|xsum dolor
+:type w4.
+	xxrem xxsum xxx|xr
+:type 100.
+	xxrem xxsum xxx|xr
+:end

@@ -1,0 +1,157 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Indentation settings: expandtab, softtabstop, smarttab and shiftround; and
+# ]p, [p (putting lines with their indent adjusted to the current line).
+
+:start Indent >> (noexpandtab, spaces become a tab)
+:set shiftwidth=4 tabstop=8 noexpandtab startofline
+	|alpha
+:type >>
+	    |alpha
+:type >>
+		|alpha
+:type >>
+		    |alpha
+:type <<
+		|alpha
+:end
+
+:start Indent expandtab (>> and <Tab> insert spaces)
+:set shiftwidth=4 tabstop=8 softtabstop=0 expandtab nosmarttab startofline
+	|alpha
+:type >>
+	    |alpha
+:type A\<Tab>X\<Esc>
+	    alpha       |X
+:end
+
+:start Indent softtabstop (<Tab> and <BS> in Insert mode)
+:set shiftwidth=4 tabstop=8 softtabstop=4 noexpandtab nosmarttab
+	|alpha
+:type I\<Tab>\<Esc>
+	   | alpha
+:type I\<Tab>\<Esc>
+	|	alpha
+:type I\<BS>\<Esc>
+	   | alpha
+:type A\<Tab>X\<Esc>
+	    alpha   |X
+:end
+
+:start Indent softtabstop (with expandtab)
+:set shiftwidth=4 tabstop=8 softtabstop=4 expandtab nosmarttab
+	|alpha
+:type I\<Tab>\<Tab>\<Tab>\<Esc>
+	           | alpha
+:type I\<BS>\<Esc>
+	       | alpha
+:end
+
+:start Indent smarttab (<Tab> at the start of a line inserts shiftwidth)
+:set shiftwidth=4 tabstop=8 softtabstop=0 noexpandtab smarttab
+	|alpha
+:type I\<Tab>\<Esc>
+	   | alpha
+:type I\<Tab>\<Esc>
+	|	alpha
+:type A\<Tab>X\<Esc>
+		alpha	|X
+:type I\<BS>\<Esc>
+	   | alpha	X
+:end
+
+:start Indent shiftround (>> and << round to a multiple of shiftwidth)
+:set shiftwidth=4 expandtab shiftround startofline
+	   |alpha
+	      bravo
+:type >>
+	    |alpha
+	      bravo
+:type j<<
+	    alpha
+	    |bravo
+:end
+
+:start Command ]p and [p (linewise, adjusting the indent)
+:set startofline tabstop=8 shiftwidth=8 noexpandtab
+	|bar();
+	if (a) {
+	    foo();
+	}
+:type yyjj]p
+	bar();
+	if (a) {
+	    foo();
+	    |bar();
+	}
+:type u[p
+	bar();
+	if (a) {
+	    |bar();
+	    foo();
+	}
+:type u]P
+	bar();
+	if (a) {
+	    |bar();
+	    foo();
+	}
+:end
+
+:start Command ]p (several lines keep their relative indent)
+:set startofline tabstop=8 shiftwidth=8 noexpandtab
+	|if (b) {
+	  x();
+	}
+	void f() {
+	    foo();
+	}
+:type y2jG[p
+	if (b) {
+	  x();
+	}
+	void f() {
+	    foo();
+	|if (b) {
+	  x();
+	}
+	}
+:type uk]p
+	if (b) {
+	  x();
+	}
+	void f() {
+	    foo();
+	    |if (b) {
+	      x();
+	    }
+	}
+:end
+
+:start Command ]p (indent made of tabs)
+:set startofline tabstop=8 shiftwidth=8 noexpandtab
+	|  x();
+	    y();
+	f() {
+		g();
+	}
+:type yj4G]p
+	  x();
+	    y();
+	f() {
+		g();
+		|x();
+		  y();
+	}
+:end
+
+:start Command ]p (charwise register, like p)
+	|Lorem
+	    ipsum
+:type yej]p
+	Lorem
+	 Lore|m   ipsum
+:type u[p
+	Lorem
+	Lore|m    ipsum
+:end

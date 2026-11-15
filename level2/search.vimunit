@@ -84,21 +84,6 @@
 	Lorem |lalala ipsum lala
 :end
 
-:start Search / (fails at the end with nowrapscan)
-:set nowrapscan
-	Lorem ipsum
-	dolor |sit amet
-:type /ipsum\<CR>
-	Lorem ipsum
-	dolor |sit amet
-:type /amet\<CR>
-	Lorem ipsum
-	dolor sit |amet
-:type n
-	Lorem ipsum
-	dolor sit |amet
-:end
-
 :start Search / (a pattern that isn't found still becomes the last pattern)
 	|Lorem ipsum dolor ipsum
 :type /ipsum\<CR>
@@ -129,17 +114,6 @@
 	Lorem LOREM |lorem ipsum
 :type /LOREM\<CR>
 	Lorem |LOREM lorem ipsum
-:end
-
-:start Search / (ignorecase and smartcase)
-:set ignorecase smartcase wrapscan
-	|Lorem LOREM lorem ipsum
-:type /lorem\<CR>
-	Lorem |LOREM lorem ipsum
-:type n
-	Lorem LOREM |lorem ipsum
-:type /Lorem\<CR>
-	|Lorem LOREM lorem ipsum
 :end
 
 :start Search n (the only match is the one at the cursor)

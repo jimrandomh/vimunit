@@ -1,0 +1,241 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Counts with the Insert-mode commands (3ifoo<Esc>, 3o, ...), arrow keys in
+# Insert mode, which split the insert into separate undo steps and change
+# what . repeats, gi (insert where Insert mode last stopped) and gI (insert in
+# column 1).
+
+:start Command i with a count
+	Lorem |ipsum
+:type 3ifoo\<Esc>
+	Lorem foofoofo|oipsum
+:type u
+	Lorem |ipsum
+:type 3i-\<Esc>
+	Lorem --|-ipsum
+:end
+
+:start Command i with a count (on an empty line)
+	Lorem
+	|
+	ipsum
+:type 10i=\<Esc>
+	Lorem
+	=========|=
+	ipsum
+:end
+
+:start Command a with a count
+	Lore|m ipsum
+:type 3a-x\<Esc>
+	Lorem-x-x-|x ipsum
+:end
+
+:start Command A and I with a count
+	  Lo|rem
+:type 3A!\<Esc>
+	  Lorem!!|!
+:type 2Iab\<Esc>
+	  aba|bLorem!!!
+:end
+
+:start Command i with a count (inserted text with a line break)
+	Lorem |ipsum
+:type 3ia\<CR>b\<Esc>
+	Lorem a
+	ba
+	ba
+	|bipsum
+:end
+
+:start Command i with a count (no text typed)
+	Lorem |ipsum
+:type 3i\<Esc>
+	Lorem| ipsum
+:end
+
+:start Command . after an insert with a count
+	|Lorem ipsum dolor
+:type 3ifoo\<Esc>
+	foofoofo|oLorem ipsum dolor
+:type w.
+	foofoofooLorem foofoofo|oipsum dolor
+:type w2.
+	foofoofooLorem foofoofooipsum foofo|odolor
+:type 0.
+	foofo|ofoofoofooLorem foofoofooipsum foofoodolor
+:end
+
+:start Command . after o with a count
+	|Lorem
+	ipsum
+:type 2ofoo\<Esc>
+	Lorem
+	foo
+	fo|o
+	ipsum
+:type j.
+	Lorem
+	foo
+	foo
+	ipsum
+	foo
+	fo|o
+:type u3.
+	Lorem
+	foo
+	foo
+	ipsum
+	foo
+	foo
+	fo|o
+:end
+
+:start Command i with a count and an arrow key
+	Lorem |ipsum
+:type 3ifoo\<Left>X\<Esc>
+	Lorem fo|Xoipsum
+:type u
+	Lorem fo|oipsum
+:type 3iab\<Right>Y\<Esc>
+	Lorem foabo|Yipsum
+:end
+
+:start Insert mode arrow keys (start a new undo step)
+	Lorem |ipsum
+:type ifoo\<Left>bar\<Esc>
+	Lorem foba|roipsum
+:type u
+	Lorem fo|oipsum
+:type u
+	Lorem |ipsum
+:end
+
+:start Insert mode arrow keys (a new undo step even without moving)
+	|Lorem
+:type Afoo\<Left>\<Right>bar\<Esc>
+	Loremfooba|r
+:type u
+	Loremfo|o
+:end
+
+:start Insert mode arrow keys (. repeats only the text after the last arrow key)
+	Lorem |ipsum
+	dolor
+:type ifoo\<Left>bar\<Esc>
+	Lorem foba|roipsum
+	dolor
+:type j0.
+	Lorem fobaroipsum
+	ba|rdolor
+:end
+
+:start Insert mode <Left> and <Right> (do not wrap at the ends of the line)
+	Lorem
+	|ipsum
+	dolor
+:type i\<Left>X\<Esc>
+	Lorem
+	|Xipsum
+	dolor
+:type A\<Right>Y\<Esc>
+	Lorem
+	Xipsum|Y
+	dolor
+:end
+
+:start Insert mode <Up> and <Down>
+	Lorem ipsum
+	dol|or
+	sit amet
+:type afoo\<Up>X\<Esc>
+	Lorem i|Xpsum
+	dolofoor
+	sit amet
+:type Abar\<Down>Y\<Esc>
+	Lorem iXpsumbar
+	dolofoor|Y
+	sit amet
+:type 0i\<Down>\<Down>Z\<Esc>
+	Lorem iXpsumbar
+	dolofoorY
+	|Zsit amet
+:end
+
+:start Insert mode <Home> and <End>
+	  Lorem |ipsum
+:type afoo\<Home>X\<End>Y\<Esc>
+	X  Lorem ifoopsum|Y
+:type u
+	X  Lorem ifoopsu|m
+:end
+
+:start Insert mode <C-Left> and <S-Right> (word motions)
+	Lorem ip|sum dolor
+:type i\<C-Left>X\<Esc>
+	Lorem |Xipsum dolor
+:type i\<S-Right>Y\<Esc>
+	Lorem Xipsum |Ydolor
+:end
+
+:start Command gi (insert where Insert mode was last stopped)
+	Lorem |ipsum
+	dolor
+:type aX\<Esc>
+	Lorem i|Xpsum
+	dolor
+:type jgiY\<Esc>
+	Lorem iX|Ypsum
+	dolor
+:type jgiZ\<Esc>
+	Lorem iXY|Zpsum
+	dolor
+:end
+
+:start Command gi (after A, at the end of the line)
+	|Lorem
+	ipsum
+:type Afoo\<Esc>
+	Loremfo|o
+	ipsum
+:type jgibar\<Esc>
+	Loremfooba|r
+	ipsum
+:end
+
+:start Command gi (position moves with inserted lines)
+:set startofline
+	Lorem
+	ip|sum
+:type iX\<Esc>
+	Lorem
+	ip|Xsum
+:type ggyyP
+	|Lorem
+	Lorem
+	ipXsum
+:type giY\<Esc>
+	Lorem
+	Lorem
+	ipX|Ysum
+:end
+
+:start Command gi (no previous insert)
+	Lorem ip|sum
+:type giX\<Esc>
+	Lorem ip|Xsum
+:end
+
+:start Command gI (insert in column 1)
+	  Lo|rem
+	    ipsum
+:type gIX\<Esc>
+	|X  Lorem
+	    ipsum
+:type j.
+	X  Lorem
+	|X    ipsum
+:type 2gIab\<Esc>
+	X  Lorem
+	aba|bX    ipsum
+:end

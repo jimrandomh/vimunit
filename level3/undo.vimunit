@@ -1,0 +1,75 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Command U (undo all changes on the last changed line).
+
+:start Command U (undo all changes on the last changed line)
+	Lorem |ipsum dolor
+	sit
+:type x
+	Lorem |psum dolor
+	sit
+:type wx
+	Lorem psum |olor
+	sit
+:type $x
+	Lorem psum ol|o
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:end
+
+:start Command U (is itself undone by U and u)
+	Lorem |ipsum dolor
+	sit
+:type xwx
+	Lorem psum |olor
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:type U
+	Lorem psum |olor
+	sit
+:type U
+	Lorem |ipsum dolor
+	sit
+:type u
+	Lorem psum |olor
+	sit
+:type u
+	Lorem |ipsum dolor
+	sit
+:end
+
+:start Command U (only the last changed line)
+	|Lorem
+	ipsum
+	dolor
+:type x
+	|orem
+	ipsum
+	dolor
+:type jxx
+	orem
+	|sum
+	dolor
+:type jU
+	orem
+	|ipsum
+	dolor
+:end
+
+:start Command U (after an insert and a deletion)
+	Lo|rem
+	ipsum
+:type Afoo\<Esc>
+	Loremfo|o
+	ipsum
+:type 0x
+	|oremfoo
+	ipsum
+:type U
+	Lore|m
+	ipsum
+:end

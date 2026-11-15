@@ -1,0 +1,206 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Joining lines with J and gJ.
+
+:start Command J (join lines)
+	|Lorem
+	ipsum
+	    dolor
+:type J
+	Lorem| ipsum
+	    dolor
+:type J
+	Lorem ipsum| dolor
+:type uu3J$
+	Lorem ipsum dolo|r
+:type uVjjJ2h
+	Lorem ips|um dolor
+:end
+
+:start Command J (whitespace special cases)
+	|(I have trailing ws    
+	Lorem ipsum
+	)
+:type J
+	(I have trailing ws    |Lorem ipsum
+	)
+:type .
+	(I have trailing ws    Lorem ipsum|)
+:end
+
+:start Command J (count of 1 or 2 joins two lines)
+:set nojoinspaces
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type 1J
+	Lorem| ipsum
+	dolor
+	sit
+:type u2J
+	Lorem| ipsum
+	dolor
+	sit
+:end
+
+:start Command J (count larger than the number of lines)
+:set nojoinspaces
+	Lorem
+	|ipsum
+	dolor
+	sit
+:type 10J
+	Lorem
+	ipsum dolor| sit
+:type J
+	Lorem
+	ipsum dolor| sit
+:end
+
+:start Command J (removes leading tabs and spaces)
+:set nojoinspaces
+	|Lorem
+	 	 ipsum
+:type J
+	Lorem| ipsum
+:end
+
+:start Command J (with an empty line)
+:set nojoinspaces
+	Lo|rem
+	
+	ipsum
+	
+:type J
+	Lore|m
+	ipsum
+
+:type J
+	Lorem| ipsum
+
+:type J
+	Lorem ipsu|m
+:end
+
+:start Command J (on an empty line)
+:set nojoinspaces
+	|
+	  Lorem
+	ipsum
+:type J
+	|Lorem
+	ipsum
+:end
+
+:start Command J (next line starts with a closing paren)
+:set nojoinspaces
+	|foo(bar,
+	    baz
+	    )
+:type 3J
+	foo(bar, baz|)
+:end
+
+:start Command J (line ends with a tab)
+:set nojoinspaces
+	|Lorem	
+	ipsum
+:type J
+	Lorem	|ipsum
+:end
+
+:start Command J (without joinspaces)
+:set nojoinspaces
+	|Lorem.
+	Ipsum?
+	Dolor!
+	Sit,
+	amet
+:type 5J
+	Lorem. Ipsum? Dolor! Sit,| amet
+:end
+
+:start Command J (repeat with . keeps the count)
+:set nojoinspaces
+	|Lorem
+	ipsum
+	dolor
+	sit
+	amet
+	consectetur
+:type 3J
+	Lorem ipsum| dolor
+	sit
+	amet
+	consectetur
+:type j0.
+	Lorem ipsum dolor
+	sit amet| consectetur
+:type u.
+	Lorem ipsum dolor
+	sit amet| consectetur
+:end
+
+:start Command gJ (keeps whitespace, inserts no space)
+	|Lorem
+	    ipsum
+	dolor  
+	sit
+:type gJ
+	Lorem|    ipsum
+	dolor  
+	sit
+:type jgJ
+	Lorem    ipsum
+	dolor  |sit
+:end
+
+:start Command gJ (with a count)
+	|Lorem
+	ipsum
+	dolor
+	sit
+	amet
+:type 3gJ
+	Loremipsum|dolor
+	sit
+	amet
+:type u2gJ
+	Lorem|ipsum
+	dolor
+	sit
+	amet
+:type u1gJ
+	Lorem|ipsum
+	dolor
+	sit
+	amet
+:end
+
+:start Command gJ (empty lines, and on the last line)
+	|Lorem
+
+	ipsum
+:type gJ
+	Lore|m
+	ipsum
+:type gJ
+	Lorem|ipsum
+:type gJ
+	Lorem|ipsum
+:end
+
+:start Command . after gJ
+	|Lorem
+	  ipsum
+	dolor
+	  sit
+:type gJ
+	Lorem|  ipsum
+	dolor
+	  sit
+:type j.
+	Lorem  ipsum
+	dolor|  sit
+:end

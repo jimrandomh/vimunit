@@ -1,0 +1,155 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Named registers "a to "z, and appending to them with "A to "Z.
+
+:start Registers
+:set startofline
+	Lo|rem ipsum dolor
+:type "ryy"syw"rp
+	Lorem ipsum dolor
+	|Lorem ipsum dolor
+:type "sp
+	Lorem ipsum dolor
+	Lrem| orem ipsum dolor
+:type dd"sp
+	Lrem| orem ipsum dolor
+:type ""p
+	Lrem orem ipsum dolor
+	|Lrem orem ipsum dolor
+:end
+
+:start Register "A (appending charwise to charwise)
+	|Lorem ipsum dolor
+:type "aye
+	|Lorem ipsum dolor
+:type w"Aye
+	Lorem |ipsum dolor
+:type $"ap
+	Lorem ipsum dolorLoremipsu|m
+:end
+
+:start Register "A (appending a deleted line to a linewise register)
+	|Lorem
+	ipsum
+	dolor
+	sit
+:type "add
+	|ipsum
+	dolor
+	sit
+:type j"Add
+	ipsum
+	|sit
+:type "ap
+	ipsum
+	sit
+	|Lorem
+	dolor
+:end
+
+:start Register "A (appending a line to a charwise register makes it linewise)
+	|Lorem ipsum
+	dolor
+:type "aye
+	|Lorem ipsum
+	dolor
+:type j"Ayy
+	Lorem ipsum
+	|dolor
+:type "ap
+	Lorem ipsum
+	dolor
+	|Lorem
+	dolor
+:end
+
+:start Register "A (appending charwise text to a linewise register)
+	|Lorem ipsum
+	dolor
+:type "ayy
+	|Lorem ipsum
+	dolor
+:type j"Aye
+	Lorem ipsum
+	|dolor
+:type "ap
+	Lorem ipsum
+	dolor
+	|Lorem ipsum
+	dolor
+:end
+
+:start Register "A (appending to an empty register)
+	Lorem |ipsum dolor
+:type "Aye
+	Lorem |ipsum dolor
+:type $"ap
+	Lorem ipsum doloripsu|m
+:end
+
+:start Register "A (reading an uppercase register is the same as lowercase)
+	Lo|rem ipsum
+:type "aye
+	Lo|rem ipsum
+:type $"Ap
+	Lorem ipsumre|m
+:end
+
+:start Register "a (linewise put places the cursor on the first non-blank)
+	    Lo|rem
+	ipsum
+:type "ayy
+	    Lo|rem
+	ipsum
+:type j"ap
+	    Lorem
+	ipsum
+	    |Lorem
+:type "aP
+	    Lorem
+	ipsum
+	    |Lorem
+	    Lorem
+:end
+
+:start Register "a (also fills the unnamed register)
+	|Lorem ipsum dolor
+:type "aye
+	|Lorem ipsum dolor
+:type $p
+	Lorem ipsum dolorLore|m
+:end
+
+:start Register "a (not changed by later deletes)
+	|Lorem ipsum dolor
+:type "aye
+	|Lorem ipsum dolor
+:type wde
+	Lorem | dolor
+:type $"ap
+	Lorem  dolorLore|m
+:type p
+	Lorem  dolorLoremipsu|m
+:end
+
+:start Register "a (put with a count before or after the register name)
+	|Lorem ipsum
+:type "ayl
+	|Lorem ipsum
+:type 3"ap
+	LLL|Lorem ipsum
+:type "a2p
+	LLLLL|Lorem ipsum
+:end
+
+:start Register "a (deleting with x and a count)
+	Lo|rem ipsum
+:type "a3x
+	Lo| ipsum
+:type $"ap
+	Lo ipsumre|m
+:type "Ax
+	Lo ipsumr|e
+:type "aP
+	Lo ipsumrrem|me
+:end

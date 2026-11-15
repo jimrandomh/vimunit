@@ -1,0 +1,247 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Changing and deleting: c, C, s, D, and the special cases of cw, dw and
+# d{motion}.
+
+:start Wordwise motion special cases (dw,cw)
+	Lorem ipsum do|lor
+	sit amet
+:type dw
+	Lorem ipsum d|o
+	sit amet
+:type ucwsit\<Esc>
+	Lorem ipsum dosi|t
+	sit amet
+:type bbcwlorem\<Esc>
+	Lorem lore|m dosit
+	sit amet
+:type cWlorem\<Esc>
+	Lorem lorelore|m dosit
+	sit amet
+:end
+
+:start Command c (change motion)
+	Lo|rem ipsum
+	dolor sit amet
+:type c$...not lorem\<Esc>
+	Lo...not lore|m
+	dolor sit amet
+:end
+
+:start Command C (change line)
+	Lo|rem
+	ipsum
+	dolor
+:type CNot lorem\<Esc>
+	LoNot lore|m
+	ipsum
+	dolor
+:type 2Casdf\<Esc>
+	LoNot loreasd|f
+	dolor
+:end
+
+:start Command D (delete line)
+	L|orem
+	ipsum
+	dolor
+	sit
+:type D
+	|L
+	ipsum
+	dolor
+	sit
+:type 2D
+	|dolor
+	sit
+:type D
+	|
+	sit
+:end
+
+:start Command s (substitute chars)
+	Lo|rem ipsum dolor
+	sit amet
+:type sxyz\<Esc>
+	Loxy|zem ipsum dolor
+	sit amet
+:type 5sxyz\<Esc>
+	Loxyxy|zpsum dolor
+	sit amet
+:type 100sxyz\<Esc>
+	Loxyxyxy|z
+	sit amet
+:end
+
+:start Special cases of cw (change word)
+	Lo|rem ipsum dolor
+	sit amet
+:type cwabc\<esc>
+	Loab|c ipsum dolor
+	sit amet
+:type c2wabc\<esc>
+	Loabab|c dolor
+	sit amet
+:type $cw\<esc>
+	Loababc dol|o
+	sit amet
+:end
+
+:start Command cw (on the last character of a word)
+	Lore|m ipsum
+:type cwX\<Esc>
+	Lore|X ipsum
+:end
+
+:start Command cw (on a one-letter word)
+	Lorem |a ipsum
+:type cwX\<Esc>
+	Lorem |X ipsum
+:type w.
+	Lorem X |X
+:end
+
+:start Command cw (on whitespace)
+	Lorem|   ipsum dolor
+:type cwX\<Esc>
+	Lorem|Xipsum dolor
+:type el.
+	LoremXipsum|Xdolor
+:end
+
+:start Command cw (with a count)
+	|Lorem ipsum dolor sit
+:type 2cwX\<Esc>
+	|X dolor sit
+:type wc2wY\<Esc>
+	X |Y
+:end
+
+:start Command cw (with a count, across lines)
+	Lorem |ipsum
+	dolor sit
+	amet
+:type 2cwX\<Esc>
+	Lorem |X sit
+	amet
+:type u3cwY\<Esc>
+	Lorem |Y
+	amet
+:end
+
+:start Commands cw and cW (punctuation)
+	Lorem |ip-sum dolor
+:type cwX\<Esc>
+	Lorem |X-sum dolor
+:type ucWY\<Esc>
+	Lorem |Y dolor
+:end
+
+:start Command dw (on the last word of a line doesn't join lines)
+	Lorem ip|sum
+	    dolor sit
+:type dw
+	Lorem i|p
+	    dolor sit
+:type dw
+	Lorem |i
+	    dolor sit
+:end
+
+:start Command dw (with a count ending on the last word of a line)
+	Lorem-|ipsum
+	dolor sit
+	amet
+:type 2dw
+	Lorem-|sit
+	amet
+:type u3dw
+	Lorem|-
+	amet
+:end
+
+:start Command dw (on an empty line)
+	Lorem
+	|
+	ipsum
+:type dw
+	Lorem
+	|ipsum
+:end
+
+:start Command dw (with a count over whole lines becomes linewise)
+	|Lorem
+	ipsum
+	dolor
+:type 2dw
+	|dolor
+:end
+
+:start Operator d (charwise motion over whole lines becomes linewise)
+:set startofline
+	    |Lorem
+	ipsum
+	dolor sit
+:type 2de
+	|dolor sit
+:type u0j2de
+	    Lorem
+	| sit
+:end
+
+:start Command cb (exclusive, keeps the character under the cursor)
+	Lorem ips|um
+:type cbX\<Esc>
+	Lorem |Xum
+:end
+
+:start Command s (on an empty line)
+	Lorem
+	|
+	ipsum
+:type sX\<Esc>
+	Lorem
+	|X
+	ipsum
+:end
+
+:start Command s (repeat with . keeps the count)
+	|Lorem ipsum dolor
+:type 3sX\<Esc>
+	|Xem ipsum dolor
+:type w.
+	Xem |Xum dolor
+:end
+
+:start Command C (count larger than the number of lines)
+	Lorem
+	ip|sum
+	dolor
+:type 5CX\<Esc>
+	Lorem
+	ip|X
+:end
+
+:start Command D (with a count on the last line fails)
+	Lorem
+	ip|sum
+:type 2D
+	Lorem
+	ip|sum
+:type D
+	Lorem
+	i|p
+:end
+
+:start Command D (repeat with . and a count)
+	Lorem ip|sum
+	dolor sit
+	amet
+:type D
+	Lorem i|p
+	dolor sit
+	amet
+:type j0ll2.
+	Lorem ip
+	d|o
+:end

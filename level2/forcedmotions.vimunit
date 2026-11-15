@@ -1,0 +1,118 @@
+# This file is part of vim-unit: Unit tests for vim imitators
+#
+# Forcing the type of a motion after an operator: v (charwise, or toggling
+# inclusive/exclusive) and V (linewise).
+
+:start Forced motion dvj (linewise motion made charwise)
+	alpha br|avo
+	charlie delta
+	echo
+:type dvj
+	alpha br|delta
+	echo
+:type u
+	alpha br|avo
+	charlie delta
+	echo
+:type jdvk
+	alpha br|delta
+	echo
+:end
+
+:start Forced motion yvj (from the first column, becomes linewise)
+	alpha bravo
+	|charlie delta
+	echo foxtrot
+:type yvj
+	alpha bravo
+	|charlie delta
+	echo foxtrot
+:type G$p
+	alpha bravo
+	charlie delta
+	echo foxtrot
+	|charlie delta
+:end
+
+:start Forced motion dvw (exclusive motion made inclusive)
+	alpha |bravo charlie
+:type dvw
+	alpha |harlie
+:type u
+	alpha |bravo charlie
+:type dw
+	alpha |charlie
+:end
+
+:start Forced motion dvw (at the end of a line)
+	alpha |bravo
+	charlie
+:type dvw
+	alpha |o
+	charlie
+:end
+
+:start Forced motion dve (inclusive motion made exclusive)
+	alpha |bravo charlie
+:type dve
+	alpha |o charlie
+:type u
+	alpha |bravo charlie
+:type dv$
+	alpha |e
+:end
+
+:start Forced motion dvf and dvt (inclusive motions made exclusive)
+	alpha |bravo charlie
+:type dvfr
+	alpha |ravo charlie
+:type u
+	alpha |bravo charlie
+:type dvtc
+	alpha | charlie
+:end
+
+:start Forced motion dVw (charwise motion made linewise)
+:set startofline
+	alpha
+	bravo |charlie delta
+	echo
+	foxtrot
+:type dVw
+	alpha
+	|echo
+	foxtrot
+:type u
+	alpha
+	bravo |charlie delta
+	echo
+	foxtrot
+:type wdVw
+	alpha
+	|echo
+	foxtrot
+:type u
+	alpha
+	bravo charlie |delta
+	echo
+	foxtrot
+:type 2dVw
+	alpha
+	|foxtrot
+:end
+
+:start Forced motion yvj (register is charwise)
+:set startofline
+	alpha br|avo
+	charlie delta
+	echo
+:type yvj
+	alpha br|avo
+	charlie delta
+	echo
+:type GP
+	alpha bravo
+	charlie delta
+	|avo
+	charlie echo
+:end

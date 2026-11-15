@@ -29,11 +29,11 @@ and runs the suite. They are worked examples of everything below.
   "specialKeys": ["<BS>", "<C-A>", "<CR>", "<Esc>", ...],
   "tests": [
     {
-      "id": "level2/wordwise.vimunit: Motion w (next word)",
-      "file": "level2/wordwise.vimunit",
+      "id": "level1/wordwise.vimunit: Motion w (next word)",
+      "file": "level1/wordwise.vimunit",
       "line": 3,                       // of the :start line
-      "group": "level2",               // or "side"
-      "level": 2,                      // null for side branches
+      "group": "level1",               // the top-level directory
+      "level": 1,
       "feature": "wordwise",
       "description": "Motion w (next word)",
       "options": {"startofline": true},// only the options the test sets
@@ -116,10 +116,10 @@ A few things that commonly go wrong in adapters, rather than in Vim modes:
 Write one JSON object per line, per step:
 
 ```json
-{"id": "level2/wordwise.vimunit: Motion w (next word)", "step": 1, "lines": ["Lorem ipsum-dolor--", "sit amet consectetur."], "cursor": [0, 6]}
-{"id": "level2/wordwise.vimunit: Motion w (next word)", "step": 2, "lines": [...], "cursor": [0, 11], "unit": "utf16"}
-{"id": "side/folding.vimunit: Command zc (close fold)", "step": 1, "skipped": "folding not supported"}
-{"id": "level3/macros.vimunit: Macro basics (q,@)", "step": 4, "error": "adapter threw: ..."}
+{"id": "level1/wordwise.vimunit: Motion w (next word)", "step": 1, "lines": ["Lorem ipsum-dolor--", "sit amet consectetur."], "cursor": [0, 6]}
+{"id": "level1/wordwise.vimunit: Motion w (next word)", "step": 2, "lines": [...], "cursor": [0, 11], "unit": "utf16"}
+{"id": "level4/folding.vimunit: Fold zo, zc and za (open, close and toggle)", "step": 1, "skipped": "folding not supported"}
+{"id": "level2/macros.vimunit: Macro basics (q,@)", "step": 4, "error": "adapter threw: ..."}
 ```
 
 * `id` and `step` (1-based) identify the step.
