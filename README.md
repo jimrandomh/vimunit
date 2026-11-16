@@ -175,7 +175,7 @@ subsection is independent.
  * Language-based navigation (jump to declaration/reference and similar things, with an index provided, in place of an LSP)
  * Scale: Programmatically generated large-file test cases, with a deadline, to test that things still work if you open a large generated file.
  * Filtering through external programs: `!`, `!!` (pseudotest)
- * Screen-relative motions (pseudotest)
+ * Screen-relative motions
  * Split panes (pseudotest)
 
 # Level 5: Vimscript
