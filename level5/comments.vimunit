@@ -110,6 +110,7 @@
 :end
 
 :start Comment gqq (breaks a comment with its leader)
+:window 20x24
 :set textwidth=20 formatoptions=tcq tabstop=8
 	    // the quick br|own fox jumps over the lazy dog
 :type gqq
@@ -120,6 +121,7 @@
 :end
 
 :start Comment gqap (joins comment lines)
+:window 20x24
 :set textwidth=20 formatoptions=tcq nojoinspaces
 	# al|pha
 	# bravo charlie delta echo
@@ -131,6 +133,7 @@
 :end
 
 :start Comment auto-wrap (formatoptions c without t)
+:window 20x24
 :set textwidth=20 formatoptions=cq
 	// the quick brown f|ox
 	the quick brown fox
@@ -145,6 +148,7 @@
 :end
 
 :start Comment gqq (a list item continues under its text)
+:window 20x24
 :set textwidth=20 formatoptions=tcq autoindent
 	- the quick br|own fox jumps over the lazy dog
 :type gqq

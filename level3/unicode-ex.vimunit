@@ -85,21 +85,6 @@
 :end
 
 # In the first line, the final letter is the final form ς (U+03C2).
-:start Search with ignorecase (non-ASCII case folding)
-:set ignorecase nosmartcase
-	|ПРИВЕТ οδος привет ÉTÉ été
-:type /привет\<CR>
-	ПРИВЕТ οδος |привет ÉTÉ été
-:type n
-	|ПРИВЕТ οδος привет ÉTÉ été
-:type /σ\<CR>
-	ПРИВЕТ οδο|ς привет ÉTÉ été
-:type /été\<CR>
-	ПРИВЕТ οδος привет |ÉTÉ été
-:type n
-	ПРИВЕТ οδος привет ÉTÉ |été
-:end
-
 # The first "é" is "e" followed by U+0301 COMBINING ACUTE ACCENT, the second is
 # precomposed.
 :start Regex \Z (ignore combining characters)

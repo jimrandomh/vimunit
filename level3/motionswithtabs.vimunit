@@ -36,7 +36,7 @@
 # delimiters inside what look like string literals (all of which are handled by
 # vim). These may be tested in later levels.
 :start Motion % (matching delimiter, for ({[ and )}])
-:set tabstop=4
+:set tabstop=4 shiftwidth=4
 	if|(arr[getIdx()]) {
 		act();
 	}

@@ -299,7 +299,7 @@
 :end
 
 :start Visual block > (shift from the left edge of the block)
-:set shiftwidth=2 expandtab
+:set shiftwidth=2 tabstop=2 expandtab
 	ab|cd
 	efgh
 	ijkl
@@ -314,7 +314,7 @@
 :end
 
 :start Visual block < (shift left from the left edge of the block)
-:set shiftwidth=4 expandtab
+:set shiftwidth=4 tabstop=4 expandtab
 	ab|      cd
 	ef  gh
 	ij        kl

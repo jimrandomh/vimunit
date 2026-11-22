@@ -104,7 +104,7 @@
 :end
 
 :start Fold >> (on a closed fold, shifts all of its lines)
-:set foldmethod=marker foldlevel=0 shiftwidth=2 expandtab startofline
+:set foldmethod=marker foldlevel=0 shiftwidth=2 tabstop=2 expandtab startofline
 	alpha
 	|bravo {{{
 	charlie
@@ -624,19 +624,6 @@
 	echo
 	|}}}
 	golf
-:end
-
-:start Fold search (empty foldopen leaves the fold closed)
-:set foldmethod=marker foldlevel=0 foldopen= startofline
-	|alpha
-	bravo {{{
-	charlie
-	delta
-	}}}
-	echo
-:type /delta\<CR>dd
-	alpha
-	|echo
 :end
 
 :start Fold zf (insert fold markers) and zd (delete them)

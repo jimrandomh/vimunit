@@ -102,6 +102,24 @@ test's result depends on an option whose default varies between editors
 that's the baseline value. This lets editors that can't emulate that value
 skip the test. `./vimunit lint --deep` finds missing declarations.
 
+Only a *setting* can be given a value other than its baseline, and only from
+level 3 up. An *affirmed default* (`startofline`, `whichwrap`, `shiftround`,
+...; both lists are in [format.md](format.md#set)) is behavior that editors
+aren't asked to make configurable, so a test can only declare its baseline
+value, unless the test is in level 5. `./vimunit lint` checks this. If a new
+test really needs editors to support several values of an option, move the
+option to `SETTINGS` in the `vimunit` script.
+
+Don't ask for combinations that only Vim can be configured for. Keep
+`shiftwidth` equal to `tabstop` (`:set tabstop=4 shiftwidth=4`), and
+`softtabstop` either 0 or equal to them. When a test sets `textwidth`, give it
+a window of the same width (`:window 20x24` with `:set textwidth=20`); the
+narrowest window is 12 columns. `./vimunit lint` checks these too.
+
+The finer points of scrolling aren't tested: `scrolloff`, `sidescroll` and
+`smoothscroll` are affirmed defaults, and level 4 has only the plain case of
+each scrolling command.
+
 Tests that depend on the window size (screen-line motions, scrolling,
 `H`/`M`/`L`, wrapping) must declare it with `:window`, and should use a small
 window (e.g. `:window 20x6`) with lines long enough to wrap.
@@ -120,13 +138,16 @@ That means the commands it types, and also the circumstances:
 * A test goes in level 3 if it has non-ASCII text (in the `unicode-*.vimunit`
   files), depends on the width of a tab, on indentation settings or
   `autoindent`, or on line wrapping, uses an Ex command or blockwise Visual
-  mode, or sets a non-default value of an option that commonly differs between
-  editors (`ignorecase`, `joinspaces`, `nostartofline`, ...).
+  mode, or gives a setting a value other than its baseline (`expandtab`,
+  `nowrap`, `textwidth=20`, ...).
 * Level 4 is for the optional feature areas listed in the README: folding,
   go-to-definition, scrolling and motions relative to the window, and
   filtering through external programs.
-* Level 5 is for what is left, such as tests of options that have no
-  counterpart outside Vim (`tildeop`, `delcombine`, `copyindent`).
+* Level 5 is for what is left, including every test that gives an affirmed
+  default a value other than its baseline: options that have no counterpart
+  outside Vim (`tildeop`, `delcombine`, `copyindent`), and ones where the
+  lower levels expect the baseline behavior (`nostartofline`, `joinspaces`,
+  `shiftround`).
 
 A test whose steps belong in different levels goes in the highest of them;
 consider splitting it instead. Start each file with:

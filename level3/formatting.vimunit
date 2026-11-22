@@ -1,9 +1,11 @@
 # This file is part of vim-unit: Unit tests for vim imitators
 #
 # Formatting text: the gq and gw operators, and automatic wrapping while
-# typing, with 'textwidth'.
+# typing, with 'textwidth'. A test that sets 'textwidth' has a window of the
+# same width.
 
 :start Command gqq (break a long line at textwidth)
+:window 20x24
 :set textwidth=20 formatoptions=tcq
 	the qu|ick brown fox jumps over the lazy dog
 :type gqq
@@ -15,6 +17,7 @@
 :end
 
 :start Command gqap (join and reflow a paragraph)
+:window 20x24
 :set textwidth=20 formatoptions=tcq nojoinspaces
 	alpha bravo
 	charlie de|lta echo foxtrot golf
@@ -30,6 +33,7 @@
 :end
 
 :start Command gwap (cursor stays with its text)
+:window 20x24
 :set textwidth=20 formatoptions=tcq nojoinspaces
 	alpha bravo
 	charlie delta echo fox|trot golf
@@ -51,6 +55,7 @@
 :end
 
 :start Command gww (format the current line, cursor stays)
+:window 20x24
 :set textwidth=20 formatoptions=tcq
 	the quick brown fox jumps over the la|zy dog
 :type gww
@@ -60,6 +65,7 @@
 :end
 
 :start Command gq (with a count, and in Visual mode)
+:window 20x24
 :set textwidth=20 formatoptions=tcq nojoinspaces
 	o|ne two
 	three
@@ -81,6 +87,7 @@
 :end
 
 :start Command gqq (line already short enough)
+:window 20x24
 :set tabstop=8 textwidth=20 formatoptions=tcq
 	    sh|ort line
 	next
@@ -90,7 +97,8 @@
 :end
 
 :start Command gqq (a word longer than textwidth is not broken)
-:set textwidth=10 formatoptions=tcq
+:window 12x24
+:set textwidth=12 formatoptions=tcq
 	sh|ort extraordinarily long words
 :type gqq
 	short
@@ -99,6 +107,7 @@
 :end
 
 :start Command gqap (keeps the indent of the first line)
+:window 20x24
 :set tabstop=8 textwidth=20 formatoptions=tcq autoindent nojoinspaces
 	    alpha bravo charlie
 	delta echo foxtro|t golf hotel
@@ -120,6 +129,7 @@
 :end
 
 :start Command gqap (nojoinspaces after a period)
+:window 40x24
 :set textwidth=40 formatoptions=tcq nojoinspaces
 	First sen|tence.
 	Second one!
@@ -128,16 +138,8 @@
 	|First sentence. Second one! Third?
 :end
 
-:start Command gqap (joinspaces after a period)
-:set textwidth=40 formatoptions=tcq joinspaces
-	First sen|tence.
-	Second one!
-	Third?
-:type gqap
-	|First sentence.  Second one!  Third?
-:end
-
 :start Auto-wrap while typing (textwidth)
+:window 20x24
 :set textwidth=20 formatoptions=tcq
 	the quick brown fo|x
 :type A jumps over\<Esc>
@@ -150,6 +152,7 @@
 :end
 
 :start Auto-wrap while typing (with autoindent)
+:window 20x24
 :set tabstop=8 textwidth=20 formatoptions=tcq autoindent
 	    alpha bra|vo
 :type A charlie delta echo\<Esc>
@@ -159,6 +162,7 @@
 :end
 
 :start Auto-wrap while typing (inserting in the middle of a line)
+:window 20x24
 :set textwidth=20 formatoptions=tcq
 	the quick fox jumps o|ver
 :type 0wwibrown \<Esc>

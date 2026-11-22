@@ -129,30 +129,6 @@
 	gamma
 :end
 
-:start Ex :m and :t with nostartofline (cursor keeps its column, but not after :d)
-:set nostartofline
-	alpha
-	  be|ta
-	gamma
-	delta
-:type :m+1\<CR>
-	alpha
-	gamma
-	  be|ta
-	delta
-:type :t0\<CR>
-	  be|ta
-	alpha
-	gamma
-	  beta
-	delta
-:type :3d\<CR>
-	  beta
-	alpha
-	  |beta
-	delta
-:end
-
 :start Ex :m into its own range (error), and after its own end (no-op)
 :set startofline
 	alpha
@@ -241,30 +217,30 @@
 :end
 
 :start Ex :> and :< (shift lines, cursor to the last line)
-:set shiftwidth=2 tabstop=8 noexpandtab
+:set shiftwidth=2 tabstop=2 noexpandtab
 	alpha
 	be|ta
 	gamma
 :type :>\<CR>
 	alpha
-	  |beta
+		|beta
 	gamma
 :type :1,3>>\<CR>
-	    alpha
-	      beta
-	    |gamma
+			alpha
+				beta
+			|gamma
 :type :1<\<CR>
-	  |alpha
-	      beta
-	    gamma
+		|alpha
+				beta
+			gamma
 :type :> 2\<CR>
-	    alpha
-		|beta
-	    gamma
+			alpha
+					|beta
+			gamma
 :end
 
 :start Ex :< with more shift than indent
-:set shiftwidth=4 tabstop=8 noexpandtab
+:set shiftwidth=4 tabstop=4 noexpandtab
 	  alpha
 	    be|ta
 :type :1,2<<\<CR>

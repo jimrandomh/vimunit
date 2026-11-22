@@ -5,20 +5,20 @@
 # and digraph (CTRL-K).
 
 :start Insert CTRL-T and CTRL-D (change the indent)
-:set shiftwidth=4 tabstop=8 noexpandtab
+:set shiftwidth=4 tabstop=4 noexpandtab
 	al|pha
 :type i\<C-T>X\<Esc>
-	    al|Xpha
+		al|Xpha
 :type A\<C-T>Y\<Esc>
-		alXpha|Y
+			alXpha|Y
 :type i\<C-D>Z\<Esc>
-	    alXpha|ZY
+		alXpha|ZY
 :type A\<C-D>\<C-D>\<C-D>\<Esc>
 	alXphaZ|Y
 :end
 
 :start Insert CTRL-T and CTRL-D round to a multiple of shiftwidth
-:set shiftwidth=4 tabstop=8 expandtab
+:set shiftwidth=4 tabstop=4 expandtab
 	   al|pha
 	      beta
 :type a\<C-T>\<Esc>
@@ -30,7 +30,7 @@
 :end
 
 :start Insert 0 CTRL-D (delete all indent)
-:set shiftwidth=4 tabstop=8 noexpandtab autoindent
+:set shiftwidth=4 tabstop=4 noexpandtab autoindent
 		al|pha
 :type o0\<C-D>X\<Esc>
 		alpha
@@ -41,12 +41,12 @@
 :end
 
 :start Insert ^ CTRL-D (delete the indent for this line only)
-:set shiftwidth=4 tabstop=8 noexpandtab autoindent
-	    al|pha
+:set shiftwidth=4 tabstop=4 noexpandtab autoindent
+		al|pha
 :type o^\<C-D>label:\<CR>beta\<Esc>
-	    alpha
+		alpha
 	label:
-	    bet|a
+		bet|a
 :end
 
 :start Insert CTRL-V (insert a key literally)

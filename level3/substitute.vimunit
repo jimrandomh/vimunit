@@ -168,15 +168,6 @@
 	|x x x
 :end
 
-:start Ex :s with the I flag (overrides ignorecase)
-:set ignorecase nosmartcase
-	Alpha al|pha ALPHA
-:type :s/alpha/x/I\<CR>
-	|Alpha x ALPHA
-:type :s/alpha/y/\<CR>
-	|y x ALPHA
-:end
-
 :start Ex :s with the c flag (answering y and n)
 	a1 a2 a|3 a4
 :type :s/a/X/gc\<CR>ynyn

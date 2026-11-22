@@ -25,7 +25,7 @@ and runs the suite. They are worked examples of everything below.
   "schemaVersion": 1,
   "defaultWindow": {"width": 80, "height": 24},
   "baselineOptions": {"wrap": true, "tabstop": 8, "startofline": true, ...},
-  "options": [{"name": "wrap", "type": "bool", "baseline": true, "group": "display", "description": "..."}, ...],
+  "options": [{"name": "wrap", "type": "bool", "baseline": true, "kind": "setting", "group": "display", "description": "..."}, ...],
   "specialKeys": ["<BS>", "<C-A>", "<CR>", "<Esc>", ...],
   "tests": [
     {
@@ -84,6 +84,22 @@ For each test:
    if your editor has no way to change an option, decide which value its fixed
    behavior corresponds to (usually the baseline), run the tests that declare
    that value, and skip the ones that declare any other.
+
+   Each entry in the export's `options` has a `kind` (see
+   [format.md](format.md#set)). A `"setting"` (`tabstop`, `expandtab`,
+   `wrap`, ...) is something tests set to different values, and is worth
+   mapping onto your editor's configuration. An `"affirmed"` default
+   (`startofline`, `ignorecase`, `scrolloff`, ...) has only its baseline
+   value in levels 0 to 4, so you don't need a way to change it: a test that
+   declares one is saying which behavior it relies on. Other values appear
+   only in level 5.
+
+   Tests keep `shiftwidth` equal to `tabstop` (and `softtabstop` 0 or equal
+   to it), and `textwidth`, when set, equal to `window.width`. So an editor
+   with one tab size and one width can run them all: take the tab size from
+   `tabstop`, and the width from whichever of the two you can control. If
+   your editor has a text width setting of its own but no way to size the
+   window, a window that only matches `textwidth` is no reason to skip.
 2. **Start fresh.** New buffer, empty undo history, empty registers, no marks,
    no previous search, `f`/`t` or `.`; Normal mode. Reusing one editor
    instance is fine if you can reset all of that.

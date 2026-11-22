@@ -51,43 +51,46 @@
 :end
 
 :start Command gq (formatoptions m, break at a multibyte character)
-:set textwidth=10 formatoptions=tcqm
+:window 12x24
+:set textwidth=12 formatoptions=tcqm
 	|日本語のテキストです
 	abc
 :type gqq
-	日本語のテ
-	|キストです
+	日本語のテキ
+	|ストです
 	abc
 :end
 
 :start Command gq (joining CJK lines, formatoptions m)
-:set textwidth=10 formatoptions=tcqm
+:window 12x24
+:set textwidth=12 formatoptions=tcqm
 	|日本語の
 	テキストです
 :type gqj
-	日本語の
-	テキストで
-	|す
-:end
-
-:start Command gq (joining CJK lines, formatoptions mM)
-:set textwidth=10 formatoptions=tcqmM
-	|日本語の
-	テキストです
-:type gqj
-	日本語のテ
+	日本語の テ
 	|キストです
 :end
 
+:start Command gq (joining CJK lines, formatoptions mM)
+:window 12x24
+:set textwidth=12 formatoptions=tcqmM
+	|日本語の
+	テキストです
+:type gqj
+	日本語のテキ
+	|ストです
+:end
+
 :start Automatic wrapping with textwidth (multibyte text)
-:set textwidth=10 formatoptions=tcqm
+:window 12x24
+:set textwidth=12 formatoptions=tcqm
 	|
 :type i日本語のテキストです\<Esc>
-	日本語のテ
-	キストで|す
-:type oéé éé éé éé\<Esc>
-	日本語のテ
-	キストです
-	éé éé éé
+	日本語のテキ
+	ストで|す
+:type oéé éé éé éé éé\<Esc>
+	日本語のテキ
+	ストです
+	éé éé éé éé
 	é|é
 :end

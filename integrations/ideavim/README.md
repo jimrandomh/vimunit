@@ -143,7 +143,8 @@ of the file).
   boundaries and keep a column free for the wrap sign, so screen lines can't
   match Vim's. Window-dependent tests without such lines (most scrolling and
   `H`/`M`/`L` tests) and those with `nowrap` are run, with the editor sized to
-  the window.
+  the window. So are tests whose window is only as wide as their `textwidth`,
+  since IdeaVim formats to its own `textwidth` option.
 * Tests whose buffer contains IntelliJ test-fixture markup (`<caret>`,
   `<selection>`, `<block>`), which the fixture would interpret.
 

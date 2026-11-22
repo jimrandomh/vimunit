@@ -387,11 +387,13 @@ class VimUnitSuiteTest : VimTestCase() {
     }
 
     // Line wrapping: IntelliJ's soft wraps break at word boundaries and leave room for the wrap sign, so screen lines
-    // don't match Vim's 'wrap'. Run window-dependent tests only if no line is long enough to wrap.
+    // don't match Vim's 'wrap'. Run window-dependent tests only if no line is long enough to wrap. A test that sets
+    // 'textwidth' has a window of the same width only to keep the two consistent; IdeaVim formats to its own
+    // 'textwidth' option, so such a test doesn't depend on how lines wrap on screen.
     if (test["windowSpecified"] == true && options["wrap"] == true) {
       val width = test.obj("window").int("width")
       val tabstop = options["tabstop"].asInt()
-      if (allBuffers(test).any { displayWidth(it, tabstop) >= width - 1 }) {
+      if (options["textwidth"].asInt() != width && allBuffers(test).any { displayWidth(it, tabstop) >= width - 1 }) {
         return "depends on line wrapping, which IntelliJ's soft wraps can't reproduce at Vim's columns"
       }
     }

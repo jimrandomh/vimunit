@@ -249,10 +249,13 @@ function parseIskeyword(spec: string): boolean[] | undefined {
 }
 
 function skipReason(t: ExportTest): string | undefined {
-  if (t.windowSpecified) {
+  const effective = { ...baseline, ...t.options };
+  // A test that sets 'textwidth' has a window of the same width, only to keep
+  // the two consistent. VSCodeVim wraps at vim.textwidth whatever the window
+  // size, so such a test doesn't depend on the window here.
+  if (t.windowSpecified && effective.textwidth !== t.window.width) {
     return "depends on the window size, which can't be set in the VS Code test instance";
   }
-  const effective = { ...baseline, ...t.options };
   for (const [name, value] of Object.entries(t.options)) {
     const check = CONFIGURABLE[name];
     if (check) {

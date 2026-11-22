@@ -1,8 +1,15 @@
 # This file is part of vim-unit: Unit tests for vim imitators
 #
+# Affirmed defaults (see doc/format.md) with a value other than the baseline.
+# Editors aren't asked to make these configurable; the tests are for editors
+# that implement the option itself.
+#
 # Options that have no counterpart in most other editors: 'tildeop',
 # 'gdefault', 'wrapmargin', the 'formatoptions' flags t and l, 'smartindent',
 # 'copyindent' and 'preserveindent'.
+#
+# Options where the lower levels expect the baseline behavior: 'startofline',
+# 'joinspaces', 'nrformats', 'wrapscan', 'shiftround' and 'foldopen'.
 
 :start Command ~ (as an operator with tildeop)
 :set tildeop
@@ -32,6 +39,7 @@
 :end
 
 :start Auto-wrap while typing (formatoptions without t)
+:window 20x24
 :set textwidth=20 formatoptions=cq
 	the quick brown fo|x
 :type A jumps over\<Esc>
@@ -39,6 +47,7 @@
 :end
 
 :start Auto-wrap while typing (formatoptions l, line was already long)
+:window 20x24
 :set textwidth=20 formatoptions=tcql
 	the quick brown fox jumps ov|er
 	short
@@ -61,7 +70,7 @@
 :end
 
 :start Indent smartindent (after { and before })
-:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=4 expandtab
 	|if (x) {
 :type A\<CR>y = 1;\<CR>}\<Esc>
 	if (x) {
@@ -70,7 +79,7 @@
 :end
 
 :start Indent smartindent (# goes to the first column)
-:set smartindent autoindent nocindent shiftwidth=4 tabstop=8 expandtab
+:set smartindent autoindent nocindent shiftwidth=4 tabstop=4 expandtab
 	|if (x) {
 :type o#if y\<Esc>
 	if (x) {
@@ -78,7 +87,7 @@
 :end
 
 :start Indent copyindent (new line copies the indent characters)
-:set autoindent copyindent expandtab shiftwidth=4 tabstop=8
+:set autoindent copyindent expandtab shiftwidth=4 tabstop=4
 		  |alpha
 :type ox\<Esc>
 		  alpha
@@ -86,8 +95,242 @@
 :end
 
 :start Indent preserveindent (>> keeps the existing indent characters)
-:set preserveindent expandtab shiftwidth=4 tabstop=8 startofline
+:set preserveindent expandtab shiftwidth=4 tabstop=4 startofline
 		|alpha
 :type >>
 		    |alpha
+:end
+
+:start Motion G and gg (nostartofline keeps the column)
+:set nostartofline
+	Lorem ip|sum
+	dolor
+	sit amet consectetur
+:type G
+	Lorem ipsum
+	dolor
+	sit amet| consectetur
+:type gg
+	Lorem ip|sum
+	dolor
+	sit amet consectetur
+:type 2G
+	Lorem ipsum
+	dolo|r
+	sit amet consectetur
+:type G
+	Lorem ipsum
+	dolor
+	sit amet| consectetur
+:end
+
+:start Ex :m and :t with nostartofline (cursor keeps its column, but not after :d)
+:set nostartofline
+	alpha
+	  be|ta
+	gamma
+	delta
+:type :m+1\<CR>
+	alpha
+	gamma
+	  be|ta
+	delta
+:type :t0\<CR>
+	  be|ta
+	alpha
+	gamma
+	  beta
+	delta
+:type :3d\<CR>
+	  beta
+	alpha
+	  |beta
+	delta
+:end
+
+:start Scroll CTRL-D and CTRL-U (nostartofline keeps the column)
+:window 20x6
+:set scrolloff=0 nostartofline scroll=0
+	line01
+	line|02
+	line03
+	line04
+	line05
+	line06
+	line07
+	line08
+	line09
+	line10
+	line11
+	line12
+	line13
+	line14
+	line15
+	line16
+	line17
+	line18
+	line19
+	line20
+:type \<C-D>
+	line01
+	line02
+	line03
+	line04
+	line|05
+	line06
+	line07
+	line08
+	line09
+	line10
+	line11
+	line12
+	line13
+	line14
+	line15
+	line16
+	line17
+	line18
+	line19
+	line20
+:type \<C-U>
+	line01
+	line|02
+	line03
+	line04
+	line05
+	line06
+	line07
+	line08
+	line09
+	line10
+	line11
+	line12
+	line13
+	line14
+	line15
+	line16
+	line17
+	line18
+	line19
+	line20
+:end
+
+:start Motion H and L (nostartofline keeps the column)
+:window 20x6
+:set scrolloff=0 nostartofline
+	alpha
+	bravo ch|arlie
+	delta
+	echo
+	foxtrot golf
+	hotel india
+	juliet
+:type L
+	alpha
+	bravo charlie
+	delta
+	echo
+	foxtrot golf
+	hotel in|dia
+	juliet
+:type H
+	alph|a
+	bravo charlie
+	delta
+	echo
+	foxtrot golf
+	hotel india
+	juliet
+:type 2L
+	alpha
+	bravo charlie
+	delta
+	echo
+	foxtrot |golf
+	hotel india
+	juliet
+:end
+
+:start Command J (with joinspaces)
+:set joinspaces
+	|Lorem.
+	Ipsum?
+	Dolor!
+	Sit,
+	amet
+:type 5J
+	Lorem.  Ipsum?  Dolor!  Sit,| amet
+:end
+
+:start Command gqap (joinspaces after a period)
+:window 40x24
+:set textwidth=40 formatoptions=tcq joinspaces
+	First sen|tence.
+	Second one!
+	Third?
+:type gqap
+	|First sentence.  Second one!  Third?
+:end
+
+:start Command CTRL-A (leading zeros with octal)
+:set nrformats=bin,octal,hex
+	|007 08 -010
+:type \<C-A>
+	01|0 08 -010
+:type w\<C-A>
+	010 |9 -010
+:type w\<C-A>
+	010 9 -01|1
+:end
+
+:start Search / (fails at the end with nowrapscan)
+:set nowrapscan
+	Lorem ipsum
+	dolor |sit amet
+:type /ipsum\<CR>
+	Lorem ipsum
+	dolor |sit amet
+:type /amet\<CR>
+	Lorem ipsum
+	dolor sit |amet
+:type n
+	Lorem ipsum
+	dolor sit |amet
+:end
+
+:start Command * (with nowrapscan, at the last match fails)
+:set nowrapscan noignorecase
+	lorem ipsum
+	dolor |lorem
+:type *
+	lorem ipsum
+	dolor |lorem
+:type #
+	|lorem ipsum
+	dolor lorem
+:end
+
+:start Indent shiftround (>> and << round to a multiple of shiftwidth)
+:set shiftwidth=4 tabstop=4 expandtab shiftround startofline
+	   |alpha
+	      bravo
+:type >>
+	    |alpha
+	      bravo
+:type j<<
+	    alpha
+	    |bravo
+:end
+
+:start Fold search (empty foldopen leaves the fold closed)
+:set foldmethod=marker foldlevel=0 foldopen= startofline
+	|alpha
+	bravo {{{
+	charlie
+	delta
+	}}}
+	echo
+:type /delta\<CR>dd
+	alpha
+	|echo
 :end

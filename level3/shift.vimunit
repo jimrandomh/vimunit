@@ -30,7 +30,7 @@
 :end
 
 :start Mark ' with operators (> and c)
-:set shiftwidth=4 tabstop=8 noexpandtab autoindent startofline
+:set shiftwidth=4 tabstop=4 noexpandtab autoindent startofline
 	|Lorem
 	ipsum
 	dolor
@@ -41,42 +41,42 @@
 	|dolor
 	sit
 :type >'a
-	    |Lorem
-	    ipsum
-	    dolor
+		|Lorem
+		ipsum
+		dolor
 	sit
 :type jjc'aX\<Esc>
-	    |X
+		|X
 	sit
 :end
 
 :start Operator > (empty lines are not indented)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	Lo|rem
 	
 	  
 	ipsum
 :type >3j
-	    |Lorem
-
-	      
-	    ipsum
-:type .
 		|Lorem
 
 		  
 		ipsum
+:type .
+			|Lorem
+
+			  
+			ipsum
 :end
 
 :start Operator > (cursor moves to the first non-blank)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	Lorem ip|sum
 	dolor
 :type >>
-	    |Lorem ipsum
+		|Lorem ipsum
 	dolor
 :type j$<<
-	    Lorem ipsum
+		Lorem ipsum
 	|dolor
 :type k$<<
 	|Lorem ipsum
@@ -84,7 +84,7 @@
 :end
 
 :start Operator < (removes at most shiftwidth of indent)
-:set shiftwidth=4 tabstop=8 noexpandtab noshiftround startofline
+:set shiftwidth=4 tabstop=4 noexpandtab noshiftround startofline
 	      Lo|rem
 	  ipsum
 	dolor
@@ -103,85 +103,85 @@
 :end
 
 :start Operator > (indent of spaces becomes a tab)
-:set shiftwidth=4 tabstop=8 noexpandtab noshiftround startofline
-	|Lorem
-:type >>
+:set shiftwidth=4 tabstop=4 noexpandtab noshiftround startofline
 	    |Lorem
 :type >>
-		|Lorem
+			|Lorem
 :type >>
-		    |Lorem
+				|Lorem
+:type >>
+					|Lorem
 :type <<
-		|Lorem
+				|Lorem
 :end
 
 :start Operator > (count larger than the number of lines)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	Lorem
 	ip|sum
 	dolor
 :type 5>>
 	Lorem
-	    |ipsum
-	    dolor
+		|ipsum
+		dolor
 :type j>5j
 	Lorem
-	    ipsum
-	    |dolor
-:type kk>5j
-	    |Lorem
 		ipsum
-		dolor
+		|dolor
+:type kk>5j
+		|Lorem
+			ipsum
+			dolor
 :end
 
 :start Operator > (repeat with .)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	|Lorem
 	ipsum
 	dolor
 :type 2>>
-	    |Lorem
-	    ipsum
-	dolor
-:type .
 		|Lorem
 		ipsum
 	dolor
+:type .
+			|Lorem
+			ipsum
+	dolor
 :type j.
-		Lorem
-		    |ipsum
-	    dolor
-:type 3.
-		Lorem
-			|ipsum
+			Lorem
+				|ipsum
 		dolor
+:type 3.
+			Lorem
+					|ipsum
+			dolor
 :end
 
 :start Operator > (with the w motion, on the last word of a line)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	Lorem ip|sum
 	    dolor sit
 :type >w
-	    |Lorem ipsum
+		|Lorem ipsum
 	    dolor sit
 :type $>e
-		|Lorem ipsum
-		dolor sit
+			|Lorem ipsum
+			dolor sit
 :end
 
 :start Operator > (with the k and % motions)
-:set shiftwidth=4 tabstop=8 noexpandtab startofline
+:set shiftwidth=4 tabstop=4 noexpandtab startofline
 	int main() {
 	return 0;
 	|}
 :type >k
 	int main() {
-	    |return 0;
-	    }
-:type k0f{>%
-	    |int main() {
-		return 0;
+		|return 0;
 		}
+:type k0f{>%
+		|int main() {
+			return 0;
+			}
 :end
 
 # The tests above indent with tabs and spaces mixed (shiftwidth=4, tabstop=8),
@@ -189,7 +189,7 @@
 # editor can emulate.
 
 :start Operator > (expandtab: empty lines are not indented)
-:set shiftwidth=4 expandtab startofline
+:set shiftwidth=4 tabstop=4 expandtab startofline
 	|alpha
 
 	bravo
@@ -207,7 +207,7 @@
 :end
 
 :start Operator > (expandtab: cursor moves to the first non-blank)
-:set shiftwidth=4 expandtab startofline
+:set shiftwidth=4 tabstop=4 expandtab startofline
 	alp|ha
 	      bravo
 :type >>
@@ -219,7 +219,7 @@
 :end
 
 :start Operator < (expandtab: removes at most shiftwidth of indent)
-:set shiftwidth=4 expandtab startofline
+:set shiftwidth=4 tabstop=4 expandtab startofline
 	      |alpha
 	  bravo
 	charlie
@@ -238,7 +238,7 @@
 :end
 
 :start Operator > (expandtab: count larger than the number of lines)
-:set shiftwidth=4 expandtab startofline
+:set shiftwidth=4 tabstop=4 expandtab startofline
 	alpha
 	|bravo
 	charlie
@@ -253,7 +253,7 @@
 :end
 
 :start Operator > (expandtab: repeat with .)
-:set shiftwidth=4 expandtab startofline
+:set shiftwidth=4 tabstop=4 expandtab startofline
 	|alpha
 	bravo
 	charlie
@@ -276,7 +276,7 @@
 :end
 
 :start Visual > and < with count (count is the number of shifts)
-:set shiftwidth=2 expandtab startofline
+:set shiftwidth=2 tabstop=2 expandtab startofline
 	|Lorem
 	ipsum
 	dolor
@@ -295,7 +295,7 @@
 :end
 
 :start Commands gUi( and >i{
-:set shiftwidth=2 expandtab startofline
+:set shiftwidth=2 tabstop=2 expandtab startofline
 	foo(b|ar) {
 	baz
 	}

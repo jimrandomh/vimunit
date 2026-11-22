@@ -158,41 +158,6 @@
 	|foo Foo FOO
 :end
 
-:start Regex \C with ignorecase
-:set ignorecase nosmartcase
-	|foo Foo FOO
-:type /Foo\<CR>
-	foo |Foo FOO
-:type n
-	foo Foo |FOO
-:type 0/\\CFOO\<CR>
-	foo Foo |FOO
-:type n
-	foo Foo |FOO
-:end
-
-:start Regex smartcase (uppercase in the pattern matches case)
-:set ignorecase smartcase
-	|foo Foo FOO foo
-:type /foo\<CR>
-	foo |Foo FOO foo
-:type n
-	foo Foo |FOO foo
-:type /Foo\<CR>
-	foo |Foo FOO foo
-:type n
-	foo |Foo FOO foo
-:end
-
-:start Regex smartcase is not used by *
-:set ignorecase smartcase
-	|Foo foo FOO
-:type *
-	Foo |foo FOO
-:type n
-	Foo foo |FOO
-:end
-
 :start Regex \n matches a line break
 	alpha |end
 	begin beta end

@@ -135,7 +135,9 @@ What's skipped
 --------------
 
 * Tests that depend on the window size (`windowSpecified`): the size of the
-  editor's text area can't be set in the test instance.
+  editor's text area can't be set in the test instance. (A test whose window
+  is only as wide as its `textwidth` is run: `vim.textwidth` doesn't depend on
+  the window.)
 * Tests whose buffer contains fold markers (with `foldenable`): VS Code folds
   by indentation or language rules, not by `{{{`/`}}}` markers, and folds don't
   start out closed.

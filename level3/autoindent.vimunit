@@ -251,7 +251,7 @@
 :end
 
 :start Indent autoindent (indent removed from a line left empty)
-:set autoindent shiftwidth=4 tabstop=8 expandtab
+:set autoindent shiftwidth=4 tabstop=4 expandtab
 	    al|pha
 	bravo
 :type o\<Esc>
@@ -267,9 +267,9 @@
 :end
 
 :start Indent autoindent (without copyindent, expandtab converts the indent)
-:set autoindent nocopyindent expandtab shiftwidth=4 tabstop=8
+:set autoindent nocopyindent expandtab shiftwidth=4 tabstop=4
 		  |alpha
 :type ox\<Esc>
 		  alpha
-	          |x
+	      |x
 :end

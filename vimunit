@@ -42,15 +42,37 @@ REFERENCE_EDITORS = ("vim", "nvim")
 # Options
 #
 # Every test runs with these values unless it overrides them with a `:set`
-# directive. Only options in this table may be set. The baseline is Vim's
-# built-in default (as with `vim -N -u NONE`), except where noted.
+# directive. Only options in these two tables may be set. The baseline is
+# Vim's built-in default (as with `vim -N -u NONE`), except where noted.
+#
+# Options come in two kinds; see doc/format.md.
 
-OPTIONS = [
+# Settings: things that legitimately differ between editors, users and files.
+# Tests (from level 3 up) set them to different values, and an editor is
+# expected to emulate each value, or to skip the tests that need one it can't.
+# Tests keep some of them consistent with each other, so that an editor needs
+# only one tab size and one width: see consistency_problems().
+SETTINGS = [
     # (name, type, baseline, group, description)
-    # --- Window and display. These matter for screen-line motions (gj, gk,
-    # g0, g$, gm), scrolling, and H/M/L. See also the :window directive.
     ("wrap", bool, True, "display", "Long lines wrap onto further screen lines."),
     ("linebreak", bool, False, "display", "Wrap at a character in 'breakat' rather than at the last column."),
+    ("tabstop", int, 8, "indent", "Width of a tab character."),
+    ("shiftwidth", int, 8, "indent", "Width of one level of indentation for >, <, CTRL-T, CTRL-D, autoindent."),
+    ("softtabstop", int, 0, "indent", "Number of columns that <Tab> and <BS> act on in Insert mode."),
+    ("expandtab", bool, False, "indent", "Insert spaces instead of tabs."),
+    ("autoindent", bool, True, "indent", "New lines copy the indent of the current line. (Differs from Vim's default, which is off.)"),
+    ("textwidth", int, 0, "format", "Maximum line width for automatic wrapping and gq; 0 disables."),
+    ("foldmethod", str, "marker", "fold", "Fold method: marker or manual only. (Differs from Vim's default, which is manual.)"),
+    ("foldlevel", int, 0, "fold", "Folds deeper than this are closed."),
+]
+
+# Affirmed defaults: behavior the suite doesn't ask editors to make
+# configurable. A test declares one only to say that its result depends on
+# it, and only with the baseline value (`:set startofline`). The exception is
+# level 5, which has tests of other values, for editors that implement the
+# option itself. `./vimunit lint` enforces this.
+AFFIRMED_DEFAULTS = [
+    # (name, type, baseline, group, description)
     ("breakindent", bool, False, "display", "Wrapped screen lines are indented like the start of the line."),
     ("showbreak", str, "", "display", "String shown at the start of wrapped screen lines (takes up columns)."),
     ("scrolloff", int, 0, "display", "Minimum number of lines kept above and below the cursor."),
@@ -60,20 +82,12 @@ OPTIONS = [
     ("scroll", int, 0, "display", "Lines scrolled by CTRL-D and CTRL-U; 0 means half the window height."),
     ("smoothscroll", bool, False, "display", "Scroll by screen lines rather than buffer lines."),
     ("startofline", bool, True, "motion", "Commands like G, gg, dd, CTRL-D move the cursor to the first non-blank. (Neovim's default is off.)"),
-    # --- Indentation.
-    ("tabstop", int, 8, "indent", "Width of a tab character."),
-    ("shiftwidth", int, 8, "indent", "Width of one level of indentation for >, <, CTRL-T, CTRL-D, autoindent."),
-    ("softtabstop", int, 0, "indent", "Number of columns that <Tab> and <BS> act on in Insert mode."),
-    ("expandtab", bool, False, "indent", "Insert spaces instead of tabs."),
     ("smarttab", bool, False, "indent", "<Tab> at the start of a line inserts 'shiftwidth'. (Neovim's default is on.)"),
     ("shiftround", bool, False, "indent", "Round indentation from > and < to a multiple of 'shiftwidth'."),
-    ("autoindent", bool, True, "indent", "New lines copy the indent of the current line. (Differs from Vim's default, which is off.)"),
     ("copyindent", bool, False, "indent", "Autoindent copies the existing indent characters exactly."),
     ("preserveindent", bool, False, "indent", "Changing indent preserves existing indent characters."),
     ("smartindent", bool, False, "indent", "Simple C-like automatic indenting after { and before }."),
     ("cindent", bool, False, "indent", "C indenting rules (with default 'cinoptions')."),
-    # --- Formatting and joining.
-    ("textwidth", int, 0, "format", "Maximum line width for automatic wrapping and gq; 0 disables."),
     ("wrapmargin", int, 0, "format", "Wrap this many columns from the right edge of the window when 'textwidth' is 0."),
     ("formatoptions", str, "tcq", "format", "Flags controlling automatic formatting. (Neovim's default is tcqj.)"),
     ("comments", str, "s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-", "format", "Comment leaders recognized by formatting and J with formatoptions+=j."),
@@ -93,28 +107,26 @@ OPTIONS = [
     ("cpoptions", str, "aABceFsz", "edit", "Vi-compatibility flags. The 'z' flag enables the cw and d special cases."),
     ("undolevels", int, 1000, "edit", "Maximum number of changes that can be undone."),
     ("jumpoptions", str, "", "motion", "Jumplist behavior. (Neovim's default is clean.)"),
-    # --- Search.
     ("ignorecase", bool, False, "search", "Ignore case in search patterns."),
     ("smartcase", bool, False, "search", "Override 'ignorecase' when the pattern contains uppercase letters."),
     ("wrapscan", bool, True, "search", "Searches wrap around the end of the buffer."),
     ("magic", bool, True, "search", "Special characters in patterns ('magic')."),
     ("gdefault", bool, False, "search", ":substitute replaces all matches in a line by default."),
     ("incsearch", bool, False, "search", "Show matches while typing a search pattern."),
-    # --- Insert-mode completion.
     ("complete", str, ".", "complete", "Where CTRL-N and CTRL-P look for completions. (Differs from Vim's default, to keep tests self-contained.)"),
     ("completeopt", str, "menu", "complete", "Insert-mode completion behavior."),
     ("infercase", bool, False, "complete", "Adjust the case of completed words."),
-    # --- Folding. Tests use marker folds; see doc/format.md.
-    ("foldmethod", str, "marker", "fold", "Fold method: marker or manual only. (Differs from Vim's default, which is manual.)"),
     ("foldmarker", str, "{{{,}}}", "fold", "Fold start and end markers."),
-    ("foldlevel", int, 0, "fold", "Folds deeper than this are closed."),
     ("foldenable", bool, True, "fold", "Folds are in effect."),
     ("foldopen", str, "block,hor,mark,percent,quickfix,search,tag,undo", "fold", "Commands that open closed folds when the cursor moves into them."),
     ("foldclose", str, "", "fold", "Close folds automatically when the cursor leaves them."),
     ("foldminlines", int, 1, "fold", "Minimum lines a fold must span to be closed."),
     ("foldnestmax", int, 20, "fold", "Maximum nesting of folds."),
 ]
+
+OPTIONS = SETTINGS + AFFIRMED_DEFAULTS
 OPTION_INFO = {o[0]: o for o in OPTIONS}
+OPTION_KIND = {o[0]: kind for kind, table in (("setting", SETTINGS), ("affirmed", AFFIRMED_DEFAULTS)) for o in table}
 BASELINE = {o[0]: o[2] for o in OPTIONS}
 OPTION_CHOICES = {"foldmethod": ("marker", "manual")}
 
@@ -1175,7 +1187,7 @@ def cmd_export(args):
         "schemaVersion": EXPORT_SCHEMA_VERSION,
         "defaultWindow": {"width": DEFAULT_WINDOW[0], "height": DEFAULT_WINDOW[1]},
         "baselineOptions": BASELINE,
-        "options": [{"name": o[0], "type": o[1].__name__, "baseline": o[2], "group": o[3], "description": o[4]} for o in OPTIONS],
+        "options": [{"name": o[0], "type": o[1].__name__, "baseline": o[2], "kind": OPTION_KIND[o[0]], "group": o[3], "description": o[4]} for o in OPTIONS],
         "specialKeys": SPECIAL_KEY_TOKENS,
         "tests": [test_to_json(t) for rel, tests in suite for t in tests],
     }
@@ -1389,11 +1401,52 @@ def deep_lint(suite, jobs, timeout):
                         elif name == "window":
                             problems.append("%s: result depends on the window size; add a :window directive" % where)
                         else:
-                            val = BASELINE[name]
-                            decl = (name if val else "no" + name) if isinstance(val, bool) else "%s=%s" % (name, val)
-                            problems.append("%s: result depends on '%s'; declare it with :set %s (or another value)" % (where, name, decl))
+                            other = " (or another value)" if OPTION_KIND[name] == "setting" else ""
+                            problems.append("%s: result depends on '%s'; declare it with :set %s%s" % (where, name, format_setting(name, BASELINE[name]), other))
                         break
     return problems
+
+
+def format_setting(name, value):
+    """An option value as a :set directive writes it."""
+    if isinstance(value, bool):
+        return name if value else "no" + name
+    return "%s=%s" % (name, value)
+
+
+def consistency_problems(test):
+    """Tests keep the size of a tab and of an indent the same, and wrap text
+    at the width of the window, so that an editor needs only one tab size and
+    one width."""
+    opts = test.effective_options()
+    problems = []
+    ts = opts["tabstop"]
+    sw = opts["shiftwidth"] or ts
+    if sw != ts:
+        problems.append("shiftwidth=%d differs from tabstop=%d; tests keep them equal" % (sw, ts))
+    sts = opts["softtabstop"]
+    if sts > 0 and sts != ts:
+        problems.append("softtabstop=%d differs from tabstop=%d; tests keep it equal to 'tabstop', or 0" % (sts, ts))
+    tw = opts["textwidth"]
+    if tw != 0 and (test.window is None or test.window[0] != tw):
+        problems.append("textwidth=%d differs from the window width; tests keep them equal (:window %dx%d)" % (tw, tw, DEFAULT_WINDOW[1]))
+    return problems
+
+
+def option_value_problem(test, name, value):
+    """Why the test may not give the option this value, or None. Levels 0 to
+    2 use only the baseline, and an affirmed default has another value only
+    in level 5."""
+    if value == BASELINE[name] or test.level is None:
+        return None
+    setting = format_setting(name, value)
+    baseline = format_setting(name, BASELINE[name])
+    if OPTION_KIND[name] == "affirmed" and test.level < 5:
+        return ("sets %s, but '%s' is an affirmed default, which tests below level 5 can only declare as %s; "
+                "move the test to level 5" % (setting, name, baseline))
+    if test.level < 3:
+        return "sets %s, but tests below level 3 can only declare baseline values (%s)" % (setting, baseline)
+    return None
 
 
 def cmd_lint(args):
@@ -1414,6 +1467,12 @@ def cmd_lint(args):
                     problems.append("%s:%d: %s: keys are not in canonical form (%s)" % (t.path, s.lineno + 1, t.description, keys_to_text(s.keys)))
             if t.window and t.initial.line >= t.window[1]:
                 problems.append("%s:%d: %s: initial cursor is below the first screenful of the window" % (t.path, t.lineno + 1, t.description))
+            for name, value in t.options.items():
+                problem = option_value_problem(t, name, value)
+                if problem:
+                    problems.append("%s:%d: %s: %s" % (t.path, t.lineno + 1, t.description, problem))
+            for problem in consistency_problems(t):
+                problems.append("%s:%d: %s: %s" % (t.path, t.lineno + 1, t.description, problem))
     if args.deep and not errors:
         problems.extend(deep_lint(suite, args.jobs, args.timeout))
     for p in problems:
@@ -1423,15 +1482,19 @@ def cmd_lint(args):
 
 
 def options_markdown():
-    out = ["| Option | Baseline | Description |", "|--------|----------|-------------|"]
-    for name, typ, base, grp, desc in OPTIONS:
-        if typ is bool:
-            val = "on" if base else "off"
-        elif base == "":
-            val = "(empty)"
-        else:
-            val = "`%s`" % base
-        out.append("| `%s` | %s | %s |" % (name, val, desc.replace("|", "\\|")))
+    out = []
+    for title, table in (("Settings", SETTINGS), ("Affirmed defaults", AFFIRMED_DEFAULTS)):
+        if out:
+            out.append("")
+        out += ["**%s**" % title, "", "| Option | Baseline | Description |", "|--------|----------|-------------|"]
+        for name, typ, base, grp, desc in table:
+            if typ is bool:
+                val = "on" if base else "off"
+            elif base == "":
+                val = "(empty)"
+            else:
+                val = "`%s`" % base
+            out.append("| `%s` | %s | %s |" % (name, val, desc.replace("|", "\\|")))
     return "\n".join(out)
 
 
@@ -1509,20 +1572,21 @@ def cmd_options(args):
     if args.markdown:
         print(options_markdown())
         return 0
-    groups = []
-    for o in OPTIONS:
-        if o[3] not in groups:
-            groups.append(o[3])
-    for g in groups:
-        print("[%s]" % g)
-        for name, typ, base, grp, desc in OPTIONS:
-            if grp != g:
-                continue
-            if typ is bool:
-                val = name if base else "no" + name
-            else:
-                val = "%s=%s" % (name, base)
-            print("  %-48s %s" % (val, desc))
+    sections = (
+        ("Settings (tests set these to different values)", SETTINGS),
+        ("Affirmed defaults (tests declare only the baseline value, except in level 5)", AFFIRMED_DEFAULTS),
+    )
+    for title, table in sections:
+        print("%s:" % title)
+        groups = []
+        for o in table:
+            if o[3] not in groups:
+                groups.append(o[3])
+        for g in groups:
+            print("  [%s]" % g)
+            for name, typ, base, grp, desc in table:
+                if grp == g:
+                    print("    %-48s %s" % (format_setting(name, base), desc))
     return 0
 
 
