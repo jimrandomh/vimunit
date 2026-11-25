@@ -9,7 +9,7 @@ However, for a power user with muscle memory for obscure vim commands, the
 coverage and quality of these implementations is largely mediocre. This
 project, vimunit, aims to fix that.
 
-This project grew out of the unit test suite if Vanadium, a (currently
+This project grew out of the unit test suite of Vanadium, a (currently
 unpublished) vim-like editor which I wrote starting in 2016 and have been
 daily-driving ever since. It is a test suite of behaviors for vim-like editors;
 the intention is that any editor or editor-plugin with a vim-emulation mode
